@@ -6,11 +6,12 @@
 #include "native_perf.h"
 #include "native_display.h"
 #include "native_io.h"
+#include "native_paths.h"
 
 #define PERF_ROWS 480
 #define PERF_FILES 8
 #define HIST_BINS 1025
-#define PERF_PATH "sdmc:/3ds/ssb64/perf"
+#define PERF_PATH NATIVE_SD_DIRECTORY "/perf"
 NativePerfGame native_perf_game;
 NativePerfRender native_perf_render;
 uint32_t native_perf_saved,native_perf_error;

@@ -36,11 +36,11 @@ def main():
     tp=align(hdr)+align(cert);mp=tp+align(ticketSize);cp=mp+align(tmdSize)
     assert cp+align(size)+metaSize==len(raw)
     ticket=raw[tp:tp+ticketSize];tmd=raw[mp:mp+tmdSize];content=raw[cp:cp+size]
-    title=0x000400000ff64000
+    title=0x000400000ff64100
     assert int.from_bytes(ticket[0x1dc:0x1e4],'big')==title
     assert int.from_bytes(tmd[0x18c:0x194],'big')==title
     title_version=int.from_bytes(tmd[0x1dc:0x1de],'big')
-    assert title_version==8
+    assert title_version==1
     assert int.from_bytes(tmd[0x1de:0x1e0],'big')==1
     chunk=tmd[0xb04:0xb34]
     assert int.from_bytes(chunk[8:16],'big')==size and not int.from_bytes(chunk[6:8],'big')&1

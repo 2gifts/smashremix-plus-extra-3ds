@@ -1,11 +1,12 @@
 #include "native_controls.h"
+#include "native_paths.h"
 #include "native_io.h"
 #include "native_perf.h"
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #ifndef CONTROLS_PATH
-#define CONTROLS_PATH "sdmc:/3ds/ssb64/controls.cfg"
+#define CONTROLS_PATH NATIVE_SD_DIRECTORY "/controls.cfg"
 #endif
 uint32_t native_tap_jump_disabled,native_cstick_enabled;
 void nativeControlsLoad(void){

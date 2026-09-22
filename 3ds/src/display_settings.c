@@ -5,7 +5,8 @@
 #include <string.h>
 #include <errno.h>
 #ifndef DISPLAY_PATH
-#define DISPLAY_PATH "sdmc:/3ds/ssb64/display.cfg"
+#include "native_paths.h"
+#define DISPLAY_PATH NATIVE_SD_DIRECTORY "/display.cfg"
 #endif
 volatile uint32_t native_widescreen;
 void nativeDisplayLoad(void){

@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "port": {
+    "repository": "https://github.com/2gifts/smash64-3ds",
+    "version": "v1.0.1",
+    "commit": "e2334a4fd54b4056f9972762a2846a0dd72626c8"
+  },
+  "extra": {
+    "repository": "https://github.com/joaorb64/smashremix-plus-extra",
+    "version": "0.6.0",
+    "commit": "d981b7c23d7aadb80f86aadb6fbe7d9519a33ab4",
+    "path": "remix/upstream"
+  },
+  "remix": {
+    "repository": "https://github.com/JSsixtyfour/smashremix",
+    "version": "2.0.1 dependency of +EXTRA 0.6.0",
+    "commit": "5e04fe7fcd023cd43c71f25f89bb6e810d254d55",
+    "path": "remix/upstream/smashremix"
+  },
+  "base_rom": {
+    "revision": "Super Smash Bros. USA 1.0, big endian",
+    "bytes": 16777216,
+    "sha1": "e2929e10fccc0aa84e5776227e798abc07cedabf"
+  },
+  "native_target": {
+    "title_id": "000400000ff64100",
+    "product_code": "CTR-P-SMXE",
+    "sd_directory": "/3ds/ssb64-remix-extra",
+    "playable": false
+  }
+}

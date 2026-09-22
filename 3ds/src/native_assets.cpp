@@ -1,23 +1,25 @@
 #include "native_assets.h"
 #include "native_perf.h"
-#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
 extern "C" void port_log(const char*, ...);
 namespace {
-constexpr size_t FileCount=2132;
+constexpr size_t MaxFileCount=16384;
+constexpr size_t MaxDependencies=262144;
+constexpr size_t ResidentBudget=24*1024*1024;
+size_t FileCount;
 struct Entry { uint32_t offset,size,deps; uint16_t internal,external; uint32_t reserved; };
 static_assert(sizeof(Entry)==20);
-std::array<Entry,FileCount> assetIndex;
-std::array<uint32_t,FileCount+1> dependencyOffsets;
+std::vector<Entry> assetIndex;
+std::vector<uint32_t> dependencyOffsets;
 std::vector<uint16_t> dependencies;
-std::array<std::weak_ptr<RelocFile>,FileCount> cached;
+std::vector<std::weak_ptr<RelocFile>> cached;
 // These bytes are pristine: relocation always copies them into the scene
 // arena. Retaining a bounded working set is safe across arena replacement.
-std::array<std::shared_ptr<RelocFile>,FileCount> retained;
-std::array<uint32_t,FileCount> age{};
+std::vector<std::shared_ptr<RelocFile>> retained;
+std::vector<uint32_t> age;
 size_t retainedBytes;
 uint32_t cacheClock;
 constexpr size_t CacheBudget=1024*1024;
@@ -35,28 +37,33 @@ void openPack() {
     if(!pack) fail("cannot open romfs:/reloc.pak");
     uint32_t header[4];
     if(std::fread(header,1,16,pack)!=16 || std::memcmp(header,"SSB3DPAK",8)
-       || header[2]!=1 || header[3]!=FileCount) fail("invalid asset pack header");
+       || header[2]!=1 || !header[3] || header[3]>MaxFileCount) fail("invalid asset pack header");
+    FileCount=header[3];
+    assetIndex.resize(FileCount);dependencyOffsets.resize(FileCount+1);
+    cached.resize(FileCount);retained.resize(FileCount);age.assign(FileCount,0);
     if(std::fread(assetIndex.data(),sizeof(Entry),FileCount,pack)!=FileCount) fail("truncated asset pack index");
     FILE* index=std::fopen("romfs:/reloc-deps.bin","rb");
     uint32_t meta[4];
-    if(!index||std::fread(meta,1,16,index)!=16||std::memcmp(meta,"SSB3DIDX",8)||meta[2]!=FileCount||meta[3]>65536)
+    if(!index||std::fread(meta,1,16,index)!=16||std::memcmp(meta,"SSB3DIDX",8)||meta[2]!=FileCount||meta[3]>MaxDependencies)
         fail("invalid dependency index");
     dependencies.resize(meta[3]+1);
     if(std::fread(dependencyOffsets.data(),4,FileCount+1,index)!=FileCount+1||
        std::fread(dependencies.data(),2,meta[3],index)!=meta[3])fail("truncated dependency index");
     std::fclose(index);
-    for(unsigned i=0;i<FileCount;i++)if(dependencyOffsets[i]>meta[3]||dependencyOffsets[i+1]>meta[3]||
+    if(dependencyOffsets[0]!=0||dependencyOffsets[FileCount]!=meta[3])fail("dependency index endpoints");
+    for(unsigned i=0;i<meta[3];i++)if(dependencies[i]>=FileCount)fail("dependency id outside pack");
+    for(unsigned i=0;i<FileCount;i++)if(dependencyOffsets[i]>dependencyOffsets[i+1]||dependencyOffsets[i+1]>meta[3]||
         dependencyOffsets[i+1]-dependencyOffsets[i]!=assetIndex[i].deps)fail("dependency index mismatch");
-    // The New 3DS capability profile provides an 84 MiB ordinary heap, in
-    // addition to a separate 32 MiB GPU pool. Keep the 16.34 MiB pristine pack
-    // here so stage changes never wait for many small SD requests. Load once
-    // before gameplay; allocation failure safely retains the bounded file cache.
+    // Vanilla's small pack still remains resident. Remix's larger catalogue
+    // must be streamed: reserving its entire ROM/pack would crowd out scene
+    // memory on New 3DS. Both paths share the bounded pristine-file cache.
     if(std::fseek(pack,0,SEEK_END))fail("pack length seek failed");
-    long length=std::ftell(pack);if(length<16||length>32*1024*1024)fail("invalid pack length");
+    long length=std::ftell(pack);if(length<16||length>512*1024*1024)fail("invalid pack length");
     packBytes=(size_t)length;
-    for(const auto& e:assetIndex)if(e.offset>packBytes||e.size>packBytes-e.offset||e.deps*2>packBytes-e.offset-e.size)
+    for(const auto& e:assetIndex)if(e.size>16*1024*1024||e.deps>65536||e.offset>packBytes||e.size>packBytes-e.offset||e.deps*2>packBytes-e.offset-e.size||
+        ((e.size||e.deps)&&e.offset<16+FileCount*sizeof(Entry)))
         fail("pack entry outside payload");
-    residentPack=(uint8_t*)std::malloc(packBytes);
+    residentPack=packBytes<=ResidentBudget?(uint8_t*)std::malloc(packBytes):nullptr;
     if(residentPack){
         std::rewind(pack);
         if(std::fread(residentPack,1,packBytes,pack)!=packBytes)fail("truncated resident pack");
@@ -74,6 +81,8 @@ extern "C" void nativeAssetsShutdown(void) {
     for(auto& p:retained)p.reset();retainedBytes=0;
     if(pack){std::fclose(pack);pack=nullptr;}
     std::free(residentPack);residentPack=nullptr;packReady=false;
+    cached.clear();retained.clear();age.clear();assetIndex.clear();dependencyOffsets.clear();dependencies.clear();
+    FileCount=0;packBytes=0;cacheClock=0;
 }
 std::shared_ptr<RelocFile> nativeLoadReloc(uint32_t id) {
     openPack();

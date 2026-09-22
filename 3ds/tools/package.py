@@ -14,6 +14,8 @@ def run(*args):
     subprocess.run(list(map(str,args)),check=True,cwd=ROOT)
 
 def main():
+    from remix_status import require_native_remix
+    require_native_remix()
     ap=argparse.ArgumentParser();ap.add_argument('--variant',choices=['graphics','release'],default='graphics');args=ap.parse_args()
     dst=OUT/'package';dst.mkdir(parents=True,exist_ok=True)
     shutil.copy2(OUT/args.variant/('ssb64-'+args.variant+'.elf'),dst/'ssb64-package.elf')
@@ -23,7 +25,7 @@ def main():
         wav.setparams((2,2,32000,0,'NONE','not compressed'));wav.writeframes(bytes(32000*4))
     bt=tool('bannertool')
     makerom=tool('makerom')
-    run(bt,'makesmdh','-s','Smash 64' if args.variant=='release' else 'Smash 64 development','-l','Native New Nintendo 3DS port with stereoscopic 3D',
+    run(bt,'makesmdh','-s','Remix +EXTRA 3DS' if args.variant=='release' else 'Remix 3DS development','-l','Unofficial native Remix +EXTRA port for New Nintendo 3DS',
         '-p','Decompilation and port contributors','-i',dst/'icon.png','-o',dst/'icon.smdh',
         '-r','regionfree','-f','visible,allow3d,new3ds,recordusage')
     run(bt,'makebanner','-i',dst/'banner.png','-a',dst/'silent.wav','-o',dst/'banner.bin')
@@ -35,7 +37,7 @@ def main():
     common=['-target','t','-exefslogo','-elf',dst/'ssb64-package.elf',
         '-rsf',dst/'smash64.rsf','-icon',dst/'icon.smdh','-banner',dst/'banner.bin']
     for fmt,suffix in [('cia','cia'),('ncch','cxi')]:
-        run(makerom,'-f',fmt,*common,*(['-ver','8'] if fmt=='cia' else []),'-o',dst/('smash64-development.'+suffix))
+        run(makerom,'-f',fmt,*common,*(['-ver','1'] if fmt=='cia' else []),'-o',dst/('smash64-development.'+suffix))
     report={'development_only':args.variant!='release','build_variant':args.variant,'validation_complete':False,'fully_playable':False,'files':{}}
     for path in dst.glob('smash64-development.*'):
         report['files'][path.name]={'bytes':path.stat().st_size,'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}

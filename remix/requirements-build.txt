@@ -1,0 +1,4 @@
+# Headless requirements from +EXTRA 0.6.0's Pipfile.lock.
+PyYAML==6.0.3
+lineinfile==0.5.1
+Pillow==12.1.1

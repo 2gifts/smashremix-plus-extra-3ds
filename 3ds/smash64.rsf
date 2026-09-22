@@ -1,13 +1,13 @@
-# Native Smash 64 development build. Assets are included in RomFS.
+# Native Remix +EXTRA development identity. Assets are included in RomFS.
 BasicInfo:
-  Title: Smash64
-  ProductCode: CTR-P-SS64
+  Title: RemixExtra
+  ProductCode: CTR-P-SMXE
   # HOME reads this launch resource separately from the selected-title banner.
   Logo: Homebrew
 TitleInfo:
   Category: Application
   Platform: snake
-  UniqueId: 0xFF640
+  UniqueId: 0xFF641
 Option:
   UseOnSD: true
   FreeProductCode: true

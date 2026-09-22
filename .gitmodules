@@ -4,3 +4,6 @@
 [submodule "3ds/vendor/sm64-3ds"]
     path = 3ds/vendor/sm64-3ds
     url = https://github.com/mkst/sm64-port.git
+[submodule "remix/upstream"]
+	path = remix/upstream
+	url = https://github.com/joaorb64/smashremix-plus-extra.git

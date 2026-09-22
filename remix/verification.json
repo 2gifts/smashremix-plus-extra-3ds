@@ -1,0 +1,431 @@
+{
+  "native_gameplay_playable": false,
+  "playable_cia_available": false,
+  "sources": {
+    "port": {
+      "repository": "https://github.com/2gifts/smash64-3ds",
+      "version": "v1.0.1",
+      "commit": "e2334a4fd54b4056f9972762a2846a0dd72626c8"
+    },
+    "extra": {
+      "repository": "https://github.com/joaorb64/smashremix-plus-extra",
+      "version": "0.6.0",
+      "commit": "d981b7c23d7aadb80f86aadb6fbe7d9519a33ab4",
+      "path": "remix/upstream"
+    },
+    "remix": {
+      "repository": "https://github.com/JSsixtyfour/smashremix",
+      "version": "2.0.1 dependency of +EXTRA 0.6.0",
+      "commit": "5e04fe7fcd023cd43c71f25f89bb6e810d254d55",
+      "path": "remix/upstream/smashremix"
+    }
+  },
+  "reference_rom": {
+    "rom_bytes": 80421504,
+    "rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
+    "symbols_sha256": "69463a54e1429fc058985e6bb3bcd1958223a8de2d2426c9260fc2cc636a0d85"
+  },
+  "assets": {
+    "source_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
+    "extra_commit": "d981b7c23d7aadb80f86aadb6fbe7d9519a33ab4",
+    "remix_commit": "5e04fe7fcd023cd43c71f25f89bb6e810d254d55",
+    "files": 7564,
+    "dependencies": 11659,
+    "pack_bytes": 82246242,
+    "pack_sha256": "1b70f9001aae7f0672f9d449aae4131ca45565d58f2e8c79194004bf4a7bad3e",
+    "dependency_index_sha256": "503ab3d528bc50a6226e34c5b4ed4b36592b5858c5a44dbfca30587c31d9d8c1",
+    "native_3ds_playable": false,
+    "native_relocations_validated": false,
+    "relocation_issues": 32
+  },
+  "source_inventory": {
+    "base_remix": {
+      "assembly_files": 404,
+      "assembly_lines": 245282,
+      "patch_start_calls": 1969,
+      "literal_patch_sites": 1945
+    },
+    "extra": {
+      "extra_characters": {
+        "assembly_files": 51,
+        "assembly_lines": 63825,
+        "patch_start_calls": 7,
+        "literal_patch_sites": 7
+      },
+      "extra_stages": {
+        "assembly_files": 4,
+        "assembly_lines": 516,
+        "patch_start_calls": 0,
+        "literal_patch_sites": 0
+      },
+      "smashremix_overwrite": {
+        "assembly_files": 9,
+        "assembly_lines": 18346,
+        "patch_start_calls": 195,
+        "literal_patch_sites": 195
+      }
+    },
+    "extra_fighter_definitions": 19,
+    "extra_stage_configurations": 16
+  },
+  "host_loader": {
+    "fixtures": {
+      "passed": true,
+      "cases": [
+        "expanded IDs, bounded streaming cache, live handles and reopen passed",
+        "zero_file_count",
+        "excessive_file_count",
+        "payload_out_of_bounds",
+        "payload_overlaps_header",
+        "dependency_count_over_limit",
+        "dependency_offset_nonzero_start",
+        "dependency_offset_out_of_bounds"
+      ]
+    },
+    "reference": {
+      "passed": true,
+      "detail": "all reference asset payloads and dependency counts match; cache remains bounded",
+      "files": 7564,
+      "pack_sha256": "1b70f9001aae7f0672f9d449aae4131ca45565d58f2e8c79194004bf4a7bad3e",
+      "scope": "Raw I/O and cache only; does not execute relocations, game code, or rendering.",
+      "native_relocation_issues_remaining": 32
+    },
+    "passed": true
+  },
+  "arm11_asset_diagnostic": {
+    "passed": true,
+    "emulator": "Azahar",
+    "source_build": {
+      "diagnostic_only": true,
+      "native_gameplay": false,
+      "elf_sha256": "73c7bd639878450fcf8ee9134ea708010a48047a3678acab45c1730163a63441",
+      "binary_sha256": "887ade50c61d46ca1cd57571636ff446396f95106d4758255597742257e777e1",
+      "pack_sha256": "1b70f9001aae7f0672f9d449aae4131ca45565d58f2e8c79194004bf4a7bad3e",
+      "expected_files": 7564
+    },
+    "guest": {
+      "remix_probe_status": 2,
+      "remix_probe_files": 7564,
+      "remix_probe_expected": 7564,
+      "remix_probe_failure_id": 4294967295,
+      "remix_probe_ms": 41398,
+      "native_asset_reads": 7564,
+      "native_asset_hits": 0,
+      "native_asset_bytes": 82071628,
+      "__ctru_heap_size": 96284672,
+      "__ctru_linear_heap_size": 33554432
+    },
+    "scope": "ARM11 raw asset reads and CRC validation only; no game, relocation, stereo, or frame-rate validation."
+  },
+  "arm11_support_objects_compiled": 11,
+  "host_regressions": {
+    "asset-cache-test": {
+      "passed": true,
+      "detail": "Allocation fallback, cache hits, pristine copies, LRU eviction, resident-pack reads, 1 MiB decoded-cache bound, repeated reload and shutdown passed"
+    },
+    "controls-host": {
+      "passed": true,
+      "detail": "saved settings, defaults, malformed files, deadzone, direction, hysteresis and held-nub behavior passed"
+    },
+    "display-host-test": {
+      "passed": true,
+      "detail": "settings persistence, defaults, invalid files, and 1500 clipped viewports passed"
+    },
+    "perf-host-test": {
+      "bounded_transition_events_verified": true,
+      "bottom_screen_tracking_verified": true,
+      "widescreen_tracking_verified": true,
+      "passed": true,
+      "detail": "frames, pause exclusion, compaction, finish and rotation passed; row RAM=88320 bytes",
+      "retained_sequences": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "files": 8,
+      "bytes": 26625,
+      "menu_summary_frames": 120,
+      "additional_metrics_verified": true
+    }
+  },
+  "relocation_compatibility_findings": [
+    {
+      "file_id": 5144,
+      "kind": "internal_target_outside_file",
+      "slot": 3708,
+      "target": 9928,
+      "file_size": 4704,
+      "file_name": "PEACH_TURNIP_GFX"
+    },
+    {
+      "file_id": 5144,
+      "kind": "internal_target_outside_file",
+      "slot": 3712,
+      "target": 9408,
+      "file_size": 4704,
+      "file_name": "PEACH_TURNIP_GFX"
+    },
+    {
+      "file_id": 6379,
+      "kind": "internal_chain",
+      "detail": "Invalid relocation link 0xdf00",
+      "file_name": "MRGAW_ANIM_ENDIMAGE1"
+    },
+    {
+      "file_id": 6380,
+      "kind": "internal_chain",
+      "detail": "Invalid relocation link 0xdf00",
+      "file_name": "MRGAW_ANIM_ENDIMAGE2"
+    },
+    {
+      "file_id": 6537,
+      "kind": "internal_chain",
+      "detail": "Invalid relocation link 0xdf00",
+      "file_name": "MRGAWPLUS_ANIM_ENDIMAGE1"
+    },
+    {
+      "file_id": 6538,
+      "kind": "internal_chain",
+      "detail": "Invalid relocation link 0xdf00",
+      "file_name": "MRGAWPLUS_ANIM_ENDIMAGE2"
+    },
+    {
+      "file_id": 6693,
+      "kind": "internal_chain",
+      "detail": "Invalid relocation link 0xdf00",
+      "file_name": "MRGAWTHREED_ANIM_ENDIMAGE1"
+    },
+    {
+      "file_id": 6694,
+      "kind": "internal_chain",
+      "detail": "Invalid relocation link 0xdf00",
+      "file_name": "MRGAWTHREED_ANIM_ENDIMAGE2"
+    },
+    {
+      "file_id": 2939,
+      "kind": "external_target_outside_file",
+      "dependency": 3270,
+      "target": 2400,
+      "file_size": 64,
+      "file_name": "MTWO_MAIN",
+      "dependency_name": "MTWO_SBALL_PROJECTILE_HITBOX"
+    },
+    {
+      "file_id": 3102,
+      "kind": "external_target_outside_file",
+      "dependency": 3124,
+      "target": 688,
+      "file_size": 176,
+      "file_name": "CONKER_MAIN",
+      "dependency_name": "CONKER_GRENADE_PROJECTILE_HITBOX"
+    },
+    {
+      "file_id": 3102,
+      "kind": "external_target_outside_file",
+      "dependency": 3208,
+      "target": 11312,
+      "file_size": 6520,
+      "file_name": "CONKER_MAIN",
+      "dependency_name": "GREGS_HAND"
+    },
+    {
+      "file_id": 3693,
+      "kind": "external_target_outside_file",
+      "dependency": 3695,
+      "target": 1888,
+      "file_size": 64,
+      "file_name": "SHEIK_MAIN",
+      "dependency_name": "SHEIK_PROJECTILE_HITBOX"
+    },
+    {
+      "file_id": 3886,
+      "kind": "external_target_outside_file",
+      "dependency": 4058,
+      "target": 1888,
+      "file_size": 384,
+      "file_name": "MARINA_MAIN",
+      "dependency_name": "MARINA_GEM_HITBOX"
+    },
+    {
+      "file_id": 4093,
+      "kind": "external_target_outside_file",
+      "dependency": 4096,
+      "target": 1888,
+      "file_size": 400,
+      "file_name": "DEDEDE_MAIN",
+      "dependency_name": "WADDLE_DEE_INFO"
+    },
+    {
+      "file_id": 4093,
+      "kind": "external_target_outside_file",
+      "dependency": 4095,
+      "target": 2824,
+      "file_size": 128,
+      "file_name": "DEDEDE_MAIN",
+      "dependency_name": "DEDEDE_STAR"
+    },
+    {
+      "file_id": 4289,
+      "kind": "external_target_outside_file",
+      "dependency": 4351,
+      "target": 1544,
+      "file_size": 176,
+      "file_name": "GOEMON_MAIN",
+      "dependency_name": "GOEMON_CLOUD_INFO"
+    },
+    {
+      "file_id": 4495,
+      "kind": "external_target_outside_file",
+      "dependency": 4655,
+      "target": 1888,
+      "file_size": 64,
+      "file_name": "BANJO_MAIN",
+      "dependency_name": "KAZOOIE_EGG_INFO"
+    },
+    {
+      "file_id": 4659,
+      "kind": "external_target_outside_file",
+      "dependency": 4680,
+      "target": 2040,
+      "file_size": 400,
+      "file_name": "SCUTTLE_TOWN_HEADER",
+      "dependency_name": "SCUTTLETOWN_ENEMY_INFO"
+    },
+    {
+      "file_id": 4659,
+      "kind": "external_target_outside_file",
+      "dependency": 4680,
+      "target": 2320,
+      "file_size": 400,
+      "file_name": "SCUTTLE_TOWN_HEADER",
+      "dependency_name": "SCUTTLETOWN_ENEMY_INFO"
+    },
+    {
+      "file_id": 4974,
+      "kind": "external_target_outside_file",
+      "dependency": 5143,
+      "target": 688,
+      "file_size": 176,
+      "file_name": "PEACH_MAIN",
+      "dependency_name": "PEACH_TURNIP_INFO"
+    },
+    {
+      "file_id": 5455,
+      "kind": "external_target_outside_file",
+      "dependency": 5457,
+      "target": 2400,
+      "file_size": 192,
+      "file_name": "BIRDO_MAIN",
+      "dependency_name": "BIRDO_FILE_MERGED_FILE_0"
+    },
+    {
+      "file_id": 5455,
+      "kind": "external_target_outside_file",
+      "dependency": 338,
+      "target": 53704,
+      "file_size": 44256,
+      "file_name": "BIRDO_MAIN",
+      "dependency_name": null
+    },
+    {
+      "file_id": 5952,
+      "kind": "external_target_outside_file",
+      "dependency": 5954,
+      "target": 1888,
+      "file_size": 64,
+      "file_name": "KEN_MAIN",
+      "dependency_name": "KEN_FILE_HADOUKEN_HITBOX"
+    },
+    {
+      "file_id": 5952,
+      "kind": "external_target_outside_file",
+      "dependency": 5955,
+      "target": 2824,
+      "file_size": 2664,
+      "file_name": "KEN_MAIN",
+      "dependency_name": "KEN_FILE_SHORYUKEN_GFX"
+    },
+    {
+      "file_id": 6882,
+      "kind": "external_target_outside_file",
+      "dependency": 6884,
+      "target": 1888,
+      "file_size": 64,
+      "file_name": "RYU_MAIN",
+      "dependency_name": "RYU_FILE_HADOUKEN_HITBOX"
+    },
+    {
+      "file_id": 7004,
+      "kind": "external_target_outside_file",
+      "dependency": 7006,
+      "target": 1888,
+      "file_size": 592,
+      "file_name": "SNAKE_MAIN",
+      "dependency_name": "SNAKE_FILE_MERGED_FILE_0"
+    },
+    {
+      "file_id": 7004,
+      "kind": "external_target_outside_file",
+      "dependency": 7007,
+      "target": 2824,
+      "file_size": 176,
+      "file_name": "SNAKE_MAIN",
+      "dependency_name": "SNAKE_FILE_GRENADE_HITBOX"
+    },
+    {
+      "file_id": 7144,
+      "kind": "external_target_outside_file",
+      "dependency": 7146,
+      "target": 1888,
+      "file_size": 64,
+      "file_name": "SPIDERMAN_MAIN",
+      "dependency_name": "SPIDERMAN_FILE_WB_HITBOX"
+    },
+    {
+      "file_id": 7312,
+      "kind": "external_target_outside_file",
+      "dependency": 7314,
+      "target": 1888,
+      "file_size": 64,
+      "file_name": "TERRY_MAIN",
+      "dependency_name": "TERRY_FILE_HADOUKEN_HITBOX"
+    },
+    {
+      "file_id": 7312,
+      "kind": "external_target_outside_file",
+      "dependency": 7316,
+      "target": 2824,
+      "file_size": 2096,
+      "file_name": "TERRY_MAIN",
+      "dependency_name": "TERRY_FILE_BK_GFX"
+    },
+    {
+      "file_id": 7466,
+      "kind": "external_target_outside_file",
+      "dependency": 7468,
+      "target": 688,
+      "file_size": 64,
+      "file_name": "YZELDA_MAIN",
+      "dependency_name": "YZELDA_FILE_NSP_HITBOX"
+    },
+    {
+      "file_id": 7466,
+      "kind": "external_target_outside_file",
+      "dependency": 353,
+      "target": 11312,
+      "file_size": 6672,
+      "file_name": "YZELDA_MAIN",
+      "dependency_name": null
+    }
+  ],
+  "tested_source_sha256": {
+    "3ds/src/native_assets.cpp": "de9e583f538f3ee07bb0eae00c65e71c04bc30383180e4d492700bb0a4b649a4",
+    "remix/tests/asset_probe.cpp": "62fdc6cffc842e32890f24172e068c69987585495ec72902fbb0d907fc12249c"
+  },
+  "scope": "Reference builds, raw asset loading, and inherited host tests only. Native Remix fighter and engine integration, relocation fixes, gameplay, stereo validation, and hardware performance work remain."
+}

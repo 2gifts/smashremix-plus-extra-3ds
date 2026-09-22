@@ -1,3 +1,4 @@
+#include "native_paths.h"
 #include <3ds.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -84,7 +85,7 @@ static bool testInputsLoaded;
 static void loadTestInputs(void) {
     if(!ssb_test_inputs||testInputsLoaded)return;
     testInputsLoaded=true;
-    FILE* f=fopen("sdmc:/3ds/ssb64/test-input.txt","r");if(!f)return;
+    FILE* f=fopen(NATIVE_SD_DIRECTORY "/test-input.txt","r");if(!f)return;
     while(testInputCount<128) {
         struct TestInput* p=&testInput[testInputCount];
         if(fscanf(f,"%u %u %x %d %d",&p->begin,&p->end,&p->buttons,&p->x,&p->y)!=5)break;
@@ -155,7 +156,7 @@ void portAudioSubmitFrame(const void* samples,int count) {
     if(count<=0 || count>1024)abort();
     if(ssb_test_capture_audio && audioCaptureBytes<32000*4*30) {
         if(!audioCapture){
-            audioCapture=fopen("sdmc:/3ds/ssb64/audio-test.wav","wb+");
+            audioCapture=fopen(NATIVE_SD_DIRECTORY "/audio-test.wav","wb+");
             if(audioCapture){setvbuf(audioCapture,NULL,_IOFBF,65536);uint8_t header[44]={0};fwrite(header,1,44,audioCapture);}
         }
         if(audioCapture)audioCaptureBytes+=fwrite(samples,1,count*4,audioCapture);
@@ -194,7 +195,7 @@ static uint8_t saveBytes[32768];
 static bool saveLoaded;
 static void loadSave(void) {
     if(saveLoaded)return;
-    const char* paths[]={"sdmc:/3ds/ssb64/save.bin","sdmc:/3ds/ssb64/save.bak","romfs:/initial-save.bin"};
+    const char* paths[]={NATIVE_SD_DIRECTORY "/save.bin",NATIVE_SD_DIRECTORY "/save.bak","romfs:/initial-save.bin"};
     bool loaded=false;
     for(unsigned i=0;i<3&&!loaded;i++){
         FILE* f=fopen(paths[i],"rb");if(!f)continue;
@@ -210,18 +211,18 @@ int port_save_read(uintptr_t offset,void* dst,size_t size) {
     memcpy(dst,saveBytes+offset,size);return 0;
 }
 static void writeSave(const void* data){
-    FILE* f=fopen("sdmc:/3ds/ssb64/save.tmp","wb");if(!f)goto failed;
+    FILE* f=fopen(NATIVE_SD_DIRECTORY "/save.tmp","wb");if(!f)goto failed;
     bool ok=fwrite(data,1,sizeof(saveBytes),f)==sizeof(saveBytes);
     if(fflush(f))ok=false;if(fclose(f))ok=false;
     if(!ok)goto failed;
     /* FAT rename does not necessarily replace an existing destination.
      * Keep a recoverable previous copy across interruption or a failed rename. */
-    const char* current="sdmc:/3ds/ssb64/save.bin";
-    const char* backup="sdmc:/3ds/ssb64/save.bak";
+    const char* current=NATIVE_SD_DIRECTORY "/save.bin";
+    const char* backup=NATIVE_SD_DIRECTORY "/save.bak";
     if(remove(backup)!=0&&errno!=ENOENT)goto failed;
     bool hadPrevious=rename(current,backup)==0;
     if(!hadPrevious&&errno!=ENOENT)goto failed;
-    if(rename("sdmc:/3ds/ssb64/save.tmp",current)!=0){
+    if(rename(NATIVE_SD_DIRECTORY "/save.tmp",current)!=0){
         if(hadPrevious)rename(backup,current);
         goto failed;
     }
@@ -240,11 +241,11 @@ int main(void) {
     while(!ssb_test_boot_gate)svcSleepThread(1000000);
     gfxInitDefault();consoleInit(GFX_BOTTOM,NULL);
     Result rc=romfsInit();
-    mkdir("sdmc:/3ds",0777);mkdir("sdmc:/3ds/ssb64",0777);
+    mkdir("sdmc:/3ds",0777);mkdir(NATIVE_SD_DIRECTORY,0777);
     nativeDisplayLoad();
     nativeControlsLoad();
     if(nativeIoInit())native_perf_error++;
-    logFile=fopen("sdmc:/3ds/ssb64/game.log","w");
+    logFile=fopen(NATIVE_SD_DIRECTORY "/game.log","w");
     if(logFile)setvbuf(logFile,NULL,_IOFBF,65536);
     nativeBottomInit();
     port_log("Native ARM11 startup, romfs=%08lx\n",(unsigned long)rc);
@@ -320,7 +321,7 @@ int main(void) {
         uint32_t bytes=(dspCaptureDone?dspCapture.nsamples:dspCapture.offset)*4;
         uint32_t rate=(uint32_t)NDSP_SAMPLE_RATE;
         uint32_t header[]={0x46464952,bytes+36,0x45564157,0x20746d66,16,0x00020001,rate,rate*4,0x00100004,0x61746164,bytes};
-        FILE* f=fopen("sdmc:/3ds/ssb64/audio-dsp-test.wav","wb");
+        FILE* f=fopen(NATIVE_SD_DIRECTORY "/audio-dsp-test.wav","wb");
         if(f){fwrite(header,1,sizeof(header),f);fwrite(dspCapture.data_vaddr,1,bytes,f);fclose(f);}
         linearFree((void*)dspCapture.data_vaddr);
     }

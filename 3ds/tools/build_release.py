@@ -3,6 +3,8 @@ import argparse,json,shutil,subprocess,sys
 from pathlib import Path
 
 def main():
+    from remix_status import require_native_remix
+    require_native_remix()
     root=Path(__file__).resolve().parents[1]
     ap=argparse.ArgumentParser();ap.add_argument('--rom',type=Path);ap.add_argument('--save',type=Path);args=ap.parse_args()
     config=root/'build-config.json';cfg=json.loads(config.read_text()) if config.exists() else {}
