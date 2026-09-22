@@ -29,14 +29,14 @@ def blz(data):
     assert dst==end
     return bytes(out)
 
-def main():
-    folder=OUT/'package';raw=(folder/'smash64-development.cia').read_bytes()
+def main(folder=None, expected_title=0x000400000ff64100, verify_startup=False):
+    folder=folder or OUT/'package';raw=(folder/'smash64-development.cia').read_bytes()
     hdr,_,_,cert,ticketSize,tmdSize,metaSize,size=struct.unpack_from('<IHHIIIIQ',raw)
     assert hdr==0x2020 and raw[0x20]==0x80
     tp=align(hdr)+align(cert);mp=tp+align(ticketSize);cp=mp+align(tmdSize)
     assert cp+align(size)+metaSize==len(raw)
     ticket=raw[tp:tp+ticketSize];tmd=raw[mp:mp+tmdSize];content=raw[cp:cp+size]
-    title=0x000400000ff64100
+    title=expected_title
     assert int.from_bytes(ticket[0x1dc:0x1e4],'big')==title
     assert int.from_bytes(tmd[0x18c:0x194],'big')==title
     title_version=int.from_bytes(tmd[0x1dc:0x1de],'big')
@@ -100,7 +100,7 @@ def main():
     assert set(packaged)==expected and not any(k.endswith(('.z64','.cdc')) for k in packaged)
     metadata=json.loads((folder/'package.json').read_text())
     defaults={}
-    if metadata.get('build_variant')=='release':
+    if verify_startup or metadata.get('build_variant')=='release':
         raw_symbols=subprocess.check_output([str(BIN/'llvm-nm.exe'),'-n',str(folder/'ssb64-package.elf')],text=True)
         symbols={parts[2]:int(parts[0],16) for line in raw_symbols.splitlines() if len(parts:=line.split())==3 and all(c in '0123456789abcdefABCDEF' for c in parts[0])}
         wanted={'ssb_test_frame_limit':0,'ssb_test_inputs':0,'ssb_test_logging':0,'ssb_test_metrics':0,'ssb_test_boot_gate':1,'native_test_no_capture':1,'native_test_slider':0xbf800000,'ssb_test_single_stage':0xffffffff,'ssb_test_start_scene':0xffffffff}

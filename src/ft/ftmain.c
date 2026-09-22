@@ -10,6 +10,9 @@ extern void port_dump_backtrace(void);
 #include "hooks/Events.h"
 #endif
 #include <sys/controller.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_probe.h"
+#endif
 
 extern alSoundEffect* func_800269C0_275C0(u16);
 extern void func_ovl0_800C9A38();
@@ -182,6 +185,11 @@ void ftMainParseMotionEvent(GObj *fighter_gobj, FTStruct *fp, FTMotionScript *ms
 
     switch (ev_kind)
     {
+#ifdef SSB_REMIX_PROBE
+    case 52: /* Remix uses the full command byte for 0xD0..0xD3. */
+        nativeRemixProbeCommand(fighter_gobj, fp, ms);
+        break;
+#endif
     case nFTMotionEventEnd:
         ms->p_script = NULL;
         break;
@@ -211,6 +219,9 @@ void ftMainParseMotionEvent(GObj *fighter_gobj, FTStruct *fp, FTMotionScript *ms
              * doesn't bleed in. */
             {
                 CALL_EVENT(FighterHitboxSlotResetEvent, fp->player, attack_id);
+#ifdef SSB_REMIX_PROBE
+                nativeRemixProbeHitboxReset(fp->player, attack_id);
+#endif
             }
 #endif
 
@@ -989,6 +1000,13 @@ void ftMainUpdateMotionEventsForwardEffect(GObj *fighter_gobj)
 
                     switch (ev_kind)
                     {
+#ifdef SSB_REMIX_PROBE
+                    /* Remix replays frame speed, direction and translation
+                     * commands while seeking an animation too. */
+                    case 52:
+                        nativeRemixProbeCommand(fighter_gobj, fp, ms);
+                        break;
+#endif
                     case nFTMotionEventEnd:
                     case nFTMotionEventSyncWait:
                     case nFTMotionEventAsyncWait:
@@ -3011,6 +3029,9 @@ void ftMainProcessHitCollisionStatsMain(GObj *fighter_gobj)
          * No listener = damage_lr keeps the vanilla value computed above. */
         {
             CALL_EVENT(FighterDamageDirectionApplyEvent, this_fp, attacker_fp, ft_attack_coll);
+#ifdef SSB_REMIX_PROBE
+            nativeRemixProbeDamageDirection(this_fp, attacker_fp, ft_attack_coll);
+#endif
         }
 #endif
 
@@ -4598,6 +4619,9 @@ void ftMainSetStatus(GObj *fighter_gobj, s32 status_id, f32 frame_begin, f32 ani
 #endif
     FTStruct *fp = ftGetStruct(fighter_gobj);
     intptr_t event_file_head;
+#ifdef SSB_REMIX_PROBE
+    nativeRemixProbeReset(fp);
+#endif
     FTAttributes *attr = fp->attr;
     FTStatusDesc *status_struct;
     FTOpeningDesc *opening_struct;

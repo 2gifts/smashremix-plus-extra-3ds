@@ -10,7 +10,12 @@
 #define RGB(r,g,b) ((((r)>>3)<<11)|(((g)>>2)<<5)|((b)>>3))
 static const uint16_t paper=RGB(244,237,213),gold=RGB(248,198,62),muted=RGB(167,165,151);
 static const uint16_t colors[4]={RGB(235,68,63),RGB(75,140,235),RGB(241,190,43),RGB(65,188,105)};
-static const char* names[12]={"MARIO","FOX","DONKEY KONG","SAMUS","LUIGI","LINK","YOSHI","C. FALCON","KIRBY","PIKACHU","JIGGLYPUFF","NESS"};
+#ifdef SSB_REMIX_PROBE
+#define FOX_SLOT_NAME "FALCO"
+#else
+#define FOX_SLOT_NAME "FOX"
+#endif
+static const char* names[12]={"MARIO",FOX_SLOT_NAME,"DONKEY KONG","SAMUS","LUIGI","LINK","YOSHI","C. FALCON","KIRBY","PIKACHU","JIGGLYPUFF","NESS"};
 static const char* stages[9]={"PEACH'S CASTLE","SECTOR Z","KONGO JUNGLE","PLANET ZEBES","HYRULE CASTLE","YOSHI'S ISLAND","DREAM LAND","SAFFRON CITY","MUSHROOM KINGDOM"};
 typedef struct {uint32_t w,h,offset;} Art;
 typedef struct {uint16_t color;uint8_t alpha,pad;} Pixel;
@@ -224,7 +229,12 @@ void nativeBottomDraw(uint16_t* target,const NativeBottomState* s,unsigned fps,u
         header(menuTitle(s->scene),"NINTENDO 64");
         image(BART_LOGO,111,44,98,98,gold,28);
         center(160,154,s->status==~0u?"LOADING GAME":s->scene==1||s->scene>=27&&s->scene<=45?"PRESS START":"A SELECT   /   B BACK",12,paper);
+#ifdef SSB_REMIX_PROBE
+        center(160,179,"FALCO TEST / SELECT FOX",8,gold);
+        center(160,194,"FULL REMIX PORT IN DEVELOPMENT",7,muted);
+#else
         center(160,181,"3D SLIDER ADJUSTS DEPTH",8,muted);
+#endif
     }
     if(errors){rect(0,198,320,12,RGB(88,34,23));center(160,201,"SD WRITE FAILED / TAP FPS",7,gold);}
     if(!audio){rect(0,198,320,12,RGB(88,34,23));center(160,201,"AUDIO NEEDS /3DS/DSPFIRM.CDC",7,gold);}

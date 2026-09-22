@@ -1185,7 +1185,12 @@ u32 dGMColScriptsScreenFlashDamageIce[/* */] =
 };
 
 // 0x8012DBD0
-GMColDesc dGMColScriptsDescs[/* */] =
+#ifdef SSB_REMIX_PROBE
+#define NATIVE_COL_SCRIPT_COUNT 99
+#else
+#define NATIVE_COL_SCRIPT_COUNT
+#endif
+GMColDesc dGMColScriptsDescs[NATIVE_COL_SCRIPT_COUNT] =
 {
 	{ NULL, 			    					 	  	  0, FALSE },
 	{ dGMColScriptsFighterComPlayer,    		 	  	  1, FALSE },

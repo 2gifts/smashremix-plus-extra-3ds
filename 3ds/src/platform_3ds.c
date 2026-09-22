@@ -25,7 +25,7 @@ volatile uint32_t ssb_test_active;
 volatile uint32_t native_test_touch;
 volatile uint32_t native_test_cstick_active;
 volatile int32_t native_test_cstick_x,native_test_cstick_y;
-#ifdef SSB_RELEASE
+#if defined(SSB_RELEASE) || defined(SSB_STANDALONE_PROBE)
 volatile uint32_t ssb_test_frame_limit;
 volatile uint32_t ssb_test_inputs;
 volatile uint32_t ssb_test_logging;
@@ -220,8 +220,10 @@ static void writeSave(const void* data){
     const char* current=NATIVE_SD_DIRECTORY "/save.bin";
     const char* backup=NATIVE_SD_DIRECTORY "/save.bak";
     if(remove(backup)!=0&&errno!=ENOENT)goto failed;
-    bool hadPrevious=rename(current,backup)==0;
-    if(!hadPrevious&&errno!=ENOENT)goto failed;
+    struct stat previous;
+    bool hadPrevious=stat(current,&previous)==0;
+    if(hadPrevious){if(rename(current,backup)!=0)goto failed;}
+    else if(errno!=ENOENT)goto failed;
     if(rename(NATIVE_SD_DIRECTORY "/save.tmp",current)!=0){
         if(hadPrevious)rename(backup,current);
         goto failed;

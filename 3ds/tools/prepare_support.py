@@ -15,6 +15,13 @@ def bridges():
         s=re.sub(r'^#include <ship/[^\n]+\n','',s,flags=re.M)
         s='#include "native_assets.h"\n'+s
         if name=='lbreloc_bridge':
+            animation_hook='static bool portRelocIsFighterFigatreeFile(u32 file_id)\n{'
+            if s.count(animation_hook)!=1:
+                raise ValueError('Unsupported BattleShip animation classifier; check the pinned dependency')
+            s=s.replace(animation_hook,
+                'extern "C" int nativeRelocIsFighterAnimation(unsigned int);\n'
+                'static bool portRelocIsFighterFigatreeFile(u32 file_id)\n{\n'
+                '    if (nativeRelocIsFighterAnimation(file_id)) return true;')
             a=s.index('static std::shared_ptr<RelocFile> portLoadRelocResource(')
             b=s.index('// All game-facing functions have C linkage',a)
             s=s[:a]+'''static std::shared_ptr<RelocFile> portLoadRelocResource(u32 file_id)

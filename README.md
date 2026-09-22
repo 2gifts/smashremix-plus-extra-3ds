@@ -2,7 +2,7 @@
 
 A native 3DS port **in development**, derived from [Smash 64 for New Nintendo 3DS](https://github.com/2gifts/smash64-3ds). The target is the complete [Smash Remix](https://github.com/JSsixtyfour/smashremix) base with [Smash Remix +EXTRA](https://github.com/joaorb64/smashremix-plus-extra), retaining the existing port's stereoscopic rendering, widescreen option, bottom-screen HUD, and control settings.
 
-**Remix gameplay does not run on 3DS yet. There is no playable Remix CIA available from this repository.** The original Smash 64 port remains available in its [own repository](https://github.com/2gifts/smash64-3ds).
+**The complete Remix +EXTRA port is not ready.** A local development CIA now runs Falco in the original Fox slot, with native movement code and imported move data. It is a fighter integration test, not the expanded roster or finished mod. The original Smash 64 port remains available in its [own repository](https://github.com/2gifts/smash64-3ds).
 
 ## Current progress
 
@@ -11,13 +11,15 @@ A native 3DS port **in development**, derived from [Smash 64 for New Nintendo 3D
 - Reproducible local reference-ROM build using your own US 1.0 ROM.
 - Expanded native asset loader with bounded caching for the larger mod catalogue.
 - Asset conversion checks, host regression tests, and an ARM11 asset diagnostic.
+- First native fighter fixture: Falco model, animations, motion scripts, Phantasm and Firebird adjustments.
+- Expanded sound-bank conversion with validated pointers and unchanged sample payloads.
 - Separate application identity and save directory for the eventual 3DS build.
 
 Remix adds N64 assembly code as well as characters and assets. Its fighter registry, new moves, engine patches, menus, and save layout still need native integration. See [porting status](docs/PORTING-STATUS.md) for what is tested and what remains.
 
 ## Building and contributing
 
-See the [development build guide](docs/BUILD-3DS.md). The current tools produce a reference N64 ROM and diagnostics; they do not produce a playable Remix CIA. The release packager checks this explicitly.
+See the [development build guide](docs/BUILD-3DS.md) to build the reference mod, run checks, or build the Falco test CIA from your own assets. Its HOME Menu label is **Remix Falco test**; select **Fox** to test Falco. The full-mod release packager remains disabled while integration is unfinished.
 
 The target hardware is **New Nintendo 3DS / New 3DS XL**. Gameplay performance and stereo compatibility for Remix are not established yet.
 

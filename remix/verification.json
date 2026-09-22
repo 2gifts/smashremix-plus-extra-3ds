@@ -1,6 +1,6 @@
 {
-  "native_gameplay_playable": false,
-  "playable_cia_available": false,
+  "full_mod_playable": false,
+  "full_mod_cia_available": false,
   "sources": {
     "port": {
       "repository": "https://github.com/2gifts/smash64-3ds",
@@ -427,5 +427,137 @@
     "3ds/src/native_assets.cpp": "de9e583f538f3ee07bb0eae00c65e71c04bc30383180e4d492700bb0a4b649a4",
     "remix/tests/asset_probe.cpp": "62fdc6cffc842e32890f24172e068c69987585495ec72902fbb0d907fc12249c"
   },
-  "scope": "Reference builds, raw asset loading, and inherited host tests only. Native Remix fighter and engine integration, relocation fixes, gameplay, stereo validation, and hardware performance work remain."
+  "scope": "Reference builds, raw asset loading, and inherited host tests only. Native Remix fighter and engine integration, relocation fixes, gameplay, stereo validation, and hardware performance work remain.",
+  "falco_development_fixture": {
+    "scope": "Falco replaces Fox; vanilla menus, stages and other fighters; no +EXTRA roster",
+    "complete_falco_parity": false,
+    "additional_roster_slot": false,
+    "cia_available_locally": true,
+    "published_binary": false,
+    "title_id": "000400000ff64200",
+    "sd_directory": "/3ds/ssb64-remix-falco-test/",
+    "elf_sha256": "87c4158392df26fb3ff5b4661421ea50edab75995ed91f07e8c6ab136e4a3fb4",
+    "cia_sha256": "4af0f7682e1cbd68ac03864e45dad017a72ab1c52b555bf29dbd32e6f3a5956a",
+    "cia_bytes": 35529664,
+    "main_motions": 219,
+    "menu_motions": 15,
+    "motion_words": 813,
+    "motion_pointer_tokens": 10,
+    "validated_asset_closure": 179,
+    "asset_pack_sha256": "54ab697beab4c230ccb3b45fd8b3fe2a0b0d1b4b2469b72d5d75da28e545520a",
+    "unresolved_relocations_in_fixture": [],
+    "emulator_move_checks": [
+      {
+        "case": "ground Phantasm uses native dash callback",
+        "passed": true
+      },
+      {
+        "case": "air Phantasm uses native dash callback",
+        "passed": true
+      },
+      {
+        "case": "jab animation and bytecode",
+        "passed": true
+      },
+      {
+        "case": "down smash animation and bytecode",
+        "passed": true
+      },
+      {
+        "case": "reflector start and loop",
+        "passed": true
+      },
+      {
+        "case": "Firebird native launch",
+        "passed": true
+      },
+      {
+        "case": "grab bytecode and relocated throw records",
+        "passed": true
+      },
+      {
+        "case": "taunt animation and bytecode",
+        "passed": true
+      },
+      {
+        "case": "down aerial animation and bytecode",
+        "passed": true
+      }
+    ],
+    "emulator_test_elf_sha256": "87c4158392df26fb3ff5b4661421ea50edab75995ed91f07e8c6ab136e4a3fb4",
+    "sd_errors_during_move_checks": 0,
+    "package_integrity_verified": true,
+    "normal_startup_defaults_verified": {
+      "ssb_test_frame_limit": "0x0",
+      "ssb_test_inputs": "0x0",
+      "ssb_test_logging": "0x0",
+      "ssb_test_metrics": "0x0",
+      "ssb_test_boot_gate": "0x1",
+      "native_test_no_capture": "0x1",
+      "native_test_slider": "0xbf800000",
+      "ssb_test_single_stage": "0xffffffff",
+      "ssb_test_start_scene": "0xffffffff",
+      "native_test_bottom_disabled": "0x0",
+      "native_bottom_page": "0x0",
+      "native_test_touch": "0x0",
+      "native_widescreen": "0x0",
+      "native_test_magnifier_capture": "0x0",
+      "native_test_dump_textures": "0x0",
+      "native_capture_requested": "0x0",
+      "native_test_uncached_state": "0x0",
+      "native_test_cstick_active": "0x0",
+      "native_test_cstick_x": "0x0",
+      "native_test_cstick_y": "0x0",
+      "native_tap_jump_disabled": "0x0",
+      "native_cstick_enabled": "0x0"
+    },
+    "real_console_performance_measured": false,
+    "remaining": "Expanded roster, menus, stages, mod engine patches, Kirby copy ability, AI parity, music and save integration remain unfinished.",
+    "pristine_emulator_startup_verified": true,
+    "four_fighter_stereo_match_to_results_verified": true,
+    "results_scene_observed": 24,
+    "results_frame_observed": 7737,
+    "sd_errors_after_results": 0,
+    "emulator_invalid_memory_accesses_detected": false,
+    "stereo_capture_eyes_differ": true
+  },
+  "expanded_audio_conversion": {
+    "source_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
+    "sound_records": 1516,
+    "samples": 1516,
+    "fgm_table_count": 1667,
+    "fgm_microcode_count": 1924,
+    "serialized_bank_verified": {
+      "sound_records": 1516,
+      "wave_records": 1516
+    },
+    "sample_payloads_verified": 1516,
+    "files": {
+      "B1_sounds2_ctl.bin": {
+        "bytes": 277576,
+        "sha256": "25b6d5f173bc3a13de0558d7fa7f03afdaeff0aea2e6209af02e1668a0bd266e"
+      },
+      "B1_sounds2_tbl.bin": {
+        "bytes": 14300704,
+        "sha256": "0311bb1f3f441c9066d8cb21aa98bb8f2cd20ca4c5363a50cdfa70f818cfefd9"
+      },
+      "fgm_tbl.bin": {
+        "bytes": 39176,
+        "sha256": "67dfc0c4e4e358492cdefcf310b7bb8e22a9c88727fc763b43432d3a7f05363e"
+      },
+      "fgm_ucd.bin": {
+        "bytes": 53536,
+        "sha256": "708c0babf67b97445f8fca3c9967233347e8804c2a86be1735349835b7dc7e52"
+      }
+    }
+  },
+  "fighter_import_host_tests": {
+    "passed": true,
+    "tests": 7,
+    "scope": "motion graph pointers, unsupported commands, empty animation ID, split audio bank, malformed ranges and sample preservation"
+  },
+  "save_writer_host_tests": {
+    "passed": true,
+    "scope": "first save, backup rotation, failed commit rollback, retry"
+  }
 }

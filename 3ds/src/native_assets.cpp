@@ -1,4 +1,7 @@
 #include "native_assets.h"
+/* Expanded animation IDs have no entry in the original filename catalogue.
+ * The native roster supplies their type explicitly when one is installed. */
+extern "C" __attribute__((weak)) int nativeRelocIsFighterAnimation(unsigned int) { return 0; }
 #include "native_perf.h"
 #include <cstdio>
 #include <cstdlib>

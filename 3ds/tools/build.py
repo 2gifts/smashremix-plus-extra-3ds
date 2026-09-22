@@ -67,6 +67,7 @@ def game_flags():
             '-DNON_EQUIVALENT=1', '-DAVOID_UB=1', '-DPORT=1',
             '-DF3DEX_GBI_2=1', '-D_LANGUAGE_C', '-DN_MICRO=1',
             '-D__3DS__', '-D_USE_MATH_DEFINES',
+            *(['-DSSB_REMIX_PROBE'] if os.environ.get('SSB_REMIX_PROBE') == 'falco' else []),
             '-DosGetTime=ssb_osGetTime',
             '-D__assert=ssb_assert',
             '-Wno-unknown-pragmas', '-Wno-implicit-int', '-Wno-shift-negative-value',

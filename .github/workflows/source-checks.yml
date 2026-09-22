@@ -26,3 +26,5 @@ jobs:
           PY
       - name: Test expanded native asset loader without game assets
         run: python remix/tools/test_asset_loader.py --compiler g++
+      - name: Test motion and audio conversion without game assets
+        run: python remix/tools/test_fighter_import.py

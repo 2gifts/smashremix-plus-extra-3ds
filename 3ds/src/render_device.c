@@ -17,7 +17,7 @@ int uLoc_projection,uLoc_modelView;
 int uLoc_eye;
 extern volatile uint32_t ssb_frame_count;
 volatile uint32_t native_capture_requested;
-#ifdef SSB_RELEASE
+#if defined(SSB_RELEASE) || defined(SSB_STANDALONE_PROBE)
 volatile uint32_t native_test_no_capture=1;
 #else
 volatile uint32_t native_test_no_capture;

@@ -116,6 +116,9 @@ void ftFoxSpecialHiHoldInitStatusVars(GObj *fighter_gobj)
 {
     FTStruct *fp = ftGetStruct(fighter_gobj);
     fp->status_vars.fox.specialhi.launch_delay = FTFOX_FIREFOX_LAUNCH_DELAY;
+#ifdef SSB_REMIX_PROBE
+    if (fp->fkind == nFTKindFox) fp->status_vars.fox.specialhi.launch_delay = 22;
+#endif
 }
 
 // 0x8015BFCC
@@ -315,6 +318,9 @@ void ftFoxSpecialHiDecideSetStatus(GObj *fighter_gobj)
             ftFoxSpecialHiInitStatusVars(fp);
 
             fp->physics.vel_ground.x = 115.0F;
+#ifdef SSB_REMIX_PROBE
+            if (fp->fkind == nFTKindFox) fp->physics.vel_ground.x = 98.0f;
+#endif
             fp->status_vars.fox.specialhi.angle = syUtilsArcTan2(-fp->coll_data.floor_angle.x * fp->lr, fp->coll_data.floor_angle.y);
             return;
         }
@@ -345,6 +351,12 @@ void ftFoxSpecialAirHiSetStatusFromGround(GObj *fighter_gobj)
 
     fp->physics.vel_air.x = (__cosf(fp->status_vars.fox.specialhi.angle) * FTFOX_FIREFOX_VEL * fp->lr);
     fp->physics.vel_air.y = (__sinf(fp->status_vars.fox.specialhi.angle) * FTFOX_FIREFOX_VEL);
+#ifdef SSB_REMIX_PROBE
+    if (fp->fkind == nFTKindFox) {
+        fp->physics.vel_air.x = __cosf(fp->status_vars.fox.specialhi.angle) * 98.0f * fp->lr;
+        fp->physics.vel_air.y = __sinf(fp->status_vars.fox.specialhi.angle) * 98.0f;
+    }
+#endif
 
     ftFoxSpecialHiUpdateModelPitch(fighter_gobj);
 

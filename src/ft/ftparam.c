@@ -1,5 +1,8 @@
 #include <string.h>
 #include <ft/fighter.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_probe.h"
+#endif
 #include <it/item.h>
 #include <sc/scene.h>
 #include <ft/ftcommondata.h>
@@ -554,6 +557,9 @@ void ftParamClearAttackCollAll(GObj *fighter_gobj)
         FTAttackColl *attack_coll = &fp->attack_colls[i];
 
         attack_coll->attack_state = nGMAttackStateOff;
+#ifdef SSB_REMIX_PROBE
+        nativeRemixProbeHitboxReset(fp->player, i);
+#endif
     }
     fp->is_attack_active = FALSE;
 }

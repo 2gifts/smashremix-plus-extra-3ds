@@ -39,6 +39,10 @@ void port_submit_display_list(void* dl) {
 static void boot(void* unused) {syMainLoop();}
 void ssb_game_init(void) {
     port_fighter_seed_vanilla();
+#ifdef SSB_REMIX_PROBE
+    extern void nativeRemixProbeInit(void);
+    nativeRemixProbeInit();
+#endif
     port_coroutine_init_main();
     PortCoroutine* co=port_coroutine_create(boot,0,1024*1024);
     if(!co)abort();

@@ -181,7 +181,11 @@ typedef struct SYAudioConfig
 
 extern SYAudioSettings dSYAudioPublicSettings;
 #ifdef PORT
+#ifdef SSB_REMIX_PROBE
+extern u8 gSYAudioHeapBuffer[0x200000];
+#else
 extern u8 gSYAudioHeapBuffer[0x100000];
+#endif
 #elif defined(REGION_US)
 extern u8 gSYAudioHeapBuffer[0x56000];
 #else

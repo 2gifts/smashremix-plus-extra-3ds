@@ -5,22 +5,34 @@ import sys
 import shutil
 import struct
 import argparse
+import os
 from build import ROOT,UPSTREAM,ARM,SDK,BIN,OUT,ARCH,GCC_VERSION,tool,run,game_flags
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--render',action='store_true');ap.add_argument('--release',action='store_true');args=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--render',action='store_true');ap.add_argument('--release',action='store_true')
+    ap.add_argument('--standalone-probe', action='store_true', help='Start the Falco development fixture without a debugger')
+    args=ap.parse_args()
     if args.release:args.render=True
+    probe = os.environ.get('SSB_REMIX_PROBE') == 'falco'
+    if probe and args.release:
+        raise ValueError('The Falco integration fixture is not a release build')
+    if args.standalone_probe:
+        if not probe or args.release:
+            raise ValueError('--standalone-probe requires SSB_REMIX_PROBE=falco and is not a release')
+        args.render=True
     from prepare_bottom_assets import main as prepare_bottom
     prepare_bottom()
     from prepare_reloc_index import main as prepare_index
     prepare_index()
-    variant='release' if args.release else 'graphics' if args.render else 'bringup'
+    variant='falco-test' if args.standalone_probe else 'release' if args.release else 'graphics' if args.render else 'bringup'
     out=OUT/variant;out.mkdir(parents=True,exist_ok=True)
     objects=[]
     sources=[ROOT/'src/game_host.c',ROOT/'src/vanilla_policy.c',ROOT/'src/coroutine.c',ROOT/'src/platform_3ds.c',ROOT/'src/performance.c',ROOT/'src/save_layout_check.c',ROOT/'src/stereo_camera.c']
     sources += [ROOT/'src/display_settings.c',ROOT/'src/io_worker.c']
     sources += [ROOT/'src/control_settings.c',ROOT/'src/control_input.c',ROOT/'src/control_game.c']
     sources += [ROOT/'src/bottom_game.c',ROOT/'src/bottom_draw.c',ROOT/'src/bottom_3ds.c',ROOT/'src/wallpaper.c']
+    if probe:
+        sources.append(ROOT/'src/remix_falco_probe.c')
     if args.render:
         from prepare_render import main as prepare
         prepare()
@@ -31,7 +43,7 @@ def main():
     else:sources.append(ROOT/'src/bringup_render.c')
     for src in sources:
         obj=out/(src.stem+'.o')
-        if src.stem in ['game_host','vanilla_policy','render_bridge','gfx_pc','save_layout_check','stereo_camera','bottom_game','wallpaper','control_game']:
+        if src.stem in ['game_host','vanilla_policy','render_bridge','gfx_pc','save_layout_check','stereo_camera','bottom_game','wallpaper','control_game','remix_falco_probe']:
             flags=game_flags()
         else:
             flags=[*ARCH,'-std=gnu11','-O2','-g','-D__3DS__','-DSSB_BRINGUP',
@@ -40,6 +52,8 @@ def main():
                    '-I'+str(SDK/'libctru/include'),'-I'+str(UPSTREAM/'port'),
                    '-isystem',str(ARM/'arm-none-eabi/include')]
         flags += ['-I'+str(ROOT/'include'),'-I'+str(ROOT/'renderer')]
+        if probe:flags += ['-DSSB_REMIX_PROBE','-I'+str(ROOT.parent/'remix/build/fighter-probe')]
+        if args.standalone_probe:flags += ['-DSSB_STANDALONE_PROBE']
         if args.render:flags += ['-DTARGET_N3DS','-DSSB_GRAPHICS']
         if args.release:flags += ['-DSSB_RELEASE']
         run([BIN/'clang.exe',*flags,'-c',src,'-o',obj]);objects.append(obj)
@@ -79,6 +93,8 @@ def main():
     metadata=bytearray(0x36c0);metadata[:4]=b'SMDH'
     for lang in range(16):
         labels=[(0,'Smash 64' if args.release else 'SSB64 development'),(0x80,'Native New Nintendo 3DS port' if args.release else 'Engine and renderer validation build'),(0x180,'Decompilation and port contributors')]
+        if probe:
+            labels=[(0,'Remix Falco test'),(0x80,'Falco in Fox slot - integration test'),(0x180,'Smash Remix / decomp / port contributors')]
         for offset,text in labels:
             text=text.encode('utf-16le');base=8+lang*0x200+offset
             metadata[base:base+len(text)]=text

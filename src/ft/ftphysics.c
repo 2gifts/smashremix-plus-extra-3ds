@@ -1,4 +1,7 @@
 #include <ft/fighter.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_probe.h"
+#endif
 
 // 0x800D87D0
 void ftPhysicsSetGroundVelTransferAir(GObj *fighter_gobj)
@@ -186,6 +189,11 @@ void ftPhysicsApplyGroundVelTransN(GObj *fighter_gobj)
 
     fp->physics.vel_ground.x = ((fp->joints[nFTPartsJointTransN]->translate.vec.f.z - fp->anim_vel.z) * DObjGetStruct(fighter_gobj)->scale.vec.f.z);
     fp->physics.vel_ground.z = ((fp->joints[nFTPartsJointTransN]->translate.vec.f.x - fp->anim_vel.x) * -fp->lr * DObjGetStruct(fighter_gobj)->scale.vec.f.x);
+#ifdef SSB_REMIX_PROBE
+    float remix_scale = nativeRemixProbeTranslation(fp);
+    fp->physics.vel_ground.x *= remix_scale;
+    fp->physics.vel_ground.z *= remix_scale;
+#endif
 
     if ((fp->lr * DObjGetStruct(fighter_gobj)->rotate.vec.f.y) < 0.0F)
     {
@@ -427,6 +435,11 @@ void ftPhysicsGetAirVelTransN(FTStruct *fp, f32 *z, f32 *y, f32 *x) // Ness / Yo
     {
     f32 anim_vel_z = (transn_joint->translate.vec.f.z - fp->anim_vel.z) * fp->lr * topn_joint->scale.vec.f.z;
     f32 anim_vel_y = (transn_joint->translate.vec.f.y - fp->anim_vel.y) * topn_joint->scale.vec.f.y;
+#ifdef SSB_REMIX_PROBE
+    float remix_scale = nativeRemixProbeTranslation(fp);
+    anim_vel_z *= remix_scale;
+    anim_vel_y *= remix_scale;
+#endif
     f32 cos = cosf(transn_joint->rotate.vec.f.z);
     f32 sin = __sinf(transn_joint->rotate.vec.f.z);
 
@@ -441,6 +454,9 @@ void ftPhysicsGetAirVelTransN(FTStruct *fp, f32 *z, f32 *y, f32 *x) // Ness / Yo
     if (x != NULL)
     {
         *x = (transn_joint->translate.vec.f.x - fp->anim_vel.x) * -fp->lr * topn_joint->scale.vec.f.x;
+#ifdef SSB_REMIX_PROBE
+        *x *= remix_scale;
+#endif
     }
     }
 }
