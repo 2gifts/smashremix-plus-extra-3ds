@@ -82,6 +82,71 @@ TABLE_TEMPLATES = {
         0x03e00008, 0x27bd0038),
 }
 
+# A forward, branch-likely switch on fighter kind selects a copy-action ID
+# for Kirby variants and the ordinary grounded action otherwise. The branch
+# targets, delay slots, helper call, and status flags must all match.
+FKIND_GROUND_BRANCH = (
+    0x27bdffc8, 0xafbf001c, 0xafa40038, 0x8c840084,
+    0x0c037ba6, 0xafa40034, 0x8fa20034, 0x8fa40038,
+    0x8c460008, None, 0x50a60005, None, None,
+    0x50a60002, None, None, 0x8c860078, 0x3c073f80,
+    0x340e0001, 0x0c039bc9, 0xafae0010, 0x8fbf001c,
+    0x27bd0038, 0x03e00008, 0x00000000,
+)
+
+FKIND_SELECT_BRANCH = (
+    0x27bdffd8, 0xafbf001c, 0xafa40028, 0x8c840084,
+    None, 0xafa40024, 0x8fa40028, 0x240f0002,
+    0x8c860084, 0x8cc60008, None, 0x50a60002,
+    None, None, 0x8c860078, 0x3c073f80,
+    0x0c039bc9, 0xafaf0010, 0x8fbf001c,
+    0x03e00008, 0x27bd0028,
+)
+
+
+def decode_fkind_branch(address, actual):
+    if len(actual) != len(FKIND_GROUND_BRANCH) or any(
+            expected is not None and word != expected
+            for word, expected in zip(actual, FKIND_GROUND_BRANCH)):
+        return None
+    for index in (9, 11, 12, 14):
+        if actual[index] & 0xffff0000 != 0x34050000:
+            return None
+    if actual[15] & 0xffff0000 != 0x24050000:
+        return None
+    kinds = (actual[9] & 0xffff, actual[12] & 0xffff)
+    copy_status = actual[11] & 0xffff
+    normal_status = actual[15] & 0xffff
+    if (kinds[0] == kinds[1] or any(kind > 255 for kind in kinds) or
+            actual[14] & 0xffff != copy_status or
+            not 0xdc <= copy_status < 0x4000 or
+            not 0xdc <= normal_status < 0x4000):
+        return None
+    return {'address': f'{address:08x}', 'template': 'fkind_ground_branch',
+            'status_id': normal_status, 'status_conditional_id': copy_status,
+            'conditional_fkind_ids': list(kinds), 'kinetics': 'ground',
+            'clamp_air_speed': False, 'preserve_flags': 1}
+
+
+def decode_fkind_select_branch(address, actual):
+    if len(actual) != len(FKIND_SELECT_BRANCH) or any(
+            expected is not None and word != expected
+            for word, expected in zip(actual, FKIND_SELECT_BRANCH)):
+        return None
+    kinetics = {0x0c037ba6: 'ground', 0x0c037bb2: 'air'}.get(actual[4])
+    if kinetics is None or any(actual[index] & 0xffff0000 != 0x34050000
+                               for index in (10, 12, 13)):
+        return None
+    kind = actual[10] & 0xffff
+    conditional = actual[12] & 0xffff
+    fallback = actual[13] & 0xffff
+    if kind > 255 or not 0xdc <= conditional < 0x4000 or not 0xdc <= fallback < 0x4000:
+        return None
+    return {'address': f'{address:08x}', 'template': 'fkind_select_branch',
+            'status_id': fallback, 'status_conditional_id': conditional,
+            'conditional_fkind_ids': [kind], 'kinetics': kinetics,
+            'clamp_air_speed': False, 'preserve_flags': 2}
+
 
 def decode_status_table(ref, address, actual):
     for name, pattern in TABLE_TEMPLATES.items():
@@ -207,7 +272,10 @@ def decode_transition(ref, address):
                 'kinetics': 'ground' if name.startswith('ground') else 'air',
                 'clamp_air_speed': name.startswith('air'),
                 'preserve_flags': 1 if name == 'ground_fixed_preserve_hit' else 0x800}
-    return decode_status_table(ref, address, actual) or decode_straightline(ref, address)
+    return (decode_status_table(ref, address, actual) or
+            decode_fkind_branch(address, actual) or
+            decode_fkind_select_branch(address, actual) or
+            decode_straightline(ref, address))
 
 
 def extract_native_transitions(ref, families):
@@ -224,7 +292,9 @@ def extract_native_transitions(ref, families):
         transition = transitions[address]
         if transition is None:
             continue
-        if transition['template'] not in ('decoded_straightline', *TABLE_TEMPLATES):
+        if transition['template'] not in ('decoded_straightline', 'fkind_ground_branch',
+                                          'fkind_select_branch',
+                                          *TABLE_TEMPLATES):
             # Keep the hand-checked examples as an independent semantic
             # oracle for the more general instruction decoder.
             decoded = decode_straightline(ref, address)
@@ -253,6 +323,11 @@ def render_native_code(manifest):
             values = ', '.join(str(value) for value in row['status_table'])
             lines += [f'static const u16 nativeRemixStatusTable_{address}[] = {{{values}}};']
             status = f'nativeRemixStatusTable_{address}[fp->status_id - {row["status_base"]}]'
+        elif 'status_conditional_id' in row:
+            kinds = row['conditional_fkind_ids']
+            condition = ' || '.join(f'fp->fkind == {kind}' for kind in kinds)
+            status = (f'(({condition}) ? '
+                      f'{row["status_conditional_id"]} : {row["status_id"]})')
         else:
             status = (str(row['status_id']) if row['status_id'] is not None else
                       f'fp->status_id {"+" if row["status_delta"] > 0 else "-"} {abs(row["status_delta"])}')

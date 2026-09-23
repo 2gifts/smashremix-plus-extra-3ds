@@ -22,6 +22,18 @@ STATUS_PLAY_CLEAR = (
     0x8fbf001c, 0x03e00008, 0x27bd0020,
 )
 
+# The four compiled Knuckles dive variants share this exact animation-end
+# transition: enter the air action, play its events, reset two move variables,
+# arm the third, and clear the fast-fall bit. Only the action ID varies.
+DIVE_AIR_INITIAL = (
+    0x27bdffe0, 0xafbf0014, 0x340e0008, 0xafa40020,
+    0xafae0010, None, 0x34060000, 0x0c039bc9,
+    0x3c073f80, 0x0c03820c, 0x8fa40020, 0x8fa40020,
+    0x8c840084, 0xac80017c, 0xac800180, 0x34030001,
+    0xac830184, 0x9083018d, 0x340e0007, 0x006e1824,
+    0xa083018d, 0x8fbf0014, 0x03e00008, 0x27bd0020,
+)
+
 
 def exact_anim_end_wrapper(ref, address, target):
     """Accept only the observed no-side-effect call shapes."""
@@ -60,6 +72,24 @@ def decode_status_play_clear(ref, address):
     return {'address': f'{address:08x}', 'status_id': status}
 
 
+def decode_dive_air_initial(ref, address):
+    words = ref.words(address, 128)
+    length = first_return_words(words)
+    if length != len(DIVE_AIR_INITIAL):
+        return None
+    actual = words[:length]
+    if any(want is not None and got != want
+           for got, want in zip(actual, DIVE_AIR_INITIAL)):
+        return None
+    if actual[5] & 0xffff0000 != 0x34050000:
+        return None
+    status = actual[5] & 0xffff
+    if not 0xdc <= status < 0x4000:
+        raise ValueError(f'Invalid compiled dive status {status} at {address:08x}')
+    return {'address': f'{address:08x}', 'status_id': status,
+            'template': 'dive_air_initial'}
+
+
 def extract_native_anim_ends(ref, worklist):
     if worklist['reference_rom_sha256'] != sha256(ref.path):
         raise ValueError('Action worklist and pinned reference ROM differ')
@@ -77,7 +107,8 @@ def extract_native_anim_ends(ref, worklist):
         if target is None or target < ref.ram_base or not exact_anim_end_wrapper(ref, address, target):
             continue
         if target not in accepted_targets:
-            accepted_targets[target] = decode_status_play_clear(ref, target)
+            accepted_targets[target] = (decode_status_play_clear(ref, target) or
+                                        decode_dive_air_initial(ref, target))
         if accepted_targets[target] is None:
             continue
         wrappers.append({'address': f'{address:08x}', 'symbols': row['symbols'],
@@ -96,14 +127,21 @@ def extract_native_anim_ends(ref, worklist):
 def render_native_code(manifest):
     lines = ['/* Exact compiled animation-end callback and status templates. */']
     for row in manifest['transitions']:
+        dive = row.get('template') == 'dive_air_initial'
         lines += [f'static void nativeRemixAnimStatus_{row["address"]}(GObj *fighter_gobj) {{',
                   '    FTStruct *fp = ftGetStruct(fighter_gobj);',
-                  f'    ftMainSetStatus(fighter_gobj, {row["status_id"]}, 0.0F, 1.0F, FTSTATUS_PRESERVE_HIT);',
+                  f'    ftMainSetStatus(fighter_gobj, {row["status_id"]}, 0.0F, 1.0F, '
+                  f'{"FTSTATUS_PRESERVE_FASTFALL" if dive else "FTSTATUS_PRESERVE_HIT"});',
                   '    ftMainPlayAnimEventsAll(fighter_gobj);',
                   '    _Static_assert(sizeof(fp->status_vars) >= 3 * sizeof(s32),',
                   '                   "Three compiled move variables need storage");',
-                  '    memset(&fp->status_vars, 0, 3 * sizeof(s32));',
-                  '}', '']
+                  '    memset(&fp->status_vars, 0, 3 * sizeof(s32));']
+        if dive:
+            lines += ['    const s32 dive_armed = 1;',
+                      '    memcpy((u8*)&fp->status_vars + 2 * sizeof(s32),',
+                      '           &dive_armed, sizeof(dive_armed));',
+                      '    fp->is_fastfall = FALSE;']
+        lines += ['}', '']
     for row in manifest['wrappers']:
         lines += [f'void {row["native"]}(GObj *fighter_gobj) {{',
                   f'    ftAnimEndCheckSetStatus(fighter_gobj, '

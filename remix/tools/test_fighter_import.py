@@ -30,9 +30,11 @@ from native_hit_sound_patches import extract_hit_sounds, render_native_rows as r
 from native_entry_patches import extract_entry_effects, render_native_rows as render_entry_effects
 from classify_action_callbacks import classify as classify_action_callbacks
 from native_transition_templates import (TEMPLATES, SHARED_TEMPLATES, TABLE_TEMPLATES,
+                                         FKIND_GROUND_BRANCH, FKIND_SELECT_BRANCH,
                                          decode_transition, extract_native_transitions,
                                          render_native_code)
-from native_anim_end_templates import (STATUS_PLAY_CLEAR, extract_native_anim_ends,
+from native_anim_end_templates import (STATUS_PLAY_CLEAR, DIVE_AIR_INITIAL,
+                                       decode_dive_air_initial, extract_native_anim_ends,
                                        render_native_code as render_anim_end_code)
 from native_straightline_transitions import decode_straightline
 
@@ -46,6 +48,76 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_compiled_fighter_kind_select_supports_air_and_ground(self):
+        for kinetics, helper in (('air', 0x0c037bb2), ('ground', 0x0c037ba6)):
+            with self.subTest(kinetics=kinetics):
+                words = list(FKIND_SELECT_BRANCH)
+                for index, value in ((4, helper), (10, 0x34050044),
+                                     (12, 0x340500e5), (13, 0x3405019f)):
+                    words[index] = value
+                ref = SimpleNamespace(words=lambda address, count:
+                                      (words + [0] * count)[:count])
+                row = decode_transition(ref, 0x80500000)
+                self.assertEqual(row['kinetics'], kinetics)
+                self.assertEqual(row['conditional_fkind_ids'], [68])
+                self.assertEqual(row['status_conditional_id'], 0xe5)
+                self.assertEqual(row['status_id'], 0x19f)
+                native = render_native_code({'transitions': [row], 'wrappers': []})
+                self.assertIn('fp->fkind == 68', native)
+                self.assertIn('? 229 : 415', native)
+                for index, replacement in ((4, 0x0c037ba7),
+                                           (11, 0x50a60003),
+                                           (17, 0xafa00010)):
+                    with self.subTest(instruction=index):
+                        original = words[index]
+                        words[index] = replacement
+                        self.assertIsNone(decode_transition(ref, 0x80500000))
+                        words[index] = original
+
+    def test_compiled_fighter_kind_branch_translates_copy_status(self):
+        words = list(FKIND_GROUND_BRANCH)
+        for index, value in ((9, 0x34050008), (11, 0x34050142),
+                             (12, 0x34050030), (14, 0x34050142),
+                             (15, 0x240500e1)):
+            words[index] = value
+        ref = SimpleNamespace(words=lambda address, count:
+                              (words + [0] * count)[:count])
+        row = decode_transition(ref, 0x80500000)
+        self.assertEqual(row['conditional_fkind_ids'], [8, 48])
+        self.assertEqual(row['status_conditional_id'], 0x142)
+        self.assertEqual(row['status_id'], 0xe1)
+        code = render_native_code({'transitions': [row], 'wrappers': []})
+        self.assertIn('fp->fkind == 8 || fp->fkind == 48', code)
+        self.assertIn('? 322 : 225', code)
+        for index, replacement in ((10, 0x50a60004),  # Wrong branch target.
+                                   (14, 0x34050143),  # Copy paths disagree.
+                                   (18, 0x340e0000)):  # Status flag changed.
+            with self.subTest(instruction=index):
+                original = words[index]
+                words[index] = replacement
+                self.assertIsNone(decode_transition(ref, 0x80500000))
+                words[index] = original
+
+    def test_shared_dive_animation_end_transition_is_fail_closed(self):
+        words = [0x340500e7 if word is None else word
+                 for word in DIVE_AIR_INITIAL]
+        ref = SimpleNamespace(words=lambda address, count:
+                              (words + [0] * count)[:count])
+        row = decode_dive_air_initial(ref, 0x80500000)
+        self.assertEqual(row['status_id'], 0xe7)
+        code = render_anim_end_code({'transitions': [row], 'wrappers': []})
+        self.assertIn('FTSTATUS_PRESERVE_FASTFALL', code)
+        self.assertIn('fp->is_fastfall = FALSE;', code)
+        self.assertIn('const s32 dive_armed = 1;', code)
+        for index, replacement in ((2, 0x340e0001),  # Wrong status flags.
+                                   (16, 0xac800184),  # Lost armed variable.
+                                   (20, 0xa083018c)):  # Wrong fighter flag.
+            with self.subTest(instruction=index):
+                original = words[index]
+                words[index] = replacement
+                self.assertIsNone(decode_dive_air_initial(ref, 0x80500000))
+                words[index] = original
+
     def test_compiled_status_table_transitions_decode_shared_pattern(self):
         for name, pattern in TABLE_TEMPLATES.items():
             with self.subTest(template=name):
