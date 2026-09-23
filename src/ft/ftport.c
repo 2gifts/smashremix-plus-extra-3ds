@@ -27,6 +27,7 @@
 #include "fighter_registry.h"
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_roster.h"
+extern s32 nativeRemixEntryEffectKind(unsigned fkind);
 #endif
 
 /* Per-character status descs (used as the ft_data row's special_descs). */
@@ -75,7 +76,8 @@ void ftPortVanillaEntryMakeEffect(FTStruct *fp)
 {
     GObj *boss_target_gobj;
 #ifdef SSB_REMIX_PROBE
-    const s32 effect_kind = nativeRemixParentKind(fp->fkind);
+    const s32 imported_kind = nativeRemixEntryEffectKind(fp->fkind);
+    const s32 effect_kind = (imported_kind >= 0) ? imported_kind : nativeRemixParentKind(fp->fkind);
 #else
     const s32 effect_kind = fp->fkind;
 #endif

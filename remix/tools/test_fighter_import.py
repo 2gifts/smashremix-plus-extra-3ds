@@ -25,6 +25,7 @@ from native_results_patches import (extract_victory_bgm, extract_winner_fgm,
                                     render_native_rows as render_victory_bgm,
                                     render_winner_fgm_rows)
 from native_crowd_patches import extract_crowd_chants, render_native_rows as render_crowd_chants
+from native_entry_patches import extract_entry_effects, render_native_rows as render_entry_effects
 
 
 class WordReference:
@@ -36,6 +37,45 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_entry_effect_pointer_family_reuses_vanilla_and_lists_custom_code(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            root = Path(dirname)
+            (root / 'src').mkdir()
+            (root / 'src/Character.asm').write_text('''
+                add_to_table(entry_script, id.{name}, id.{parent}, 0x4)
+                scope get_entry_script_: {
+            ''')
+            base = 0x80400000
+            rom = bytearray(0x500)
+            for fkind in range(27):
+                pointer = {1: 0x8013dc9c, 3: 0x8013dcbc}.get(fkind, 0x8013dd68)
+                struct.pack_into('>I', rom, 0x100 + 4 * fkind, pointer)
+            path = root / 'reference.z64'
+            path.write_bytes(rom)
+            ref = SimpleNamespace(path=path, rom=rom, rom_base=0, ram_base=base,
+                                  symbols={'Character.entry_script.table': base + 0x100,
+                                           'Marth.marth_entry_routine_': base + 0x300},
+                                  words=lambda address, count: [0x27bdffe0] if
+                                  address == base + 0x300 and count == 1 else
+                                  (_ for _ in ()).throw(ValueError('unmapped')))
+            fighters = [{'name': name, 'fkind': fkind,
+                         'tables': {'entry_script': list(pointer.to_bytes(4, 'big'))}}
+                        for name, fkind, pointer in
+                        [('FALCO', 29, 0x8013dc9c), ('CRASH', 30, 0x8013dcbc),
+                         ('MARTH', 31, base + 0x300)]]
+            tables = {'layouts': {'entry_script': 4}, 'fighters': fighters}
+            audit = {'fighters': [{'name': row['name'], 'fkind': row['fkind']}
+                                  for row in fighters]}
+            result = extract_entry_effects(ref, tables, audit)
+            self.assertEqual(result['reused_vanilla_count'], 2)
+            self.assertEqual([row['native_effect_kind'] for row in result['fighters']], [1, 3, -2])
+            self.assertEqual(result['unported_expansion_targets'][0]['symbols'],
+                             ['Marth.marth_entry_routine_'])
+            self.assertIn('{31, -2}', render_entry_effects(result))
+            fighters[0]['tables']['entry_script'] = list((0x80123456).to_bytes(4, 'big'))
+            with self.assertRaisesRegex(ValueError, 'unknown original entry effect pointer'):
+                extract_entry_effects(ref, tables, audit)
+
     def test_compiled_crowd_chants_cover_added_fighters_and_bound_audio_ids(self):
         with tempfile.TemporaryDirectory() as dirname:
             root = Path(dirname)
@@ -207,6 +247,12 @@ class MotionTests(unittest.TestCase):
         self.assertEqual(report['fighters'][0]['remaining_table_families_to_review'],
                          ['recovery_logic'])
         self.assertEqual(report['families']['fireball']['importer_supported_fighters'], ['TEST'])
+        row['changed_from_parent'].append('entry_script')
+        entries = {'reference_rom_sha256': 'same', 'fighters':
+                   [{'name': 'TEST', 'native_effect_kind': 1}]}
+        report = build_worklist(audit, tables, fireballs,
+                                {'fighters': [{'name': 'TEST'}]}, entries)
+        self.assertIn('TEST', report['families']['entry_script']['importer_supported_fighters'])
         fireballs['reference_rom_sha256'] = 'different'
         with self.assertRaisesRegex(ValueError, 'different reference ROMs'):
             build_worklist(audit, tables, fireballs, {'fighters': [{'name': 'TEST'}]})

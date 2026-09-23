@@ -12,13 +12,17 @@ IMPORTED_TABLES = frozenset({'default_costume', 'entry_action', 'down_bound_fgm'
                              'str_winner_lx', 'str_winner_scale', 'str_wins_lx'})
 
 
-def build_worklist(audit, tables, fireballs, catalog):
-    hashes = {source['reference_rom_sha256'] for source in (audit, tables, fireballs)}
+def build_worklist(audit, tables, fireballs, catalog, entry_effects=None):
+    sources = (audit, tables, fireballs) + ((entry_effects,) if entry_effects is not None else ())
+    hashes = {source['reference_rom_sha256'] for source in sources}
     if len(hashes) != 1:
         raise ValueError('Patch reports were generated from different reference ROMs')
     audit_rows = {row['name']: row for row in audit['fighters']}
     enabled = {row['name'] for row in catalog['fighters']}
     fireball_names = {row['name'] for row in fireballs['profiles']}
+    vanilla_entry_names = ({row['name'] for row in entry_effects['fighters']
+                            if row['native_effect_kind'] >= 0}
+                           if entry_effects is not None else set())
     families = defaultdict(lambda: {'fighters': [], 'enabled_fighters': [], 'importer_supported_fighters': []})
     candidates = []
     for row in tables['fighters']:
@@ -30,11 +34,13 @@ def build_worklist(audit, tables, fireballs, catalog):
             family['fighters'].append(name)
             if name in enabled:
                 family['enabled_fighters'].append(name)
-            if table in IMPORTED_TABLES or (table in ('fireball', 'kirby_fireball') and
-                                            name in fireball_names):
+            if (table in IMPORTED_TABLES or
+                    (table in ('fireball', 'kirby_fireball') and name in fireball_names) or
+                    (table == 'entry_script' and name in vanilla_entry_names)):
                 family['importer_supported_fighters'].append(name)
         unresolved = [table for table in changes if table not in IMPORTED_TABLES and
-                      not (table in ('fireball', 'kirby_fireball') and name in fireball_names)]
+                      not (table in ('fireball', 'kirby_fireball') and name in fireball_names) and
+                      not (table == 'entry_script' and name in vanilla_entry_names)]
         candidates.append({'name': name, 'fkind': row['fkind'], 'enabled': name in enabled,
                            'assets_and_scripts_ready': source['fixture_data_ready'],
                            'vanilla_action_callbacks_suffice':
@@ -50,7 +56,7 @@ def build_worklist(audit, tables, fireballs, catalog):
             'fighters': candidates}
 
 
-def write_worklist(audit, tables, fireballs, catalog):
-    report = build_worklist(audit, tables, fireballs, catalog)
+def write_worklist(audit, tables, fireballs, catalog, entry_effects=None):
+    report = build_worklist(audit, tables, fireballs, catalog, entry_effects)
     write_json(BUILD / 'native-patch-worklist.json', report)
     return report

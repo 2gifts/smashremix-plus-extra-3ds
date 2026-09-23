@@ -50,12 +50,18 @@ typedef struct NativeRemixResultsText {
     u8 singular_win;
 } NativeRemixResultsText;
 
+typedef struct NativeRemixEntryEffect {
+    u16 fkind;
+    s16 effect_kind;
+} NativeRemixEntryEffect;
+
 #include "generic_variants_data.inc"
 #include "native_kirby_inhale_rows.inc"
 #include "native_victory_bgm_rows.inc"
 #include "native_winner_fgm_rows.inc"
 #include "native_results_text_rows.inc"
 #include "native_crowd_chant_rows.inc"
+#include "native_entry_effect_rows.inc"
 volatile s32 native_remix_last_winner_fgm = -1;
 volatile s32 native_remix_last_results_text_fkind = -1;
 typedef char NativeRemixTablePatchCountCheck[
@@ -116,6 +122,13 @@ s32 nativeRemixCrowdChantFGM(unsigned fkind) {
         native_remix_crowd_chant_fgm[fkind] != 0)
         return native_remix_crowd_chant_fgm[fkind];
     return -1;
+}
+
+s32 nativeRemixEntryEffectKind(unsigned fkind) {
+    for (unsigned i = 0; i < ARRAY_COUNT(native_remix_entry_effects); i++)
+        if (native_remix_entry_effects[i].fkind == fkind)
+            return native_remix_entry_effects[i].effect_kind;
+    return -3; /* Not an added fighter. */
 }
 
 static int has_animation(const FTMotionDesc *motions, unsigned count, unsigned fid) {
