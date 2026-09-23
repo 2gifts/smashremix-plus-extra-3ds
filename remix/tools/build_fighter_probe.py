@@ -6,14 +6,20 @@ import subprocess
 import sys
 import wave
 from common import BUILD, ROOT, sha256, write_json
+from native_fighter_catalog import load_catalog
 
 
 def main():
+    fighter_count = len(load_catalog()['fighters'])
     os.environ['SSB_REMIX_PROBE'] = 'falco'
     sys.path.insert(0, str(ROOT / '3ds/tools'))
     from build import OUT, tool
     def run(*args):
         subprocess.run(list(map(str, args)), cwd=ROOT, check=True)
+    audit_path = BUILD / 'fighter-audit.json'
+    reference_sha = json.loads((BUILD / 'reference.json').read_text())['rom_sha256']
+    if not audit_path.exists() or json.loads(audit_path.read_text()).get('reference_rom_sha256') != reference_sha:
+        run(sys.executable, ROOT / 'remix/tools/audit_reference_fighters.py')
     run(sys.executable, ROOT / 'remix/tools/prepare_fighter_probe.py')
     config_path = ROOT / '3ds/build-config.json'
     config = json.loads(config_path.read_text()) if config_path.exists() else {}
@@ -39,12 +45,12 @@ def main():
                             anchor='mm', align='center', spacing=5)
         image.save(path)
     art((48, 48), 'REMIX\nTEST', 11, dst / 'icon.png')
-    art((256, 128), 'REMIX FIGHTER TEST\nFalco / DK Ult / J DK\nJ Pika / E Pika / J & E Samus\nE Link / J Link / J Yoshi\nJ Mario / J Falcon / J Luigi\nJ Ness / Full mod in development', 13, dst / 'banner.png')
+    art((256, 128), f'REMIX +EXTRA\n{fighter_count} FIGHTER TEST\nNATIVE 3DS DEVELOPMENT\nFULL MOD IN PROGRESS', 15, dst / 'banner.png')
     with wave.open(str(dst / 'silent.wav'), 'wb') as sound:
         sound.setparams((2, 2, 32000, 0, 'NONE', 'not compressed'))
         sound.writeframes(bytes(32000 * 4))
     run(tool('bannertool'), 'makesmdh', '-s', 'Remix fighter test', '-l',
-        'Fourteen fighter integrations via VS bottom screen - full port unfinished', '-p', 'Remix / decomp / port contributors',
+        f'{fighter_count} fighter integrations via VS bottom screen - full port unfinished', '-p', 'Remix / decomp / port contributors',
         '-i', dst / 'icon.png', '-o', dst / 'icon.smdh', '-r', 'regionfree',
         '-f', 'visible,allow3d,new3ds,recordusage')
     run(tool('bannertool'), 'makebanner', '-i', dst / 'banner.png', '-a', dst / 'silent.wav', '-o', dst / 'banner.bin')
@@ -58,7 +64,7 @@ def main():
         run(tool('makerom'), '-f', fmt, *flags, *(['-ver', '1'] if fmt == 'cia' else []),
             '-o', dst / ('smash64-development.' + suffix))
     report = {'development_only': True, 'build_variant': 'fighter-test', 'fully_playable': False,
-              'scope': 'Fourteen imported fighters selectable from their parent VS bottom cards; full Remix roster and menus unfinished',
+              'scope': f'{fighter_count} imported fighters selectable from their parent VS bottom cards; full Remix roster and menus unfinished',
               'elf_sha256': sha256(elf), 'title_id': '000400000ff64200', 'files': {}}
     for suffix in ('cia', 'cxi'):
         path = dst / ('smash64-development.' + suffix)

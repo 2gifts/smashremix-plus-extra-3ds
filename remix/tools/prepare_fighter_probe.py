@@ -12,6 +12,7 @@ import struct
 from collections import Counter
 from pathlib import Path
 from common import BUILD, ROOT, checked_sources, sha256, write_json
+from native_fighter_catalog import load_catalog, render_generic_data, render_header, validate_reference, HEADER
 
 
 class Reference:
@@ -177,6 +178,10 @@ def emit_variant(ref, name, native_scripts, out):
 def main():
     from audit_reference_fighters import known_native_script_symbols
     ref = Reference()
+    catalog = load_catalog()
+    validate_reference(catalog, BUILD / 'fighter-audit.json', sha256(ref.path))
+    if HEADER.read_text() != render_header(catalog):
+        raise ValueError('Native roster header is stale; run native_fighter_catalog.py')
     data = ref.words(ref.symbols['Character.FALCO_character_struct'], 30)
     motion = [ref.words(data[25] + i * 12, 3) for i in range(data[27])]
     menus = [ref.words(data[26] + i * 12, 3) for i in range(ref.words(data[28], 1)[0])]
@@ -251,20 +256,12 @@ def main():
                  f'#define REMIX_JPIKA_ATTRIBUTE_OFFSET 0x{jp_data[24]:x}']
     (out / 'jpika_data.inc').write_text('\n'.join(jp_lines) + '\n')
 
-    mario_data, mario_motion, mario_menus, mario_scripts = emit_variant(ref, 'JMARIO', dk_external, out)
-    falcon_data, falcon_motion, falcon_menus, falcon_scripts = emit_variant(ref, 'JFALCON', dk_external, out)
-    luigi_data, luigi_motion, luigi_menus, luigi_scripts = emit_variant(ref, 'JLUIGI', dk_external, out)
-    jdk_data, jdk_motion, jdk_menus, jdk_scripts = emit_variant(ref, 'JDK', dk_external, out)
-    epika_data, epika_motion, epika_menus, epika_scripts = emit_variant(ref, 'EPIKA', dk_external, out)
-    esamus_data, esamus_motion, esamus_menus, esamus_scripts = emit_variant(ref, 'ESAMUS', dk_external, out)
-    jsamus_data, jsamus_motion, jsamus_menus, jsamus_scripts = emit_variant(ref, 'JSAMUS', dk_external, out)
-    elink_data, elink_motion, elink_menus, elink_scripts = emit_variant(ref, 'ELINK', dk_external, out)
-    jlink_data, jlink_motion, jlink_menus, jlink_scripts = emit_variant(ref, 'JLINK', dk_external, out)
-    jyoshi_data, jyoshi_motion, jyoshi_menus, jyoshi_scripts = emit_variant(ref, 'JYOSHI', dk_external, out)
-    jness_data, jness_motion, jness_menus, jness_scripts = emit_variant(ref, 'JNESS', dk_external, out)
+    generic = {row['name']: emit_variant(ref, row['name'], dk_external, out)
+               for row in catalog['fighters'] if row['registration'] == 'generic'}
+    (out / 'generic_variants_data.inc').write_text(render_generic_data(catalog))
 
     # Keep the proven vanilla UI assets. Add only the validated dependency
-    # closure required by this fighter, never ship unresolved reference files.
+    # closure required by enabled fighters, never ship unresolved reference files.
     config = json.loads((ROOT / '3ds/build-config.json').read_text())
     if 'vanilla_assets' in config:
         vanilla = Path(config['vanilla_assets']).resolve()
@@ -286,7 +283,10 @@ def main():
         required.add(fid)
         for dep in entries[fid]['external_files']:
             add(dep)
-    for fid in data[:9] + dk_data[:9] + jp_data[:9] + mario_data[:9] + falcon_data[:9] + luigi_data[:9] + jdk_data[:9] + epika_data[:9] + esamus_data[:9] + jsamus_data[:9] + elink_data[:9] + jlink_data[:9] + jyoshi_data[:9] + jness_data[:9] + [r[0] for r in motion + menus + dk_motion + dk_menus + jp_motion + jp_menus + mario_motion + mario_menus + falcon_motion + falcon_menus + luigi_motion + luigi_menus + jdk_motion + jdk_menus + epika_motion + epika_menus + esamus_motion + esamus_menus + jsamus_motion + jsamus_menus + elink_motion + elink_menus + jlink_motion + jlink_menus + jyoshi_motion + jyoshi_menus + jness_motion + jness_menus]:
+    rows = [(data, motion, menus), (dk_data, dk_motion, dk_menus), (jp_data, jp_motion, jp_menus)]
+    rows += [(record[0], record[1], record[2]) for record in generic.values()]
+    for fid in [fid for fighter_data, fighter_motion, fighter_menus in rows
+                for fid in fighter_data[:9] + [row[0] for row in fighter_motion + fighter_menus]]:
         add(fid)
     bad = [issue for issue in manifest['relocation_issues'] if issue['file_id'] in required]
     if bad:
@@ -316,8 +316,15 @@ def main():
         shutil.copy2(path, assets / 'audio' / path.name)
     for name in ('initial-save.bin', 'bottom-ui.bin'):
         shutil.copy2(vanilla / name, assets / name)
+    metrics = {}
+    for name, (fighter_data, fighter_motion, fighter_menus, fighter_scripts) in generic.items():
+        key = name.lower()
+        metrics.update({f'{key}_motion_count': len(fighter_motion),
+                        f'{key}_menu_motion_count': len(fighter_menus),
+                        f'{key}_script_words': len(fighter_scripts.words),
+                        f'{key}_script_pointers': len(fighter_scripts.pointers)})
     write_json(out / 'manifest.json', {
-        'fixture': 'Fourteen independently backed fighters selectable beside vanilla parents in VS; not the complete mod',
+        'fixture': f"{len(catalog['fighters'])} independently backed fighters selectable beside vanilla parents in VS; not the complete mod",
         'motion_count': len(motion), 'menu_motion_count': len(menus),
         'script_words': len(scripts.words), 'script_pointers': len(scripts.pointers),
         'dkult_motion_count': len(dk_motion), 'dkult_menu_motion_count': len(dk_menus),
@@ -326,43 +333,11 @@ def main():
         'jpika_motion_count': len(jp_motion), 'jpika_menu_motion_count': len(jp_menus),
         'jpika_script_words': len(jp_scripts.words),
         'jpika_script_pointers': len(jp_scripts.pointers),
-        'jmario_motion_count': len(mario_motion), 'jmario_menu_motion_count': len(mario_menus),
-        'jmario_script_words': len(mario_scripts.words),
-        'jmario_script_pointers': len(mario_scripts.pointers),
-        'jfalcon_motion_count': len(falcon_motion), 'jfalcon_menu_motion_count': len(falcon_menus),
-        'jfalcon_script_words': len(falcon_scripts.words),
-        'jfalcon_script_pointers': len(falcon_scripts.pointers),
-        'jluigi_motion_count': len(luigi_motion), 'jluigi_menu_motion_count': len(luigi_menus),
-        'jluigi_script_words': len(luigi_scripts.words),
-        'jluigi_script_pointers': len(luigi_scripts.pointers),
-        'jdk_motion_count': len(jdk_motion), 'jdk_menu_motion_count': len(jdk_menus),
-        'jdk_script_words': len(jdk_scripts.words),
-        'jdk_script_pointers': len(jdk_scripts.pointers),
-        'epika_motion_count': len(epika_motion), 'epika_menu_motion_count': len(epika_menus),
-        'epika_script_words': len(epika_scripts.words),
-        'epika_script_pointers': len(epika_scripts.pointers),
-        'esamus_motion_count': len(esamus_motion), 'esamus_menu_motion_count': len(esamus_menus),
-        'esamus_script_words': len(esamus_scripts.words),
-        'esamus_script_pointers': len(esamus_scripts.pointers),
-        'jsamus_motion_count': len(jsamus_motion), 'jsamus_menu_motion_count': len(jsamus_menus),
-        'jsamus_script_words': len(jsamus_scripts.words),
-        'jsamus_script_pointers': len(jsamus_scripts.pointers),
-        'elink_motion_count': len(elink_motion), 'elink_menu_motion_count': len(elink_menus),
-        'elink_script_words': len(elink_scripts.words),
-        'elink_script_pointers': len(elink_scripts.pointers),
-        'jlink_motion_count': len(jlink_motion), 'jlink_menu_motion_count': len(jlink_menus),
-        'jlink_script_words': len(jlink_scripts.words),
-        'jlink_script_pointers': len(jlink_scripts.pointers),
-        'jyoshi_motion_count': len(jyoshi_motion), 'jyoshi_menu_motion_count': len(jyoshi_menus),
-        'jyoshi_script_words': len(jyoshi_scripts.words),
-        'jyoshi_script_pointers': len(jyoshi_scripts.pointers),
-        'jness_motion_count': len(jness_motion), 'jness_menu_motion_count': len(jness_menus),
-        'jness_script_words': len(jness_scripts.words),
-        'jness_script_pointers': len(jness_scripts.pointers),
+        **metrics,
         'required_files': sorted(required), 'unresolved_relocations': bad,
         'pack_sha256': sha256(assets / 'reloc.pak'),
     })
-    print(f'Fourteen fighters: {len(motion)} + {len(dk_motion)} + {len(jp_motion)} + {len(epika_motion)} + {len(mario_motion)} + {len(falcon_motion)} + {len(luigi_motion)} + {len(jdk_motion)} + {len(esamus_motion)} + {len(jsamus_motion)} + {len(elink_motion)} + {len(jlink_motion)} + {len(jyoshi_motion)} + {len(jness_motion)} actions, {len(required)} validated assets')
+    print(f"{len(catalog['fighters'])} fighters: {sum(len(row[1]) for row in rows)} actions, {len(required)} validated assets")
 
 
 if __name__ == '__main__':

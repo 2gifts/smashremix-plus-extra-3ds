@@ -60,6 +60,20 @@ remix/.venv/Scripts/python.exe remix/tools/verify_fighter_catalog.py
 
 These commands use the pinned local reference ROM. Generated `.inc` files stay under ignored `remix/build/fighter-catalog/` and are not linked into the game automatically. The report distinguishes script and asset structure from native gameplay implementation.
 
+## Adding a fighter to the native development build
+
+The pinned Remix `src/Character.asm` uses `define_character` and action-parameter patch macros to build fighter records. `remix/tools/audit_reference_fighters.py` reads the assembled results and checks scripts and asset dependencies. A passing data audit is only a starting point: inspect that fighter's assembly hooks, specials, projectiles, AI, and parent differences before marking it playable.
+
+For a validated fighter, add one record to [`remix/native_fighters.json`](../remix/native_fighters.json), with its reference fighter ID, vanilla parent, and `registration` set to `generic` when vanilla callbacks suffice. Keep `custom` for fighters with their own native registration or status table. Run:
+
+```powershell
+remix/.venv/Scripts/python.exe remix/tools/native_fighter_catalog.py
+remix/.venv/Scripts/python.exe remix/tools/test_fighter_import.py
+remix/.venv/Scripts/python.exe remix/tools/build_fighter_probe.py
+```
+
+The builder checks every enabled name, ID, parent, script, and asset closure against the pinned reference audit. It then generates the fighter's motion/script data and the shared native registration table, includes required asset dependencies, and updates the VS bottom-card cycle from the same catalog. A mismatched or structurally unready record fails the build. Character-specific mechanics still require native C and emulator move tests; this pipeline does not execute N64 MIPS patches on ARM11. The catalog, generator, and shared runtime are source-only; generated ROM-derived includes and the CIA stay local.
+
 ## Build the fighter development CIA
 
 Complete the reference extraction above and configure the existing 3DS toolchain. Set `vanilla_assets` in the ignored `3ds/build-config.json` to the asset directory produced by the original 3DS port's local build. It needs `reloc.pak`, `audio/`, `particles/`, `initial-save.bin` and `bottom-ui.bin`. If omitted, the tool looks for `assets/` two directories above the configured BattleShip checkout, matching the original port's `3ds/vendor/BattleShip` layout.

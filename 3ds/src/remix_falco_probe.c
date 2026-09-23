@@ -35,17 +35,7 @@ volatile unsigned native_remix_probe_phantasm_air;
 int nativeRelocIsFighterAnimation(unsigned int fid) {
     extern int nativeRemixDKUltIsAnimation(unsigned);
     extern int nativeRemixJPikaIsAnimation(unsigned);
-    extern int nativeRemixEPikaIsAnimation(unsigned);
-    extern int nativeRemixESamusIsAnimation(unsigned);
-    extern int nativeRemixJSamusIsAnimation(unsigned);
-    extern int nativeRemixELinkIsAnimation(unsigned);
-    extern int nativeRemixJLinkIsAnimation(unsigned);
-    extern int nativeRemixJYoshiIsAnimation(unsigned);
-    extern int nativeRemixJMarioIsAnimation(unsigned);
-    extern int nativeRemixJFalconIsAnimation(unsigned);
-    extern int nativeRemixJLuigiIsAnimation(unsigned);
-    extern int nativeRemixJDKIsAnimation(unsigned);
-    extern int nativeRemixJNessIsAnimation(unsigned);
+    extern int nativeRemixGenericIsAnimation(unsigned);
     /* Motion ID zero means no animation. Relocation file zero is the shared
      * menu artwork and must retain the normal sprite byte-order fixups. */
     if (!fid) return 0;
@@ -55,13 +45,8 @@ int nativeRelocIsFighterAnimation(unsigned int fid) {
     for (unsigned i = 0; i < ARRAY_COUNT(remix_menu_motions); i++)
         if (remix_menu_motions[i].anim_file_id == fid &&
             !(remix_menu_motions[i].anim_desc.word & (FTANIM_FLAG_ANIMJOINT | FTANIM_FLAG_SHIELDPOSE))) return 1;
-    return nativeRemixDKUltIsAnimation(fid) || nativeRemixJPikaIsAnimation(fid) || nativeRemixEPikaIsAnimation(fid) ||
-           nativeRemixESamusIsAnimation(fid) || nativeRemixJSamusIsAnimation(fid) || nativeRemixELinkIsAnimation(fid) ||
-           nativeRemixJLinkIsAnimation(fid) ||
-           nativeRemixJYoshiIsAnimation(fid) ||
-           nativeRemixJMarioIsAnimation(fid) || nativeRemixJFalconIsAnimation(fid) ||
-           nativeRemixJLuigiIsAnimation(fid) || nativeRemixJDKIsAnimation(fid) ||
-           nativeRemixJNessIsAnimation(fid);
+    return nativeRemixDKUltIsAnimation(fid) || nativeRemixJPikaIsAnimation(fid) ||
+           nativeRemixGenericIsAnimation(fid);
 }
 
 void nativeRemixProbeReset(FTStruct *fp) {

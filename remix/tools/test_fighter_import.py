@@ -2,11 +2,15 @@
 import struct
 import subprocess
 import unittest
+import json
+import tempfile
+from pathlib import Path
 from types import SimpleNamespace
 from common import ROOT, BUILD
 from prepare_fighter_probe import Scripts, Reference
 from prepare_reference_audio import Bank, package, repack_sequence_bank, verify_bank
 from test_asset_loader import compiler_path
+from native_fighter_catalog import load_catalog, render_header, render_generic_data, validate_reference, HEADER
 
 
 class WordReference:
@@ -18,6 +22,40 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_fighter_catalog_generates_roster_and_rejects_unvalidated_ids(self):
+        catalog = load_catalog()
+        self.assertEqual(HEADER.read_text(), render_header(catalog))
+        generic = [row for row in catalog['fighters'] if row['registration'] == 'generic']
+        generated = render_generic_data(catalog)
+        self.assertEqual(generated.count('_data.inc"'), len(generic))
+        self.assertEqual(generated.count('_relocate_scripts}'), len(generic))
+        augmented = json.loads(json.dumps(catalog))
+        augmented['fighters'].append({'name': 'TEST', 'fkind': 199, 'parent': 'FOX',
+                                      'registration': 'generic'})
+        self.assertIn('#define NATIVE_REMIX_TEST_KIND 199u', render_header(augmented))
+        self.assertIn('#include "test_data.inc"', render_generic_data(augmented))
+        with tempfile.TemporaryDirectory() as dirname:
+            path = Path(dirname) / 'catalog.json'
+            invalid = json.loads(json.dumps(catalog))
+            invalid['fighters'][1]['fkind'] = invalid['fighters'][0]['fkind']
+            path.write_text(json.dumps(invalid))
+            with self.assertRaisesRegex(ValueError, 'duplicate fighter ID'):
+                load_catalog(path)
+            audit = Path(dirname) / 'audit.json'
+            audit.write_text(json.dumps({'schema': 1, 'fighters': [
+                {'name': row['name'], 'fkind': row['fkind'], 'parent': row['parent'],
+                 'fixture_data_ready': row['name'] != generic[0]['name']}
+                for row in catalog['fighters']]}))
+            with self.assertRaisesRegex(ValueError, 'assets/scripts unready'):
+                validate_reference(catalog, audit)
+            with self.assertRaisesRegex(ValueError, 'does not match the pinned reference'):
+                validate_reference(catalog, audit, 'stale-reference')
+            report = json.loads(audit.read_text())
+            for row in report['fighters']:
+                row['fixture_data_ready'] = True
+            audit.write_text(json.dumps(report))
+            validate_reference(catalog, audit)
+
     def test_roster_cycle_match_and_results_share_parent(self):
         fixture = '''#include <assert.h>
 #include "native_remix_roster.h"
@@ -186,93 +224,56 @@ int main(void) {
         subprocess.run([str(exe)], check=True)
 
     def test_native_animation_classification_does_not_touch_menu_file_zero(self):
-        source = (ROOT / '3ds/src/remix_falco_probe.c').read_text()
-        start = source.index('int nativeRelocIsFighterAnimation(')
-        function = source[start:source.index('\n}', start) + 2]
-        dk_source = (ROOT / '3ds/src/remix_dkult_probe.c').read_text()
-        dk_start = dk_source.index('int nativeRemixDKUltIsAnimation(')
-        dk_function = dk_source[dk_start:dk_source.index('\n}', dk_start) + 2]
-        jp_source = (ROOT / '3ds/src/remix_jpika_probe.c').read_text()
-        jp_start = jp_source.index('int nativeRemixJPikaIsAnimation(')
-        jp_function = jp_source[jp_start:jp_source.index('\n}', jp_start) + 2]
-        ep_source = (ROOT / '3ds/src/remix_epika_probe.c').read_text()
-        ep_start = ep_source.index('int nativeRemixEPikaIsAnimation(')
-        ep_function = ep_source[ep_start:ep_source.index('\n}', ep_start) + 2]
-        es_source = (ROOT / '3ds/src/remix_esamus_probe.c').read_text()
-        es_start = es_source.index('int nativeRemixESamusIsAnimation(')
-        es_function = es_source[es_start:es_source.index('\n}', es_start) + 2]
-        js_source = (ROOT / '3ds/src/remix_jsamus_probe.c').read_text()
-        js_start = js_source.index('int nativeRemixJSamusIsAnimation(')
-        js_function = js_source[js_start:js_source.index('\n}', js_start) + 2]
-        link_source = (ROOT / '3ds/src/remix_elink_probe.c').read_text()
-        link_start = link_source.index('int nativeRemixELinkIsAnimation(')
-        link_function = link_source[link_start:link_source.index('\n}', link_start) + 2]
-        jlink_source = (ROOT / '3ds/src/remix_jlink_probe.c').read_text()
-        jlink_start = jlink_source.index('int nativeRemixJLinkIsAnimation(')
-        jlink_function = jlink_source[jlink_start:jlink_source.index('\n}', jlink_start) + 2]
-        yoshi_source = (ROOT / '3ds/src/remix_jyoshi_probe.c').read_text()
-        yoshi_start = yoshi_source.index('int nativeRemixJYoshiIsAnimation(')
-        yoshi_function = yoshi_source[yoshi_start:yoshi_source.index('\n}', yoshi_start) + 2]
-        mario_source = (ROOT / '3ds/src/remix_jmario_probe.c').read_text()
-        mario_start = mario_source.index('int nativeRemixJMarioIsAnimation(')
-        mario_function = mario_source[mario_start:mario_source.index('\n}', mario_start) + 2]
-        falcon_source = (ROOT / '3ds/src/remix_jfalcon_probe.c').read_text()
-        falcon_start = falcon_source.index('int nativeRemixJFalconIsAnimation(')
-        falcon_function = falcon_source[falcon_start:falcon_source.index('\n}', falcon_start) + 2]
-        luigi_source = (ROOT / '3ds/src/remix_jluigi_probe.c').read_text()
-        luigi_start = luigi_source.index('int nativeRemixJLuigiIsAnimation(')
-        luigi_function = luigi_source[luigi_start:luigi_source.index('\n}', luigi_start) + 2]
-        jdk_source = (ROOT / '3ds/src/remix_jdk_probe.c').read_text()
-        jdk_start = jdk_source.index('int nativeRemixJDKIsAnimation(')
-        jdk_function = jdk_source[jdk_start:jdk_source.index('\n}', jdk_start) + 2]
-        jness_source = (ROOT / '3ds/src/remix_jness_probe.c').read_text()
-        jness_start = jness_source.index('int nativeRemixJNessIsAnimation(')
-        jness_function = jness_source[jness_start:jness_source.index('\n}', jness_start) + 2]
-        # Compile the actual native predicate against a small motion catalogue.
+        def extract(path, signature):
+            source = (ROOT / path).read_text()
+            start = source.index(signature)
+            return source[start:source.index('\n}', start) + 2]
+
+        helper = extract('3ds/src/remix_variants.c', 'static int has_animation(')
+        predicate = extract('3ds/src/remix_variants.c', 'int nativeRemixGenericIsAnimation(')
+        falco = extract('3ds/src/remix_falco_probe.c', 'int nativeRelocIsFighterAnimation(')
+        dk = extract('3ds/src/remix_dkult_probe.c', 'int nativeRemixDKUltIsAnimation(')
+        jp = extract('3ds/src/remix_jpika_probe.c', 'int nativeRemixJPikaIsAnimation(')
         fixture = '''#include <cassert>
 #define ARRAY_COUNT(a) (sizeof(a)/sizeof((a)[0]))
 struct Motion {unsigned anim_file_id;struct {unsigned word;} anim_desc;};
-static Motion remix_main_motions[]={{0,{0}},{4,{0}},{5,{8}},{6,{2}},{7,{10}}};
+typedef Motion FTMotionDesc;
+struct NativeRemixGenericDef {
+    unsigned kind, parent;
+    const unsigned *file_ids;
+    long attribute_offset;
+    FTMotionDesc *main_motions;
+    unsigned main_count;
+    FTMotionDesc *menu_motions;
+    int *menu_count;
+    void (*relocate_scripts)();
+};
+static Motion remix_main_motions[]={{0,{0}},{4,{0}},{5,{8}},{6,{2}}};
 static Motion remix_menu_motions[]={{0,{0}},{8,{0}}};
 static Motion remix_dkult_main_motions[]={{0,{0}},{10,{0}},{11,{8}}};
 static Motion remix_dkult_menu_motions[]={{0,{0}},{12,{0}}};
 static Motion remix_jpika_main_motions[]={{0,{0}},{13,{0}},{14,{8}}};
 static Motion remix_jpika_menu_motions[]={{0,{0}},{15,{0}}};
-static Motion remix_epika_main_motions[]={{0,{0}},{28,{0}},{29,{8}}};
-static Motion remix_epika_menu_motions[]={{0,{0}},{30,{0}}};
-static Motion remix_esamus_main_motions[]={{0,{0}},{31,{0}},{32,{8}}};
-static Motion remix_esamus_menu_motions[]={{0,{0}},{33,{0}}};
-static Motion remix_jsamus_main_motions[]={{0,{0}},{46,{0}},{47,{8}}};
-static Motion remix_jsamus_menu_motions[]={{0,{0}},{48,{0}}};
-static Motion remix_elink_main_motions[]={{0,{0}},{34,{0}},{35,{8}}};
-static Motion remix_elink_menu_motions[]={{0,{0}},{36,{0}}};
-static Motion remix_jlink_main_motions[]={{0,{0}},{40,{0}},{41,{8}}};
-static Motion remix_jlink_menu_motions[]={{0,{0}},{42,{0}}};
-static Motion remix_jyoshi_main_motions[]={{0,{0}},{37,{0}},{38,{8}}};
-static Motion remix_jyoshi_menu_motions[]={{0,{0}},{39,{0}}};
-static Motion remix_jmario_main_motions[]={{0,{0}},{16,{0}},{17,{8}}};
-static Motion remix_jmario_menu_motions[]={{0,{0}},{18,{0}}};
-static Motion remix_jfalcon_main_motions[]={{0,{0}},{19,{0}},{20,{8}}};
-static Motion remix_jfalcon_menu_motions[]={{0,{0}},{21,{0}}};
-static Motion remix_jluigi_main_motions[]={{0,{0}},{22,{0}},{23,{8}}};
-static Motion remix_jluigi_menu_motions[]={{0,{0}},{24,{0}}};
-static Motion remix_jdk_main_motions[]={{0,{0}},{25,{0}},{26,{8}}};
-static Motion remix_jdk_menu_motions[]={{0,{0}},{27,{0}}};
-static Motion remix_jness_main_motions[]={{0,{0}},{43,{0}},{44,{8}}};
-static Motion remix_jness_menu_motions[]={{0,{0}},{45,{0}}};
+static Motion generic_a_main[]={{0,{0}},{16,{0}},{17,{8}}};
+static Motion generic_a_menu[]={{0,{0}},{18,{0}}};
+static Motion generic_b_main[]={{0,{0}},{31,{0}},{32,{2}}};
+static Motion generic_b_menu[]={{0,{0}},{33,{0}}};
+static int a_menu_count=2, b_menu_count=2;
+static NativeRemixGenericDef native_remix_generic_defs[]={
+    {0,0,0,0,generic_a_main,ARRAY_COUNT(generic_a_main),generic_a_menu,&a_menu_count,0},
+    {0,0,0,0,generic_b_main,ARRAY_COUNT(generic_b_main),generic_b_menu,&b_menu_count,0}
+};
 '''
         for line in (ROOT / 'src/ft/ftdef.h').read_text().splitlines():
             if line.startswith('#define FTANIM_FLAG_ANIMJOINT ') or line.startswith('#define FTANIM_FLAG_SHIELDPOSE '):
                 fixture += line + '\n'
-        fixture += dk_function + '\n' + jp_function + '\n' + ep_function + '\n' + es_function + '\n' + js_function + '\n' + link_function + '\n' + jlink_function + '\n' + yoshi_function + '\n' + mario_function + '\n' + falcon_function + '\n' + luigi_function + '\n' + jdk_function + '\n' + jness_function + '\n' + function + '''
+        fixture += '\n'.join((helper, predicate, dk, jp, falco)) + '''
 int main(){
     assert(!nativeRelocIsFighterAnimation(0));
     assert(nativeRelocIsFighterAnimation(4));
     assert(!nativeRelocIsFighterAnimation(5));
     assert(!nativeRelocIsFighterAnimation(6));
-    assert(!nativeRelocIsFighterAnimation(7));
     assert(nativeRelocIsFighterAnimation(8));
-    assert(!nativeRelocIsFighterAnimation(9));
     assert(nativeRelocIsFighterAnimation(10));
     assert(!nativeRelocIsFighterAnimation(11));
     assert(nativeRelocIsFighterAnimation(12));
@@ -282,49 +283,10 @@ int main(){
     assert(nativeRelocIsFighterAnimation(16));
     assert(!nativeRelocIsFighterAnimation(17));
     assert(nativeRelocIsFighterAnimation(18));
-    assert(nativeRelocIsFighterAnimation(19));
-    assert(!nativeRelocIsFighterAnimation(20));
-    assert(nativeRelocIsFighterAnimation(21));
-    assert(nativeRelocIsFighterAnimation(22));
-    assert(!nativeRelocIsFighterAnimation(23));
-    assert(nativeRelocIsFighterAnimation(24));
-    assert(nativeRelocIsFighterAnimation(25));
-    assert(!nativeRelocIsFighterAnimation(26));
-    assert(nativeRelocIsFighterAnimation(27));
-    assert(nativeRelocIsFighterAnimation(28));
-    assert(!nativeRelocIsFighterAnimation(29));
-    assert(nativeRelocIsFighterAnimation(30));
     assert(nativeRelocIsFighterAnimation(31));
     assert(!nativeRelocIsFighterAnimation(32));
     assert(nativeRelocIsFighterAnimation(33));
-    assert(nativeRelocIsFighterAnimation(34));
-    assert(!nativeRelocIsFighterAnimation(35));
-    assert(nativeRelocIsFighterAnimation(36));
-    assert(nativeRelocIsFighterAnimation(37));
-    assert(!nativeRelocIsFighterAnimation(38));
-    assert(nativeRelocIsFighterAnimation(39));
-    assert(nativeRelocIsFighterAnimation(40));
-    assert(!nativeRelocIsFighterAnimation(41));
-    assert(nativeRelocIsFighterAnimation(42));
-    assert(nativeRelocIsFighterAnimation(43));
-    assert(!nativeRelocIsFighterAnimation(44));
-    assert(nativeRelocIsFighterAnimation(45));
-    assert(nativeRelocIsFighterAnimation(46));
-    assert(!nativeRelocIsFighterAnimation(47));
-    assert(nativeRelocIsFighterAnimation(48));
-    assert(!nativeRemixDKUltIsAnimation(0));
-    assert(!nativeRemixJPikaIsAnimation(0));
-    assert(!nativeRemixEPikaIsAnimation(0));
-    assert(!nativeRemixESamusIsAnimation(0));
-    assert(!nativeRemixJSamusIsAnimation(0));
-    assert(!nativeRemixELinkIsAnimation(0));
-    assert(!nativeRemixJLinkIsAnimation(0));
-    assert(!nativeRemixJYoshiIsAnimation(0));
-    assert(!nativeRemixJMarioIsAnimation(0));
-    assert(!nativeRemixJFalconIsAnimation(0));
-    assert(!nativeRemixJLuigiIsAnimation(0));
-    assert(!nativeRemixJDKIsAnimation(0));
-    assert(!nativeRemixJNessIsAnimation(0));
+    assert(!nativeRemixGenericIsAnimation(0));
 }
 '''
         out = BUILD / 'fighter-import-test'
