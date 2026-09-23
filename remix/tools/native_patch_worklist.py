@@ -8,7 +8,8 @@ from common import BUILD, write_json
 
 
 IMPORTED_TABLES = frozenset({'default_costume', 'entry_action', 'down_bound_fgm',
-                             'winner_bgm', 'winner_fgm'})
+                             'winner_bgm', 'winner_fgm', 'str_winner_ptr',
+                             'str_winner_lx', 'str_winner_scale', 'str_wins_lx'})
 
 
 def build_worklist(audit, tables, fireballs, catalog):

@@ -16,7 +16,7 @@ from native_fighter_catalog import load_catalog, render_generic_data, render_hea
 from reference_table_patches import write_reference_tables
 from native_fireball_patches import write_fireballs
 from native_kirby_patches import write_kirby_rows
-from native_results_patches import write_results_audio
+from native_results_patches import write_results_patches
 from native_patch_worklist import write_worklist
 from native_action_patches import write_action_patches
 
@@ -269,7 +269,7 @@ def main():
     table_manifest = write_reference_tables(ref, audit, catalog, out)
     fireball_manifest = write_fireballs(ref, table_manifest, audit, catalog, out)
     write_kirby_rows(ref, table_manifest, audit, out)
-    _, winner_voices = write_results_audio(ref, table_manifest, audit, out)
+    _, winner_voices, _ = write_results_patches(ref, table_manifest, audit, out)
     write_worklist(audit, table_manifest, fireball_manifest, catalog)
     (out / 'generic_variants_data.inc').write_text(render_generic_data(catalog))
 
@@ -301,6 +301,11 @@ def main():
     for fid in [fid for fighter_data, fighter_motion, fighter_menus in rows
                 for fid in fighter_data[:9] + [row[0] for row in fighter_motion + fighter_menus]]:
         add(fid)
+    # The mod extends the shared results announcer file with the ampersand
+    # glyph used by Banjo's compiled winner string.
+    if entries[0x25]['size'] < 0x8358 + 0x40:
+        raise ValueError('Compiled announcer asset lacks the ampersand sprite')
+    add(0x25)
     bad = [issue for issue in manifest['relocation_issues'] if issue['file_id'] in required]
     if bad:
         raise ValueError(f'Fighter reaches invalid relocations: {bad}')

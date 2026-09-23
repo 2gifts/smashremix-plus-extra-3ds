@@ -942,10 +942,28 @@
     },
     "scope": "Compiled victory BGM and winner voice table imports and one Falco results transition; not the expanded stage-music selector."
   },
+  "compiled_results_text": {
+    "decoded_added_fighters": 87,
+    "inherited_results_text_path": ["RANDOM"],
+    "imported_tables": ["str_winner_ptr", "str_winner_lx", "str_winner_scale", "str_wins_lx"],
+    "ampersand_asset_file_id": 37,
+    "azahar_falco_match": {
+      "passed": true,
+      "tested_cxi_sha256": "33ba4f6c3bab79d0eed97a95c9aaab97f648a364e87259768533bd51d8d348a1",
+      "tested_elf_sha256": "50f6d28c69db06444d3112567913134b20ad3aa39f9441fb586a32cd756a37c7",
+      "package_verified_cia_sha256": "ac89b4a8b5b8d5fab9ca8504a624617ac67fe5566ebb4692d5201fb97bcda4bf",
+      "winner_fkind": 29,
+      "observed_results_text_fkind_at_tic_144": 29,
+      "observed_sequence_id_at_tic_144": 69,
+      "observed_winner_voice_id_at_tic_235": 726,
+      "stereo_enabled": true
+    },
+    "scope": "All compiled added-fighter name and position rows plus one native results transition; only Falco was exercised in Azahar. Ampersand and hyphen glyphs were structurally checked, not visually tested in-game."
+  },
   "fighter_import_host_tests": {
     "passed": true,
-    "tests": 27,
-    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors, and victory BGM thunk decoding"
+    "tests": 28,
+    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors, victory BGM thunk decoding, winner voice bounds, and compiled results text validation"
   },
   "save_writer_host_tests": {
     "passed": true,

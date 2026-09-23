@@ -21,6 +21,7 @@ from native_fireball_patches import FIREBALL_BASE, extract_fireballs, render_row
 from native_patch_worklist import build_worklist
 from native_kirby_patches import extract_kirby_rows, render_native_rows
 from native_results_patches import (extract_victory_bgm, extract_winner_fgm,
+                                    extract_results_text, render_results_text_rows,
                                     render_native_rows as render_victory_bgm,
                                     render_winner_fgm_rows)
 
@@ -34,6 +35,66 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_compiled_results_text_imports_all_rows_and_rejects_bad_glyphs(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            root = Path(dirname)
+            (root / 'src').mkdir()
+            (root / 'src/resultsscreen.asm').write_text('''
+                Character.table_patch_start(str_winner_ptr, {id}, 0x4)
+                Character.table_patch_start(str_winner_lx, {id}, 0x4)
+                Character.table_patch_start(str_winner_scale, {id}, 0x4)
+                Character.table_patch_start(str_wins_lx, {id}, 0x4)
+                Character.id.DRAGONKING
+                Character.id.BANJO
+                0x8348 + 0x0010
+            ''')
+            (root / 'src/Character.asm').write_text('constant J(0x1)')
+            rom = bytearray(0x500)
+            base = 0x80400000
+            names = [('FALCO', 'FALCO', 0),
+                     ('BANJO', 'BAN1JO2&2KAZOOI1E', 0),
+                     ('DRAGONKING', 'DRAGON KING', 1),
+                     ('JPUFF', 'P1U1R1I1N', 1),
+                     ('SPIDERMAN', 'SPIDER-MAN', 0)]
+            fighters = []
+            for index, (name, label, sound_type) in enumerate(names):
+                offset = 0x100 + index * 0x30
+                rom[offset:offset + len(label) + 1] = label.encode() + b'\0'
+                fighters.append({'name': name, 'fkind': 29 + index,
+                                 'tables': {
+                                     'str_winner_ptr': list((base + offset).to_bytes(4, 'big')),
+                                     'str_winner_lx': list(struct.pack('>f', 20.0)),
+                                     'str_winner_scale': list(struct.pack('>f', 0.5)),
+                                     'str_wins_lx': list(struct.pack('>f', 185.0)),
+                                     'sound_type': [sound_type]}})
+            fighters.append({'name': 'RANDOM', 'fkind': 27,
+                             'tables': {'str_winner_ptr': list((0x80139808).to_bytes(4, 'big'))}})
+            path = root / 'reference.z64'
+            path.write_bytes(rom)
+            ref = SimpleNamespace(path=path, rom=rom, ram_base=base, rom_base=0)
+            tables = {'layouts': {key: (1 if key == 'sound_type' else 4)
+                                  for key in ('str_winner_ptr', 'str_winner_lx',
+                                              'str_winner_scale', 'str_wins_lx', 'sound_type')},
+                      'fighters': fighters}
+            audit = {'fighters': [{'name': row['name'], 'fkind': row['fkind']}
+                                  for row in fighters]}
+            result = extract_results_text(ref, tables, audit)
+            self.assertEqual(len(result['fighters']), 5)
+            self.assertEqual(result['inherited_results_text'], ['RANDOM'])
+            singular = {row['name']: row['singular_win'] for row in result['fighters']}
+            self.assertEqual(singular, {'FALCO': False, 'BANJO': True,
+                                        'DRAGONKING': False, 'JPUFF': True,
+                                        'SPIDERMAN': False})
+            self.assertIn('BAN1JO2&2KAZOOI1E', render_results_text_rows(result))
+            original = rom[0x100]
+            rom[0x100] = ord('@')
+            with self.assertRaisesRegex(ValueError, 'unsupported results name glyph'):
+                extract_results_text(ref, tables, audit)
+            rom[0x100] = original
+            fighters[0]['tables']['str_winner_scale'] = list(struct.pack('>f', float('nan')))
+            with self.assertRaisesRegex(ValueError, 'invalid results text geometry'):
+                extract_results_text(ref, tables, audit)
+
     def test_victory_music_thunks_decode_for_entire_results_table(self):
         with tempfile.TemporaryDirectory() as dirname:
             root = Path(dirname)

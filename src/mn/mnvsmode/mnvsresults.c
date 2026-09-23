@@ -11,6 +11,8 @@
 #include "native_remix_roster.h"
 extern s32 nativeRemixVictoryBGM(unsigned fkind);
 extern s32 nativeRemixWinnerFGM(unsigned fkind);
+extern const char *nativeRemixResultsName(unsigned fkind, f32 *lx, f32 *scale);
+extern s32 nativeRemixResultsWins(unsigned fkind, f32 *lx, s32 *singular);
 #endif
 extern void func_800266A0_272A0(void);
 
@@ -1241,6 +1243,13 @@ s32 mnVSResultsGetCharacterID(char c)
 		
 	case '.':
 		return 0x1B;
+
+#ifdef SSB_REMIX_PROBE
+	case '&':
+		return 0x1D;
+	case '-':
+		return 0x1E;
+#endif
 		
 	case ' ':
 		return 0x1C;
@@ -1263,6 +1272,9 @@ void mnVSResultsMakeString(const char *str, f32 x, f32 y, s32 color_id, f32 scal
 	{
 		35.0F, 24.0F, 24.0F, 28.0F, 22.0F, 20.0F, 31.0F, 27.0F, 9.0F, 20.0F, 27.0F, 20.0F, 37.0F, 29.0F,
 		34.0F, 24.0F, 37.0F, 27.0F, 24.0F, 24.0F, 26.0F, 28.0F, 39.0F, 31.0F, 29.0F, 30.0F, 10.0F, 8.0F
+#ifdef SSB_REMIX_PROBE
+		, 35.0F, 20.0F
+#endif
 	};
 	intptr_t offsets[/* */] =
 	{
@@ -1282,6 +1294,9 @@ void mnVSResultsMakeString(const char *str, f32 x, f32 y, s32 color_id, f32 scal
 
 		llIFCommonAnnounceCommonSymbolExclaimSprite,
 		llIFCommonAnnounceCommonSymbolPeriodSprite
+#ifdef SSB_REMIX_PROBE
+		, (intptr_t)0x8358, llIFCommonDigitsDashSprite
+#endif
 	};
 	SYColorRGBPair colors[/* */] =
 	{
@@ -1312,7 +1327,11 @@ void mnVSResultsMakeString(const char *str, f32 x, f32 y, s32 color_id, f32 scal
 			}
 			else
 			{
-				sobj = lbCommonMakeSObjForGObj(gobj, lbRelocGetFileData(Sprite*, sMNVSResultsFiles[6], offsets[char_id]));
+				sobj = lbCommonMakeSObjForGObj(gobj, lbRelocGetFileData(Sprite*,
+#ifdef SSB_REMIX_PROBE
+					(char_id == 0x1E) ? sMNVSResultsFiles[5] :
+#endif
+					sMNVSResultsFiles[6], offsets[char_id]));
 				sobj->sprite.scalex = scale;
 				sobj->pos.x = current_x;
 
@@ -1320,6 +1339,9 @@ void mnVSResultsMakeString(const char *str, f32 x, f32 y, s32 color_id, f32 scal
 				{
 					sobj->pos.y = y + 26.0F;
 				}
+#ifdef SSB_REMIX_PROBE
+				else if (char_id == 0x1E) sobj->pos.y = y + 17.0F;
+#endif
 				else sobj->pos.y = y;
 
 				sobj->sprite.attr &= ~SP_FASTCOPY;
@@ -1386,6 +1408,14 @@ void mnVSResultsMakeWinnerText(s32 winner)
 	}
 	if (sMNVSResultsIsTeamBattle == FALSE)
 	{
+#ifdef SSB_REMIX_PROBE
+		f32 remix_wins_lx;
+		s32 singular_win;
+		if (nativeRemixResultsWins(winner, &remix_wins_lx, &singular_win)) {
+			mnVSResultsMakeString(singular_win ? win : wins, remix_wins_lx, 180.0F, 3, 1.0F);
+			return;
+		}
+#endif
 #ifdef PORT
 		f32 wlx = (winner >= (s32)nFTKindEnumCount)
 		          ? port_fighter_results_wins_lx(winner)
@@ -1490,6 +1520,18 @@ void mnVSResultMakeFighterName(void)
 	};
 	
 	fkind = mnVSResultGetWinFighterKind();
+
+#ifdef SSB_REMIX_PROBE
+	{
+		f32 remix_name_lx, remix_name_scale;
+		const char *remix_name = nativeRemixResultsName(fkind, &remix_name_lx, &remix_name_scale);
+		if (remix_name != NULL) {
+			mnVSResultsMakeString(remix_name, remix_name_lx, 180.0F, 0, remix_name_scale);
+			mnVSResultsMakeWinnerText(fkind);
+			return;
+		}
+	}
+#endif
 
 #ifdef PORT
 	if (fkind >= (s32)nFTKindEnumCount) {

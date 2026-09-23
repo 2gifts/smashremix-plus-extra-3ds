@@ -1,9 +1,12 @@
-"""Decode compiled results-screen victory BGM thunks for native playback.
+"""Decode compiled results-screen patch families for native presentation.
 
 The N64 mod stores MIPS routine pointers in Character.winner_bgm rather than
 plain track IDs. Recognize the exact add_victory_bgm macro output and carry
-only its immediate BGM ID into the ARM build.
+only its immediate BGM ID into the ARM build. Other rows contain bounded
+winner voice IDs, names, and layout floats from the final assembled tables.
 """
+import json
+import math
 import struct
 from pathlib import Path
 
@@ -100,7 +103,82 @@ def microcode_count(ref):
     return struct.unpack_from('>I', ref.rom, offset)[0]
 
 
-def write_results_audio(ref, tables, audit, out):
+def extract_results_text(ref, tables, audit):
+    expected = ('str_winner_ptr', 'str_winner_lx', 'str_winner_scale',
+                'str_wins_lx', 'sound_type')
+    if any(tables['layouts'].get(key) != (1 if key == 'sound_type' else 4)
+           for key in expected):
+        raise ValueError('Compiled results text tables have unexpected widths')
+    source = (ref.path.with_name('src') / 'resultsscreen.asm').read_text()
+    character = (ref.path.with_name('src') / 'Character.asm').read_text()
+    if (any(f'Character.table_patch_start({key}, {{id}}, 0x4)' not in source
+            for key in expected[:4]) or 'Character.id.DRAGONKING' not in source or
+            'Character.id.BANJO' not in source or
+            '0x8348 + 0x0010' not in source or
+            'constant J(0x1)' not in character):
+        raise ValueError('Pinned results text macro layout changed')
+    audited = {row['name']: row['fkind'] for row in audit['fighters']}
+    rows, inherited = [], []
+    for fighter in tables['fighters']:
+        name, fkind = fighter['name'], fighter['fkind']
+        if audited.get(name) != fkind:
+            raise ValueError(f'{name}: results text fighter does not match audit')
+        pointer = int.from_bytes(bytes(fighter['tables']['str_winner_ptr']), 'big')
+        if pointer < ref.ram_base:
+            if name != 'RANDOM':
+                raise ValueError(f'{name}: unexpected inherited results name pointer')
+            inherited.append(name)
+            continue
+        offset = ref.rom_base + pointer - ref.ram_base
+        if not 0 <= offset <= len(ref.rom) - 33:
+            raise ValueError(f'{name}: results name pointer outside reference ROM')
+        raw = ref.rom[offset:offset + 33]
+        end = raw.find(b'\0')
+        if not 0 < end <= 32:
+            raise ValueError(f'{name}: results name is not bounded')
+        label = raw[:end].decode('ascii')
+        if any(char not in ' ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.&-' for char in label):
+            raise ValueError(f'{name}: unsupported results name glyph')
+        values = [struct.unpack('>f', bytes(fighter['tables'][key]))[0]
+                  for key in expected[1:4]]
+        name_lx, name_scale, wins_lx = values
+        if (any(not math.isfinite(value) for value in values) or
+                not 0 <= name_lx <= 320 or not .1 <= name_scale <= 2 or
+                not 0 <= wins_lx <= 320):
+            raise ValueError(f'{name}: invalid results text geometry')
+        sound_type = bytes(fighter['tables']['sound_type'])
+        if len(sound_type) != 1 or sound_type[0] not in (0, 1):
+            raise ValueError(f'{name}: invalid results sound type')
+        rows.append({'name': name, 'fkind': fkind, 'label': label,
+                     'name_lx': name_lx, 'name_scale': name_scale,
+                     'wins_lx': wins_lx,
+                     'singular_win': (sound_type[0] == 1 and name != 'DRAGONKING') or
+                                     name == 'BANJO'})
+    return {'schema': 1, 'reference_rom_sha256': sha256(ref.path),
+            'source_macro': 'resultsscreen.add_to_results_screen',
+            'inherited_results_text': inherited, 'fighters': rows}
+
+
+def _cfloat(value):
+    result = format(value, '.9g')
+    if '.' not in result and 'e' not in result:
+        result += '.0'
+    return result + 'F'
+
+
+def render_results_text_rows(manifest):
+    lines = ['/* Compiled results name, position, scale and WIN/WINS selection. */',
+             'static const NativeRemixResultsText native_remix_results_text[] = {']
+    for row in sorted(manifest['fighters'], key=lambda item: item['fkind']):
+        lines.append(f'    {{{row["fkind"]}, {json.dumps(row["label"])}, '
+                     f'{_cfloat(row["name_lx"])}, {_cfloat(row["name_scale"])}, '
+                     f'{_cfloat(row["wins_lx"])}, {int(row["singular_win"])}}}, '
+                     f'/* {row["name"]} */')
+    lines += ['};', '']
+    return '\n'.join(lines)
+
+
+def write_results_patches(ref, tables, audit, out):
     manifest = extract_victory_bgm(ref, tables, audit)
     if manifest['reference_rom_sha256'] != tables['reference_rom_sha256']:
         raise ValueError('Victory BGM and table patches use different ROMs')
@@ -111,4 +189,9 @@ def write_results_audio(ref, tables, audit, out):
         raise ValueError('Winner voice and table patches use different ROMs')
     write_json(BUILD / 'fighter-winner-fgm-patches.json', voices)
     (Path(out) / 'native_winner_fgm_rows.inc').write_text(render_winner_fgm_rows(voices))
-    return manifest, voices
+    text = extract_results_text(ref, tables, audit)
+    if text['reference_rom_sha256'] != tables['reference_rom_sha256']:
+        raise ValueError('Results text and table patches use different ROMs')
+    write_json(BUILD / 'fighter-results-text-patches.json', text)
+    (Path(out) / 'native_results_text_rows.inc').write_text(render_results_text_rows(text))
+    return manifest, voices, text

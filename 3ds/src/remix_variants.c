@@ -43,11 +43,20 @@ typedef struct NativeRemixWinnerFGM {
     u16 fgm_id;
 } NativeRemixWinnerFGM;
 
+typedef struct NativeRemixResultsText {
+    u16 fkind;
+    const char *label;
+    f32 name_lx, name_scale, wins_lx;
+    u8 singular_win;
+} NativeRemixResultsText;
+
 #include "generic_variants_data.inc"
 #include "native_kirby_inhale_rows.inc"
 #include "native_victory_bgm_rows.inc"
 #include "native_winner_fgm_rows.inc"
+#include "native_results_text_rows.inc"
 volatile s32 native_remix_last_winner_fgm = -1;
+volatile s32 native_remix_last_results_text_fkind = -1;
 typedef char NativeRemixTablePatchCountCheck[
     ARRAY_COUNT(native_remix_table_patches) == ARRAY_COUNT(native_remix_generic_defs) ? 1 : -1];
 
@@ -76,6 +85,29 @@ s32 nativeRemixWinnerFGM(unsigned fkind) {
             return native_remix_last_winner_fgm;
         }
     return -1;
+}
+
+const char *nativeRemixResultsName(unsigned fkind, f32 *lx, f32 *scale) {
+    for (unsigned i = 0; i < ARRAY_COUNT(native_remix_results_text); i++)
+        if (native_remix_results_text[i].fkind == fkind) {
+            const NativeRemixResultsText *row = &native_remix_results_text[i];
+            *lx = row->name_lx;
+            *scale = row->name_scale;
+            native_remix_last_results_text_fkind = fkind;
+            return row->label;
+        }
+    return NULL;
+}
+
+s32 nativeRemixResultsWins(unsigned fkind, f32 *lx, s32 *singular) {
+    for (unsigned i = 0; i < ARRAY_COUNT(native_remix_results_text); i++)
+        if (native_remix_results_text[i].fkind == fkind) {
+            const NativeRemixResultsText *row = &native_remix_results_text[i];
+            *lx = row->wins_lx;
+            *singular = row->singular_win;
+            return TRUE;
+        }
+    return FALSE;
 }
 
 static int has_animation(const FTMotionDesc *motions, unsigned count, unsigned fid) {
