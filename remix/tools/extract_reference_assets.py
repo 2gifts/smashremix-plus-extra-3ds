@@ -11,6 +11,7 @@ import struct
 import sys
 from pathlib import Path
 from common import BUILD, ROOT, checked_sources, sha256, write_json
+from relocation_layout import reverse_dependencies, stable_cross_file_target
 
 def chain(data, first):
     seen = set()
@@ -71,6 +72,7 @@ def main():
     entries, metadata, offsets, deps = [], [], [0], bytearray()
     relocation_issues = []
     normalized_display_lists = []
+    canonicalized_cross_file = []
     target = out / 'reloc.reference.pak'
     temporary = out / 'reloc.reference.pak.tmp'
     position = 16 + count * 20
@@ -129,15 +131,58 @@ def main():
             deps.extend(little_ids)
             metadata.append({'id': fid, 'symbol': symbols.get(fid), 'size': len(data),
                              'sha256': hashlib.sha256(data).hexdigest(),
-                             'external_files': ids, 'external_targets': [n for _, n in external_links]})
+                             'external_files': ids,
+                             'external_slots': [slot for slot, _ in external_links],
+                             'external_targets': [n for _, n in external_links]})
+        # Preserve the original dependency graph while rewriting the pack.
+        # The N64 loader allocates each file on a 16-byte boundary, then walks
+        # external links in order and loads dependencies depth-first. A link
+        # past a small file can therefore point into a later allocation.
+        original = [{'size': row['size'], 'external_files': tuple(row['external_files'])}
+                    for row in metadata]
+        parents = reverse_dependencies(original)
+        layout_cache = {}
+
+        changed_files = set()
         for entry in metadata:
-            for dep, offset in zip(entry['external_files'], entry.pop('external_targets')):
-                if offset * 4 >= metadata[dep]['size']:
+            slots = entry.pop('external_slots')
+            targets = entry.pop('external_targets')
+            for index, (slot, offset) in enumerate(zip(slots, targets)):
+                dep = entry['external_files'][index]
+                byte_offset = offset * 4
+                if byte_offset >= metadata[dep]['size']:
+                    destination = stable_cross_file_target(
+                        original, parents, entry['id'], dep, byte_offset, layout_cache)
+                    if destination is not None:
+                        owner, owner_offset = destination
+                        if (owner != dep and owner_offset % 4 == 0 and
+                                owner_offset < metadata[owner]['size'] and
+                                owner_offset // 4 < 0x10000):
+                            payload = struct.unpack_from('<I', entries[entry['id']])[0]
+                            pack.seek(payload + slot * 4 + 2)
+                            pack.write(struct.pack('>H', owner_offset // 4))
+                            pack.seek(payload + entry['size'] + index * 2)
+                            pack.write(struct.pack('<H', owner))
+                            struct.pack_into('<H', deps, (offsets[entry['id']] + index) * 2, owner)
+                            entry['external_files'][index] = owner
+                            changed_files.add(entry['id'])
+                            canonicalized_cross_file.append({
+                                'file_id': entry['id'], 'symbol': entry['symbol'],
+                                'slot': slot * 4, 'original_dependency': dep,
+                                'original_dependency_symbol': metadata[dep]['symbol'],
+                                'original_target': byte_offset, 'resolved_dependency': owner,
+                                'resolved_dependency_symbol': metadata[owner]['symbol'],
+                                'resolved_target': owner_offset})
+                            continue
                     relocation_issues.append({'file_id': entry['id'], 'symbol': entry['symbol'],
                                               'kind': 'external_target_outside_file',
                                               'dependency': dep, 'dependency_symbol': metadata[dep]['symbol'],
-                                              'target': offset * 4,
+                                              'target': byte_offset,
                                               'file_size': metadata[dep]['size']})
+        for file_id in changed_files:
+            payload = struct.unpack_from('<I', entries[file_id])[0]
+            pack.seek(payload)
+            metadata[file_id]['sha256'] = hashlib.sha256(pack.read(metadata[file_id]['size'])).hexdigest()
         pack.seek(16)
         pack.write(b''.join(entries))
     temporary.replace(target)
@@ -153,10 +198,12 @@ def main():
         'dependency_index_sha256': sha256(out / 'reloc-deps.bin'),
         'native_3ds_playable': False, 'native_relocations_validated': not relocation_issues,
         'raw_display_lists_normalized': len(normalized_display_lists),
+        'cross_file_relocations_canonicalized': len(canonicalized_cross_file),
         'relocation_issues': len(relocation_issues),
     }
     write_json(out / 'manifest.json', {'summary': summary, 'entries': metadata,
                                       'normalized_display_lists': normalized_display_lists,
+                                      'canonicalized_cross_file': canonicalized_cross_file,
                                       'relocation_issues': relocation_issues})
     print(json.dumps(summary, indent=2))
     if relocation_issues:

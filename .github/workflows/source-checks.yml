@@ -26,6 +26,10 @@ jobs:
           PY
       - name: Test expanded native asset loader without game assets
         run: python remix/tools/test_asset_loader.py --compiler g++
+      - name: Test shared relocation import rules without game assets
+        run: |
+          python -m unittest discover -s remix/tools -p test_relocation_layout.py
+          python -m unittest discover -s remix/tools -p test_extract_reference_assets.py
       - name: Test motion and audio conversion without game assets
         run: |
           python remix/tools/native_fighter_catalog.py --check
