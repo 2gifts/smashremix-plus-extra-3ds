@@ -1,6 +1,7 @@
 /* Generated from remix/native_fighters.json. */
 static const struct { unsigned kind, art; const char *label; } native_remix_ui[] = {
     {29u, 1u, "FALCO"},
+    {41u, 1u, "J FOX"},
     {81u, 2u, "DK ULT"},
     {44u, 2u, "J DK"},
     {36u, 3u, "J SAMUS"},

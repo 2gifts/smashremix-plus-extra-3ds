@@ -13,6 +13,7 @@ from collections import Counter
 from pathlib import Path
 from common import BUILD, ROOT, checked_sources, sha256, write_json
 from native_fighter_catalog import load_catalog, render_generic_data, render_header, render_ui, validate_reference, HEADER, UI
+from reference_table_patches import write_reference_tables
 
 
 class Reference:
@@ -179,6 +180,7 @@ def main():
     from audit_reference_fighters import known_native_script_symbols
     ref = Reference()
     catalog = load_catalog()
+    audit = json.loads((BUILD / 'fighter-audit.json').read_text())
     validate_reference(catalog, BUILD / 'fighter-audit.json', sha256(ref.path))
     if HEADER.read_text() != render_header(catalog) or UI.read_text() != render_ui(catalog):
         raise ValueError('Native fighter tables are stale; run native_fighter_catalog.py')
@@ -258,6 +260,7 @@ def main():
 
     generic = {row['name']: emit_variant(ref, row['name'], dk_external, out)
                for row in catalog['fighters'] if row['registration'] == 'generic'}
+    write_reference_tables(ref, audit, catalog, out)
     (out / 'generic_variants_data.inc').write_text(render_generic_data(catalog))
 
     # Keep the proven vanilla UI assets. Add only the validated dependency

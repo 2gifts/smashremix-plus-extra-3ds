@@ -74,26 +74,18 @@ extern void *dMNCharactersAttack1MotionDescs[][8];
 void ftPortVanillaEntryMakeEffect(FTStruct *fp)
 {
     GObj *boss_target_gobj;
+#ifdef SSB_REMIX_PROBE
+    const s32 effect_kind = nativeRemixParentKind(fp->fkind);
+#else
+    const s32 effect_kind = fp->fkind;
+#endif
 
-    switch (fp->fkind)
+    switch (effect_kind)
     {
     case nFTKindMario:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_JMARIO_KIND:
-#endif
     case nFTKindLuigi:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_JLUIGI_KIND:
-#endif
     case nFTKindMMario:
-        efManagerMarioEntryDokanMakeEffect(&fp->entry_pos,
-#ifdef SSB_REMIX_PROBE
-            fp->fkind == NATIVE_REMIX_JMARIO_KIND ? nFTKindMario :
-            fp->fkind == NATIVE_REMIX_JLUIGI_KIND ? nFTKindLuigi : fp->fkind
-#else
-            fp->fkind
-#endif
-        );
+        efManagerMarioEntryDokanMakeEffect(&fp->entry_pos, effect_kind);
         break;
 
     case nFTKindFox:
@@ -101,35 +93,20 @@ void ftPortVanillaEntryMakeEffect(FTStruct *fp)
         break;
 
     case nFTKindDonkey:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_DKULT_KIND:
-    case NATIVE_REMIX_JDK_KIND:
-#endif
     case nFTKindGDonkey:
         efManagerDonkeyEntryTaruMakeEffect(&fp->entry_pos);
         break;
 
     case nFTKindSamus:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_ESAMUS_KIND:
-    case NATIVE_REMIX_JSAMUS_KIND:
-#endif
         efManagerSamusEntryPointMakeEffect(&fp->entry_pos);
         break;
 
     case nFTKindLink:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_ELINK_KIND:
-    case NATIVE_REMIX_JLINK_KIND:
-#endif
         efManagerLinkEntryWaveMakeEffect(&fp->entry_pos);
         efManagerLinkEntryBeamMakeEffect(&fp->entry_pos);
         break;
 
     case nFTKindYoshi:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_JYOSHI_KIND:
-#endif
         efManagerYoshiEntryEggMakeEffect(&fp->entry_pos);
         break;
 
@@ -139,17 +116,10 @@ void ftPortVanillaEntryMakeEffect(FTStruct *fp)
 
     case nFTKindPikachu:
     case nFTKindPurin:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_JPUFF_KIND:
-    case NATIVE_REMIX_EPUFF_KIND:
-#endif
         efManagerMBallThrownMakeEffect(&fp->entry_pos, fp->status_vars.common.entry.lr);
         break;
 
     case nFTKindCaptain:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_JFALCON_KIND:
-#endif
         if (fp->status_vars.common.entry.lr == -1)
         {
             fp->status_vars.common.entry.is_rotate = TRUE;

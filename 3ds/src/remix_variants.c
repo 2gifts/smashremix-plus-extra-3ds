@@ -20,7 +20,15 @@ typedef struct NativeRemixGenericDef {
     void (*relocate_scripts)(void);
 } NativeRemixGenericDef;
 
+typedef struct NativeRemixTablePatch {
+    FTCostume *costume_row;
+    s32 entry_status[2];
+    s32 down_bounce_fgm;
+} NativeRemixTablePatch;
+
 #include "generic_variants_data.inc"
+typedef char NativeRemixTablePatchCountCheck[
+    ARRAY_COUNT(native_remix_table_patches) == ARRAY_COUNT(native_remix_generic_defs) ? 1 : -1];
 
 static FTData native_remix_generic_data[ARRAY_COUNT(native_remix_generic_defs)];
 static void *native_remix_generic_files[ARRAY_COUNT(native_remix_generic_defs)][9];
@@ -67,6 +75,10 @@ void nativeRemixGenericInit(void) {
         data->p_file_special4 = &files[8];
         data->p_particle = &native_remix_generic_particles[i];
         desc.ft_data = data;
+        desc.costume_row = native_remix_table_patches[i].costume_row;
+        desc.entry_appear_status[0] = native_remix_table_patches[i].entry_status[0];
+        desc.entry_appear_status[1] = native_remix_table_patches[i].entry_status[1];
+        desc.down_bounce_fgm = native_remix_table_patches[i].down_bounce_fgm;
         def->relocate_scripts();
         port_fighter_register(def->kind, &desc);
         port_log("REMIX PROBE: generic fighter registered at fkind %u\n", def->kind);

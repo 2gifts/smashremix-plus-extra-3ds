@@ -15,6 +15,7 @@
   },
   "fighters": [
     {"name": "FALCO", "fkind": 29, "parent": "FOX", "label": "FALCO", "registration": "custom"},
+    {"name": "JFOX", "fkind": 41, "parent": "FOX", "label": "J FOX", "registration": "generic"},
     {"name": "DKULT", "fkind": 81, "parent": "DONKEY", "label": "DK ULT", "registration": "custom"},
     {"name": "JDK", "fkind": 44, "parent": "DONKEY", "label": "J DK", "registration": "generic"},
     {"name": "JSAMUS", "fkind": 36, "parent": "SAMUS", "label": "J SAMUS", "registration": "generic"},

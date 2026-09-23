@@ -13,6 +13,7 @@
 #define NATIVE_REMIX_JIGGLYPUFF_KIND 10u
 #define NATIVE_REMIX_NESS_KIND 11u
 #define NATIVE_REMIX_FALCO_KIND 29u
+#define NATIVE_REMIX_JFOX_KIND 41u
 #define NATIVE_REMIX_DKULT_KIND 81u
 #define NATIVE_REMIX_JDK_KIND 44u
 #define NATIVE_REMIX_JSAMUS_KIND 36u
@@ -38,6 +39,7 @@ typedef struct NativeRemixVariant {
 
 static const NativeRemixVariant native_remix_variants[] = {
     {NATIVE_REMIX_FALCO_KIND, NATIVE_REMIX_FOX_KIND},
+    {NATIVE_REMIX_JFOX_KIND, NATIVE_REMIX_FOX_KIND},
     {NATIVE_REMIX_DKULT_KIND, NATIVE_REMIX_DONKEY_KIND},
     {NATIVE_REMIX_JDK_KIND, NATIVE_REMIX_DONKEY_KIND},
     {NATIVE_REMIX_JSAMUS_KIND, NATIVE_REMIX_SAMUS_KIND},
@@ -58,6 +60,7 @@ static const NativeRemixVariant native_remix_variants[] = {
 static inline unsigned nativeRemixParentKind(unsigned fkind) {
     switch (fkind) {
     case NATIVE_REMIX_FALCO_KIND: return NATIVE_REMIX_FOX_KIND;
+    case NATIVE_REMIX_JFOX_KIND: return NATIVE_REMIX_FOX_KIND;
     case NATIVE_REMIX_DKULT_KIND: return NATIVE_REMIX_DONKEY_KIND;
     case NATIVE_REMIX_JDK_KIND: return NATIVE_REMIX_DONKEY_KIND;
     case NATIVE_REMIX_JSAMUS_KIND: return NATIVE_REMIX_SAMUS_KIND;

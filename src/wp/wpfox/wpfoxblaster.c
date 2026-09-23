@@ -1,6 +1,9 @@
 #include <wp/weapon.h>
 #include <ft/fighter.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -110,7 +113,25 @@ sb32 wpFoxBlasterProcReflector(GObj *weapon_gobj)
 GObj* wpFoxBlasterMakeWeapon(GObj *fighter_gobj, Vec3f *pos)
 {
     WPStruct *wp;
+#ifdef SSB_REMIX_PROBE
+    FTStruct *fp = ftGetStruct(fighter_gobj);
+    WPDesc desc = dWPFoxBlasterWeaponDesc;
+    if (nativeRemixIsVariant(fp->fkind) && nativeRemixParentKind(fp->fkind) == nFTKindFox)
+    {
+        if (!*fp->data->p_file_special1)
+        {
+            *fp->data->p_file_special1 = lbRelocGetStatusBufferFile(fp->data->file_special1_id);
+            if (!*fp->data->p_file_special1)
+                *fp->data->p_file_special1 = lbRelocGetExternHeapFile(fp->data->file_special1_id,
+                    syTaskmanMalloc(lbRelocGetFileSize(fp->data->file_special1_id), 0x10));
+        }
+        if (!*fp->data->p_file_special1) return NULL;
+        desc.p_weapon = fp->data->p_file_special1;
+    }
+    GObj *weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &desc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_FIGHTER));
+#else
     GObj *weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &dWPFoxBlasterWeaponDesc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_FIGHTER));
+#endif
 
     if (weapon_gobj == NULL)
     {

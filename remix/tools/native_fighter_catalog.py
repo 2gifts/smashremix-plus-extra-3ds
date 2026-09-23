@@ -118,7 +118,8 @@ def render_header(catalog):
 
 def render_generic_data(catalog):
     fighters = [row for row in catalog['fighters'] if row['registration'] == 'generic']
-    lines = ['/* ROM-derived private include; generated from the validated fighter catalog. */']
+    lines = ['/* ROM-derived private include; generated from the validated fighter catalog. */',
+             '#include "generic_table_data.inc"']
     lines += [f'#include "{row["name"].lower()}_data.inc"' for row in fighters]
     lines += ['', 'static const NativeRemixGenericDef native_remix_generic_defs[] = {']
     for row in fighters:

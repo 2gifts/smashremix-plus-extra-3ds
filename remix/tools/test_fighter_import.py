@@ -12,6 +12,7 @@ from prepare_reference_audio import Bank, package, repack_sequence_bank, verify_
 from test_asset_loader import compiler_path
 from native_fighter_catalog import load_catalog, render_header, render_ui, render_generic_data, validate_reference, HEADER, UI
 from audit_reference_fighters import ActionTableAudit, callback_worklist
+from reference_table_patches import extract_table_patches, render_native_tables
 
 
 class WordReference:
@@ -23,6 +24,36 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_compiled_table_patch_imports_costumes_for_entire_generic_roster(self):
+        catalog = load_catalog()
+        with tempfile.TemporaryDirectory() as dirname:
+            path = Path(dirname) / 'assembled.z64'
+            base = 0x80400000
+            rom = bytearray(256 * 18)
+            for fighter in catalog['fighters']:
+                kind = fighter['fkind']
+                rom[kind * 8:kind * 8 + 8] = bytes((0, 1, 2, 3, 4, 5, 6, kind))
+                struct.pack_into('>II', rom, 2048 + kind * 8, 220, 221)
+                struct.pack_into('>H', rom, 4096 + kind * 2, 300)
+            path.write_bytes(rom)
+            ref = SimpleNamespace(path=path, rom=rom, rom_base=0, ram_base=base,
+                                  symbols={'Character.default_costume.table': base,
+                                           'Character.entry_action.table': base + 2048,
+                                           'Character.down_bound_fgm.table': base + 4096})
+            audit = {'fighters': [{'name': row['name'], 'fkind': row['fkind'],
+                                   'parent': row['parent']} for row in catalog['fighters']]}
+            manifest = extract_table_patches(ref, audit)
+            output = render_native_tables(catalog, manifest)
+            generic = [row for row in catalog['fighters'] if row['registration'] == 'generic']
+            self.assertEqual(output.count('static FTCostume'), len(generic))
+            self.assertIn(f'{{4, 5, 6}}, {generic[0]["fkind"]}', output)
+            self.assertIn('{220, 221}, 300', output)
+            tampered = json.loads(json.dumps(manifest))
+            tampered['fighters'][next(i for i, row in enumerate(tampered['fighters'])
+                                     if row['name'] == generic[0]['name'])]['fkind'] += 1
+            with self.assertRaisesRegex(ValueError, 'Costume patch mismatch'):
+                render_native_tables(catalog, tampered)
+
     def test_action_table_audit_separates_inherited_and_custom_callbacks(self):
         original = bytearray(0xa6f48)
         base = 0x80084800
@@ -65,7 +96,7 @@ class MotionTests(unittest.TestCase):
         self.assertEqual(UI.read_text(), render_ui(catalog))
         generic = [row for row in catalog['fighters'] if row['registration'] == 'generic']
         generated = render_generic_data(catalog)
-        self.assertEqual(generated.count('_data.inc"'), len(generic))
+        self.assertEqual(generated.count('_data.inc"'), len(generic) + 1)
         self.assertEqual(generated.count('_relocate_scripts}'), len(generic))
         augmented = json.loads(json.dumps(catalog))
         augmented['fighters'].append({'name': 'TEST', 'fkind': 199, 'parent': 'FOX',
@@ -128,7 +159,9 @@ int main(void) {
     assert(nativeRemixParentKind(NATIVE_REMIX_EPUFF_KIND) == NATIVE_REMIX_JIGGLYPUFF_KIND);
     assert(nativeRemixResolveKind(NATIVE_REMIX_NESS_KIND, NATIVE_REMIX_JNESS_KIND) == NATIVE_REMIX_JNESS_KIND);
     assert(nativeRemixParentKind(NATIVE_REMIX_JNESS_KIND) == NATIVE_REMIX_NESS_KIND);
-    assert(nativeRemixNextKind(NATIVE_REMIX_FOX_KIND, NATIVE_REMIX_FALCO_KIND) == 0);
+    assert(nativeRemixNextKind(NATIVE_REMIX_FOX_KIND, NATIVE_REMIX_FALCO_KIND) == NATIVE_REMIX_JFOX_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_JFOX_KIND, NATIVE_REMIX_JFOX_KIND) == 0);
+    assert(nativeRemixParentKind(NATIVE_REMIX_JFOX_KIND) == NATIVE_REMIX_FOX_KIND);
     assert(nativeRemixNextKind(999, 0) == 0);
     assert(nativeRemixResolveKind(NATIVE_REMIX_DONKEY_KIND, NATIVE_REMIX_JDK_KIND) == NATIVE_REMIX_JDK_KIND);
     assert(nativeRemixResolveKind(NATIVE_REMIX_DONKEY_KIND, NATIVE_REMIX_EPIKA_KIND) == NATIVE_REMIX_DONKEY_KIND);
