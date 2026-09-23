@@ -101,6 +101,10 @@ void ftPortVanillaEntryMakeEffect(FTStruct *fp)
         break;
 
     case nFTKindDonkey:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_DKULT_KIND:
+    case NATIVE_REMIX_JDK_KIND:
+#endif
     case nFTKindGDonkey:
         efManagerDonkeyEntryTaruMakeEffect(&fp->entry_pos);
         break;

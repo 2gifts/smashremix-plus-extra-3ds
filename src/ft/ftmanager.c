@@ -685,6 +685,10 @@ void ftManagerInitFighter(GObj *fighter_gobj, FTDesc *desc)
         /* fallthrough */
 
     case nFTKindDonkey:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_DKULT_KIND:
+    case NATIVE_REMIX_JDK_KIND:
+#endif
     case nFTKindNDonkey:
         fp->passive_vars.donkey.charge_level = 0;
         break;

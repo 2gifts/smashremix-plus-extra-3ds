@@ -1,4 +1,7 @@
 #include <ft/fighter.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -117,6 +120,9 @@ void ftDonkeySpecialAirHiSetStatus(GObj *fighter_gobj)
     FTStruct *fp = ftGetStruct(fighter_gobj);
 
     fp->physics.vel_air.y = FTDONKEY_SPINNINGKONG_AIR_VEL_Y;
+#ifdef SSB_REMIX_PROBE
+    if (fp->fkind == NATIVE_REMIX_JDK_KIND) fp->physics.vel_air.y = 18.0F;
+#endif
 
     ftDonkeySpecialHiSetStatusFlagGA(fighter_gobj, nMPKineticsAir);
 }

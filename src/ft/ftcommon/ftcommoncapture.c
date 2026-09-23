@@ -3,6 +3,9 @@
 #ifdef PORT
 #include "fighter_registry.h"
 #endif
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -152,7 +155,12 @@ void ftCommonCaptureShoulderedSetStatus(GObj *fighter_gobj)
 
     ftCommonThrownSetStatusImmediate(fighter_gobj, nFTCommonStatusShouldered);
 #if defined(REGION_US)
-    ftCommonCaptureTrappedInitBreakoutVars(this_fp, (this_fp->percent_damage * 0.08F) + 14.0F);
+    ftCommonCaptureTrappedInitBreakoutVars(this_fp, (this_fp->percent_damage * 0.08F) +
+#ifdef SSB_REMIX_PROBE
+        ((capture_fp->fkind == NATIVE_REMIX_JDK_KIND) ? 20.0F : 14.0F));
+#else
+        14.0F);
+#endif
 #else
     ftCommonCaptureTrappedInitBreakoutVars(this_fp, (this_fp->percent_damage * 0.08F) + 20.0F);
 #endif
