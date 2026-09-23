@@ -7,6 +7,9 @@
 #include <sys/audio.h>
 #include <sys/rdp.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 extern void func_800266A0_272A0(void);
 
 extern void* func_800269C0_275C0(u16);
@@ -3287,7 +3290,11 @@ void mnVSResultsUpdateAutoHandicap(void)
 // 0x80138714
 void mnVSResultsPlayWinBGM(void)
 {
+#ifdef SSB_REMIX_PROBE
+	switch (nativeRemixParentKind(mnVSResultsGetFighterKind(mnVSResultsGetWinPlayer())))
+#else
 	switch (mnVSResultsGetFighterKind(mnVSResultsGetWinPlayer()))
+#endif
 	{
 	case nFTKindMario:
 	case nFTKindLuigi:

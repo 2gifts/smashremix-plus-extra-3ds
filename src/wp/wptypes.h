@@ -239,6 +239,7 @@ struct WPStruct
     {
         // Fighter Weapons
         wpMarioWeaponVarsFireball fireball;
+        wpNessWeaponVarsPKFire pkfire;
         wpSamusWeaponVarsChargeShot charge_shot;
         wpSamusWeaponVarsBomb samus_bomb;
         wpPikachuWeaponVarsThunderJolt thunder_jolt;

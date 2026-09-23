@@ -1,5 +1,8 @@
 #include <ft/fighter.h>
 #include <wp/weapon.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 // // // // // // // // // // // //
 //                               //
 //             MACROS            //
@@ -40,15 +43,23 @@ void ftNessSpecialNProcAccessory(GObj *fighter_gobj) // PK Fire setup
         {
             vel.z = 0.0F;
             angle = FTNESS_PKFIRE_SPARK_ANGLE_AIR;
-            vel.x = __cosf(FTNESS_PKFIRE_SPARK_ANGLE_AIR) * FTNESS_PKFIRE_SPARK_VEL_AIR * fp->lr;
-            vel.y = __sinf(FTNESS_PKFIRE_SPARK_ANGLE_AIR) * FTNESS_PKFIRE_SPARK_VEL_AIR;
+            f32 speed = FTNESS_PKFIRE_SPARK_VEL_AIR;
+#ifdef SSB_REMIX_PROBE
+            if (fp->fkind == NATIVE_REMIX_JNESS_KIND) speed = 120.0F;
+#endif
+            vel.x = __cosf(FTNESS_PKFIRE_SPARK_ANGLE_AIR) * speed * fp->lr;
+            vel.y = __sinf(FTNESS_PKFIRE_SPARK_ANGLE_AIR) * speed;
         }
         else
         {
             vel.z = 0.0F;
             angle = FTNESS_PKFIRE_SPARK_ANGLE_GROUND;
-            vel.x = __cosf(FTNESS_PKFIRE_SPARK_ANGLE_GROUND) * FTNESS_PKFIRE_SPARK_VEL_GROUND * fp->lr;
-            vel.y = __sinf(FTNESS_PKFIRE_SPARK_ANGLE_GROUND) * FTNESS_PKFIRE_SPARK_VEL_GROUND;
+            f32 speed = FTNESS_PKFIRE_SPARK_VEL_GROUND;
+#ifdef SSB_REMIX_PROBE
+            if (fp->fkind == NATIVE_REMIX_JNESS_KIND) speed = 90.0F;
+#endif
+            vel.x = __cosf(FTNESS_PKFIRE_SPARK_ANGLE_GROUND) * speed * fp->lr;
+            vel.y = __sinf(FTNESS_PKFIRE_SPARK_ANGLE_GROUND) * speed;
         }
         wpNessPKFireMakeWeapon(fighter_gobj, &pos, &vel, angle); // Spawn PK Fire
     }

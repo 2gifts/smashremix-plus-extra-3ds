@@ -2,6 +2,24 @@
 #include <ft/fighter.h>
 #include <ef/effect.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+
+/* Keep the projectile's original model after reflection. A reflected head
+ * belongs to another player for damage, but still uses its creator's art. */
+static void **wpNessPKThunderFile(GObj *fighter_gobj)
+{
+    FTStruct *fp = ftGetStruct(fighter_gobj);
+    return fp->fkind == NATIVE_REMIX_JNESS_KIND ? fp->data->p_file_main : &gFTNessFileMain;
+}
+
+static GObj *wpNessPKThunderOrigin(GObj *weapon_gobj, sb32 is_trail)
+{
+    WPStruct *wp = wpGetStruct(weapon_gobj);
+    if (is_trail) wp = wpGetStruct(wp->weapon_vars.pkthunder_trail.head_gobj);
+    return wp->weapon_vars.pkthunder.parent_gobj;
+}
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -332,7 +350,11 @@ sb32 wpNessPKThunderHeadProcDead(GObj *weapon_gobj)
 // 0x8016B2C4
 GObj* wpNessPKThunderHeadMakeWeapon(GObj *fighter_gobj, Vec3f *pos, Vec3f *vel)
 {
-    GObj *weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &dWPNessPKThunderHeadWeaponDesc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_FIGHTER));
+    WPDesc desc = dWPNessPKThunderHeadWeaponDesc;
+#ifdef SSB_REMIX_PROBE
+    desc.p_weapon = wpNessPKThunderFile(fighter_gobj);
+#endif
+    GObj *weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &desc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_FIGHTER));
     WPStruct *wp;
     s32 i;
 
@@ -436,7 +458,11 @@ GObj* wpNessPKThunderTrailMakeWeapon(GObj *head_gobj, Vec3f *pos, s32 trail_id)
     WPStruct *head_wp = wpGetStruct(head_gobj);
     s32 i;
 
-    trail_gobj = wpManagerMakeWeapon(head_gobj, &dWPNessPKThunderTrailWeaponDesc, pos, WEAPON_FLAG_PARENT_WEAPON);
+    WPDesc desc = dWPNessPKThunderTrailWeaponDesc;
+#ifdef SSB_REMIX_PROBE
+    desc.p_weapon = wpNessPKThunderFile(wpNessPKThunderOrigin(head_gobj, trail_id != 0));
+#endif
+    trail_gobj = wpManagerMakeWeapon(head_gobj, &desc, pos, WEAPON_FLAG_PARENT_WEAPON);
 
     if (trail_gobj == NULL)
     {
@@ -584,13 +610,21 @@ GObj* wpNessPKReflectHeadMakeWeapon(GObj *old_gobj, Vec3f *pos, f32 angle)
     Vec3f dist;
     f32 unused;
 
-    new_gobj = wpManagerMakeWeapon(old_gobj, &dWPNessPKReflectHeadWeaponDesc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_WEAPON));
+    WPDesc desc = dWPNessPKReflectHeadWeaponDesc;
+#ifdef SSB_REMIX_PROBE
+    GObj *origin_gobj = wpNessPKThunderOrigin(old_gobj, FALSE);
+    desc.p_weapon = wpNessPKThunderFile(origin_gobj);
+#endif
+    new_gobj = wpManagerMakeWeapon(old_gobj, &desc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_WEAPON));
 
     if (new_gobj == NULL)
     {
         return NULL;
     }
     wp = wpGetStruct(new_gobj);
+#ifdef SSB_REMIX_PROBE
+    wp->weapon_vars.pkthunder.parent_gobj = origin_gobj;
+#endif
 
     wp->proc_dead = wpNessPKReflectHeadProcDead;
 
@@ -669,7 +703,11 @@ GObj* wpNessPKReflectTrailMakeWeapon(GObj *old_gobj, Vec3f *pos, s32 trail_id)
 
     old_wp = wpGetStruct(old_gobj);
 
-    new_gobj = wpManagerMakeWeapon(old_gobj, &dWPNessPKReflectTrailWeaponDesc, pos, WEAPON_FLAG_PARENT_WEAPON);
+    WPDesc desc = dWPNessPKReflectTrailWeaponDesc;
+#ifdef SSB_REMIX_PROBE
+    desc.p_weapon = wpNessPKThunderFile(wpNessPKThunderOrigin(old_gobj, trail_id != 0));
+#endif
+    new_gobj = wpManagerMakeWeapon(old_gobj, &desc, pos, WEAPON_FLAG_PARENT_WEAPON);
 
     if (new_gobj == NULL)
     {

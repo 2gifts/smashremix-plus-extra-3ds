@@ -36,6 +36,10 @@ int main(void) {
     assert(nativeRemixNextKind(NATIVE_REMIX_JLINK_KIND, NATIVE_REMIX_JLINK_KIND) == 0);
     assert(nativeRemixNextKind(NATIVE_REMIX_YOSHI_KIND, 0) == NATIVE_REMIX_JYOSHI_KIND);
     assert(nativeRemixNextKind(NATIVE_REMIX_JYOSHI_KIND, NATIVE_REMIX_JYOSHI_KIND) == 0);
+    assert(nativeRemixNextKind(NATIVE_REMIX_NESS_KIND, 0) == NATIVE_REMIX_JNESS_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_JNESS_KIND, NATIVE_REMIX_JNESS_KIND) == 0);
+    assert(nativeRemixResolveKind(NATIVE_REMIX_NESS_KIND, NATIVE_REMIX_JNESS_KIND) == NATIVE_REMIX_JNESS_KIND);
+    assert(nativeRemixParentKind(NATIVE_REMIX_JNESS_KIND) == NATIVE_REMIX_NESS_KIND);
     assert(nativeRemixNextKind(NATIVE_REMIX_FOX_KIND, NATIVE_REMIX_FALCO_KIND) == 0);
     assert(nativeRemixNextKind(999, 0) == 0);
     assert(nativeRemixResolveKind(NATIVE_REMIX_DONKEY_KIND, NATIVE_REMIX_JDK_KIND) == NATIVE_REMIX_JDK_KIND);
@@ -142,7 +146,7 @@ typedef int32_t s32;
 typedef uint32_t u32;
 enum { nFTKindMario, nFTKindFox, nFTKindDonkey, nFTKindSamus,
        nFTKindLuigi, nFTKindLink, nFTKindYoshi, nFTKindCaptain,
-       nFTKindKirby, nFTKindPikachu, nFTKindGDonkey = 27 };
+       nFTKindKirby, nFTKindPikachu, nFTKindNess = 11, nFTKindGDonkey = 27 };
 #define FTKIRBY_COPY_TABLE_COUNT 27
 ''' + function + '''
 int main(void) {
@@ -161,6 +165,7 @@ int main(void) {
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JFALCON_KIND) == nFTKindCaptain);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JLUIGI_KIND) == nFTKindLuigi);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JDK_KIND) == nFTKindDonkey);
+    assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JNESS_KIND) == nFTKindNess);
     assert(ftKirbySpecialNGetCopyTableKind(28) == nFTKindKirby);
     assert(ftKirbySpecialNGetCopyTableKind(999) == nFTKindKirby);
     assert(ftKirbySpecialNGetCopyTableKind(-1) == nFTKindKirby);
@@ -214,6 +219,9 @@ int main(void) {
         jdk_source = (ROOT / '3ds/src/remix_jdk_probe.c').read_text()
         jdk_start = jdk_source.index('int nativeRemixJDKIsAnimation(')
         jdk_function = jdk_source[jdk_start:jdk_source.index('\n}', jdk_start) + 2]
+        jness_source = (ROOT / '3ds/src/remix_jness_probe.c').read_text()
+        jness_start = jness_source.index('int nativeRemixJNessIsAnimation(')
+        jness_function = jness_source[jness_start:jness_source.index('\n}', jness_start) + 2]
         # Compile the actual native predicate against a small motion catalogue.
         fixture = '''#include <cassert>
 #define ARRAY_COUNT(a) (sizeof(a)/sizeof((a)[0]))
@@ -242,11 +250,13 @@ static Motion remix_jluigi_main_motions[]={{0,{0}},{22,{0}},{23,{8}}};
 static Motion remix_jluigi_menu_motions[]={{0,{0}},{24,{0}}};
 static Motion remix_jdk_main_motions[]={{0,{0}},{25,{0}},{26,{8}}};
 static Motion remix_jdk_menu_motions[]={{0,{0}},{27,{0}}};
+static Motion remix_jness_main_motions[]={{0,{0}},{43,{0}},{44,{8}}};
+static Motion remix_jness_menu_motions[]={{0,{0}},{45,{0}}};
 '''
         for line in (ROOT / 'src/ft/ftdef.h').read_text().splitlines():
             if line.startswith('#define FTANIM_FLAG_ANIMJOINT ') or line.startswith('#define FTANIM_FLAG_SHIELDPOSE '):
                 fixture += line + '\n'
-        fixture += dk_function + '\n' + jp_function + '\n' + ep_function + '\n' + es_function + '\n' + link_function + '\n' + jlink_function + '\n' + yoshi_function + '\n' + mario_function + '\n' + falcon_function + '\n' + luigi_function + '\n' + jdk_function + '\n' + function + '''
+        fixture += dk_function + '\n' + jp_function + '\n' + ep_function + '\n' + es_function + '\n' + link_function + '\n' + jlink_function + '\n' + yoshi_function + '\n' + mario_function + '\n' + falcon_function + '\n' + luigi_function + '\n' + jdk_function + '\n' + jness_function + '\n' + function + '''
 int main(){
     assert(!nativeRelocIsFighterAnimation(0));
     assert(nativeRelocIsFighterAnimation(4));
@@ -288,6 +298,9 @@ int main(){
     assert(nativeRelocIsFighterAnimation(40));
     assert(!nativeRelocIsFighterAnimation(41));
     assert(nativeRelocIsFighterAnimation(42));
+    assert(nativeRelocIsFighterAnimation(43));
+    assert(!nativeRelocIsFighterAnimation(44));
+    assert(nativeRelocIsFighterAnimation(45));
     assert(!nativeRemixDKUltIsAnimation(0));
     assert(!nativeRemixJPikaIsAnimation(0));
     assert(!nativeRemixEPikaIsAnimation(0));
@@ -299,6 +312,7 @@ int main(){
     assert(!nativeRemixJFalconIsAnimation(0));
     assert(!nativeRemixJLuigiIsAnimation(0));
     assert(!nativeRemixJDKIsAnimation(0));
+    assert(!nativeRemixJNessIsAnimation(0));
 }
 '''
         out = BUILD / 'fighter-import-test'

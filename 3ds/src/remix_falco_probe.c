@@ -44,6 +44,7 @@ int nativeRelocIsFighterAnimation(unsigned int fid) {
     extern int nativeRemixJFalconIsAnimation(unsigned);
     extern int nativeRemixJLuigiIsAnimation(unsigned);
     extern int nativeRemixJDKIsAnimation(unsigned);
+    extern int nativeRemixJNessIsAnimation(unsigned);
     /* Motion ID zero means no animation. Relocation file zero is the shared
      * menu artwork and must retain the normal sprite byte-order fixups. */
     if (!fid) return 0;
@@ -58,7 +59,8 @@ int nativeRelocIsFighterAnimation(unsigned int fid) {
            nativeRemixJLinkIsAnimation(fid) ||
            nativeRemixJYoshiIsAnimation(fid) ||
            nativeRemixJMarioIsAnimation(fid) || nativeRemixJFalconIsAnimation(fid) ||
-           nativeRemixJLuigiIsAnimation(fid) || nativeRemixJDKIsAnimation(fid);
+           nativeRemixJLuigiIsAnimation(fid) || nativeRemixJDKIsAnimation(fid) ||
+           nativeRemixJNessIsAnimation(fid);
 }
 
 void nativeRemixProbeReset(FTStruct *fp) {

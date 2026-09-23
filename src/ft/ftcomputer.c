@@ -10,9 +10,11 @@
 #include "native_remix_roster.h"
 #define FT_COMPUTER_IS_SAMUS(kind) ((kind) == nFTKindSamus || (kind) == NATIVE_REMIX_ESAMUS_KIND)
 #define FT_COMPUTER_IS_LINK(kind) ((kind) == nFTKindLink || (kind) == NATIVE_REMIX_ELINK_KIND || (kind) == NATIVE_REMIX_JLINK_KIND)
+#define FT_COMPUTER_IS_NESS(kind) ((kind) == nFTKindNess || (kind) == NATIVE_REMIX_JNESS_KIND)
 #else
 #define FT_COMPUTER_IS_SAMUS(kind) ((kind) == nFTKindSamus)
 #define FT_COMPUTER_IS_LINK(kind) ((kind) == nFTKindLink)
+#define FT_COMPUTER_IS_NESS(kind) ((kind) == nFTKindNess)
 #endif
 
 // // // // // // // // // // // //
@@ -4265,7 +4267,7 @@ sb32 ftComputerCheckDetectTarget(FTStruct *this_fp, f32 detect_range_base)
                         {
                             if (user_data != NULL)
                             {
-                                if ((((FTStruct*)user_data)->fkind == nFTKindNess) || (((FTStruct*)user_data)->fkind == nFTKindFox))
+                                if (FT_COMPUTER_IS_NESS(((FTStruct*)user_data)->fkind) || (((FTStruct*)user_data)->fkind == nFTKindFox))
                                 {
                                     fkind = (this_fp->fkind == nFTKindKirby) ? this_fp->passive_vars.kirby.copy_id : this_fp->fkind;
 
@@ -4778,6 +4780,9 @@ void func_ovl3_801346D4(FTStruct *fp)
             break;
 
         case nFTKindNess:
+#ifdef SSB_REMIX_PROBE
+        case NATIVE_REMIX_JNESS_KIND:
+#endif
             range = -com->jump_predict;
             break;
         }
@@ -5467,7 +5472,7 @@ sb32 func_ovl3_80135B78(FTStruct *this_fp)
                                                 if
                                                 (
                                                     (this_fp->fkind == (0,nFTKindFox)) || // WTF????????????????????????
-                                                    (this_fp->fkind == nFTKindNess)    ||
+                                                    FT_COMPUTER_IS_NESS(this_fp->fkind) ||
                                                     (this_fp->fkind == nFTKindNFox)    ||
                                                     (this_fp->fkind == nFTKindNNess)
                                                 )
@@ -5534,7 +5539,7 @@ sb32 func_ovl3_80135B78(FTStruct *this_fp)
                                                 if
                                                 (
                                                     (this_fp->fkind == (0, nFTKindFox))  || // I AM LOSING MY MIND
-                                                    (this_fp->fkind == nFTKindNess)      ||
+                                                    FT_COMPUTER_IS_NESS(this_fp->fkind) ||
                                                     (this_fp->fkind == nFTKindNFox)   ||
                                                     (this_fp->fkind == nFTKindNNess)
                                                 )
@@ -6148,7 +6153,7 @@ s32 ftComputerGetObjectiveStatus(GObj *this_gobj)
             return 0;
         }
     }
-    if (this_fp->fkind == nFTKindNess)
+    if (FT_COMPUTER_IS_NESS(this_fp->fkind))
     {
         if ((this_fp->status_id == nFTNessStatusSpecialHiHold) || (this_fp->status_id == nFTNessStatusSpecialAirHiHold))
         {
@@ -6380,6 +6385,9 @@ s32 ftComputerProcDefault(GObj *fighter_gobj)
 
     case nFTKindNess:
     case nFTKindNNess:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JNESS_KIND:
+#endif
         if ((fp->status_id >= nFTNessStatusSpecialLwScopeStart) && (fp->status_id <= nFTNessStatusSpecialLwScopeEnd))
         {
             ftComputerSetCommandWaitShort(fp, nFTComputerInputStickNButtonBRelease);
@@ -6678,6 +6686,9 @@ void ftComputerFollowObjectiveCounterAttack(FTStruct *fp)
 
         case nFTKindNess:
         case nFTKindNNess:
+#ifdef SSB_REMIX_PROBE
+        case NATIVE_REMIX_JNESS_KIND:
+#endif
             if ((fp->status_id < nFTNessStatusSpecialLwScopeStart) || (fp->status_id > nFTNessStatusSpecialLwScopeEnd))
             {
                 ftComputerSetCommandImmediate(fp, nFTComputerInputStickNXSmashLwButtonBReleaseBHold);
@@ -6728,7 +6739,7 @@ void ftComputerFollowObjectiveUseItem(FTStruct *fp)
 
             if ((fp->level >= 5) && (target_fp != NULL))
             {
-                if ((target_fp->fkind == nFTKindNess) || (target_fp->fkind == nFTKindFox))
+                if (FT_COMPUTER_IS_NESS(target_fp->fkind) || (target_fp->fkind == nFTKindFox))
                 {
                     ftComputerSetCommandWaitShort(fp, nFTComputerInputThrowItemImmediate);
                     return;
@@ -6948,6 +6959,9 @@ void func_ovl3_8013877C(FTStruct *this_fp)
                 break;
 
             case nFTKindNess:
+#ifdef SSB_REMIX_PROBE
+            case NATIVE_REMIX_JNESS_KIND:
+#endif
                 if (syUtilsRandFloat() < 0.25F)
                 {
                     ftComputerSetCommandWaitShort(this_fp, nFTComputerInputStickSmashHiButtonB);
@@ -6978,7 +6992,7 @@ sb32 func_ovl3_80138AA8(FTStruct *this_fp, sb32 is_delay)
         }
         if ((syUtilsRandFloat() < ((this_fp->level - 1) / 9.0F)) && (target_fp != NULL))
         {
-            if ((target_fp->fkind == nFTKindNess) || (target_fp->fkind == nFTKindFox))
+            if (FT_COMPUTER_IS_NESS(target_fp->fkind) || (target_fp->fkind == nFTKindFox))
             {
                 return FALSE;
             }

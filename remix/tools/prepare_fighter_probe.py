@@ -260,6 +260,7 @@ def main():
     elink_data, elink_motion, elink_menus, elink_scripts = emit_variant(ref, 'ELINK', dk_external, out)
     jlink_data, jlink_motion, jlink_menus, jlink_scripts = emit_variant(ref, 'JLINK', dk_external, out)
     jyoshi_data, jyoshi_motion, jyoshi_menus, jyoshi_scripts = emit_variant(ref, 'JYOSHI', dk_external, out)
+    jness_data, jness_motion, jness_menus, jness_scripts = emit_variant(ref, 'JNESS', dk_external, out)
 
     # Keep the proven vanilla UI assets. Add only the validated dependency
     # closure required by this fighter, never ship unresolved reference files.
@@ -284,7 +285,7 @@ def main():
         required.add(fid)
         for dep in entries[fid]['external_files']:
             add(dep)
-    for fid in data[:9] + dk_data[:9] + jp_data[:9] + mario_data[:9] + falcon_data[:9] + luigi_data[:9] + jdk_data[:9] + epika_data[:9] + esamus_data[:9] + elink_data[:9] + jlink_data[:9] + jyoshi_data[:9] + [r[0] for r in motion + menus + dk_motion + dk_menus + jp_motion + jp_menus + mario_motion + mario_menus + falcon_motion + falcon_menus + luigi_motion + luigi_menus + jdk_motion + jdk_menus + epika_motion + epika_menus + esamus_motion + esamus_menus + elink_motion + elink_menus + jlink_motion + jlink_menus + jyoshi_motion + jyoshi_menus]:
+    for fid in data[:9] + dk_data[:9] + jp_data[:9] + mario_data[:9] + falcon_data[:9] + luigi_data[:9] + jdk_data[:9] + epika_data[:9] + esamus_data[:9] + elink_data[:9] + jlink_data[:9] + jyoshi_data[:9] + jness_data[:9] + [r[0] for r in motion + menus + dk_motion + dk_menus + jp_motion + jp_menus + mario_motion + mario_menus + falcon_motion + falcon_menus + luigi_motion + luigi_menus + jdk_motion + jdk_menus + epika_motion + epika_menus + esamus_motion + esamus_menus + elink_motion + elink_menus + jlink_motion + jlink_menus + jyoshi_motion + jyoshi_menus + jness_motion + jness_menus]:
         add(fid)
     bad = [issue for issue in manifest['relocation_issues'] if issue['file_id'] in required]
     if bad:
@@ -315,7 +316,7 @@ def main():
     for name in ('initial-save.bin', 'bottom-ui.bin'):
         shutil.copy2(vanilla / name, assets / name)
     write_json(out / 'manifest.json', {
-        'fixture': 'Twelve independently backed fighters selectable beside vanilla parents in VS; not the complete mod',
+        'fixture': 'Thirteen independently backed fighters selectable beside vanilla parents in VS; not the complete mod',
         'motion_count': len(motion), 'menu_motion_count': len(menus),
         'script_words': len(scripts.words), 'script_pointers': len(scripts.pointers),
         'dkult_motion_count': len(dk_motion), 'dkult_menu_motion_count': len(dk_menus),
@@ -351,10 +352,13 @@ def main():
         'jyoshi_motion_count': len(jyoshi_motion), 'jyoshi_menu_motion_count': len(jyoshi_menus),
         'jyoshi_script_words': len(jyoshi_scripts.words),
         'jyoshi_script_pointers': len(jyoshi_scripts.pointers),
+        'jness_motion_count': len(jness_motion), 'jness_menu_motion_count': len(jness_menus),
+        'jness_script_words': len(jness_scripts.words),
+        'jness_script_pointers': len(jness_scripts.pointers),
         'required_files': sorted(required), 'unresolved_relocations': bad,
         'pack_sha256': sha256(assets / 'reloc.pak'),
     })
-    print(f'Twelve fighters: {len(motion)} + {len(dk_motion)} + {len(jp_motion)} + {len(epika_motion)} + {len(mario_motion)} + {len(falcon_motion)} + {len(luigi_motion)} + {len(jdk_motion)} + {len(esamus_motion)} + {len(elink_motion)} + {len(jlink_motion)} + {len(jyoshi_motion)} actions, {len(required)} validated assets')
+    print(f'Thirteen fighters: {len(motion)} + {len(dk_motion)} + {len(jp_motion)} + {len(epika_motion)} + {len(mario_motion)} + {len(falcon_motion)} + {len(luigi_motion)} + {len(jdk_motion)} + {len(esamus_motion)} + {len(elink_motion)} + {len(jlink_motion)} + {len(jyoshi_motion)} + {len(jness_motion)} actions, {len(required)} validated assets')
 
 
 if __name__ == '__main__':

@@ -2,6 +2,9 @@
 #include <it/item.h>
 #include <ft/fighter.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -132,7 +135,13 @@ sb32 wpNessPKFireProcAbsorb(GObj *weapon_gobj)
 GObj* wpNessPKFireMakeWeapon(GObj *fighter_gobj, Vec3f *pos, Vec3f *vel, f32 angle)
 {
     s32 unused;
-    GObj *weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &dWPNessPKFireWeaponDesc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_FIGHTER));
+    WPDesc desc = dWPNessPKFireWeaponDesc;
+#ifdef SSB_REMIX_PROBE
+    FTStruct *fp = ftGetStruct(fighter_gobj);
+    if (fp->fkind == NATIVE_REMIX_JNESS_KIND)
+        desc.p_weapon = fp->data->p_file_special2;
+#endif
+    GObj *weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &desc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_FIGHTER));
     WPStruct *wp;
 
     if (weapon_gobj == NULL)
@@ -140,6 +149,11 @@ GObj* wpNessPKFireMakeWeapon(GObj *fighter_gobj, Vec3f *pos, Vec3f *vel, f32 ang
         return NULL;
     }
     wp = wpGetStruct(weapon_gobj);
+#ifdef SSB_REMIX_PROBE
+    wp->weapon_vars.pkfire.p_file = desc.p_weapon;
+    wp->weapon_vars.pkfire.particle_bank_id = fp->fkind == NATIVE_REMIX_JNESS_KIND ?
+        *fp->data->p_particle : gFTNessParticleBankID;
+#endif
 
     wp->lifetime = WPPKFIRE_LIFETIME;
 

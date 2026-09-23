@@ -154,7 +154,11 @@ void ftCommonJumpAerialSetStatus(GObj *fighter_gobj, s32 input_source)
         fp->knockback_resist_status = FTYOSHI_JUMPAERIAL_KNOCKBACK_RESIST;
 #endif
     }
-    else if ((fp->fkind == nFTKindNess) || (fp->fkind == nFTKindNNess))
+    else if ((fp->fkind == nFTKindNess) || (fp->fkind == nFTKindNNess)
+#ifdef SSB_REMIX_PROBE
+        || (fp->fkind == NATIVE_REMIX_JNESS_KIND)
+#endif
+    )
     {
         fp->proc_physics = ftNessJumpAerialProcPhysics;
         fp->status_vars.common.jumpaerial.drift = 0.0F;
@@ -172,7 +176,11 @@ void ftCommonJumpAerialSetStatus(GObj *fighter_gobj, s32 input_source)
     } 
     fp->physics.vel_air.y = (((stick_range_y * attr->jump_height_mul) + attr->jump_height_base) * attr->jumpaerial_height);
 
-    if ((fp->fkind == nFTKindNess) || (fp->fkind == nFTKindNNess))
+    if ((fp->fkind == nFTKindNess) || (fp->fkind == nFTKindNNess)
+#ifdef SSB_REMIX_PROBE
+        || (fp->fkind == NATIVE_REMIX_JNESS_KIND)
+#endif
+    )
     {
         fp->status_vars.common.jumpaerial.vel_x = stick_range_x * attr->jumpaerial_vel_x;
     }

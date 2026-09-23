@@ -1,6 +1,9 @@
 #include <ft/fighter.h>
 #include <it/item.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -54,6 +57,9 @@ void ftCommonAttackS4ProcUpdate(GObj *fighter_gobj)
         // Fallthrough, should break here for efficiency
     case nFTKindNess:
     case nFTKindNNess:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JNESS_KIND:
+#endif
         if ((fp->motion_vars.flags.flag1 != 0) && !(fp->is_reflect))
         {
             fp->is_reflect = TRUE;
@@ -104,6 +110,9 @@ void ftCommonAttackS4SetStatus(GObj *fighter_gobj)
 
     case nFTKindNess:
     case nFTKindNNess:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JNESS_KIND:
+#endif
         fp->motion_vars.flags.flag1 = 0;
         break;
     }
@@ -123,6 +132,15 @@ void ftCommonAttackS4SetStatus(GObj *fighter_gobj)
     case nFTKindNess:
     case nFTKindNNess:
 #ifdef PORT
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JNESS_KIND:
+        if (fp->fkind == NATIVE_REMIX_JNESS_KIND)
+        {
+            fp->special_coll = (FTSpecialColl*) ((uintptr_t)*fp->data->p_file_mainmotion +
+                (intptr_t)llNessMainMotionAttackS4ReflectorFTSpecialColl);
+            break;
+        }
+#endif
         fp->special_coll = (FTSpecialColl*) ((uintptr_t)gFTNessFileMainMotion + (intptr_t)llNessMainMotionAttackS4ReflectorFTSpecialColl);
 #else
         fp->special_coll = (FTSpecialColl*) ((uintptr_t)gFTNessFileMainMotion + (intptr_t)&llNessMainMotionAttackS4ReflectorFTSpecialColl);

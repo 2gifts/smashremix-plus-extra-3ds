@@ -1,6 +1,9 @@
 #include <ft/fighter.h>
 #include <wp/weapon.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -241,6 +244,12 @@ void ftNessSpecialLwInitVars(GObj *fighter_gobj)
     fp->is_absorb = TRUE;
 
 #ifdef PORT
+#ifdef SSB_REMIX_PROBE
+    if (fp->fkind == NATIVE_REMIX_JNESS_KIND)
+        fp->special_coll = (FTSpecialColl*) ((uintptr_t)*fp->data->p_file_mainmotion +
+            (intptr_t)llNessMainMotionLwAbsorbFTSpecialColl);
+    else
+#endif
     fp->special_coll = (FTSpecialColl*) ((uintptr_t)gFTNessFileMainMotion + (intptr_t)llNessMainMotionLwAbsorbFTSpecialColl);
 #else
     fp->special_coll = (FTSpecialColl*) ((uintptr_t)gFTNessFileMainMotion + (intptr_t)&llNessMainMotionLwAbsorbFTSpecialColl);

@@ -186,6 +186,13 @@ typedef struct wpMarioWeaponVarsFireball
 
 } wpMarioWeaponVarsFireball;
 
+typedef struct wpNessWeaponVarsPKFire
+{
+    /* The original projectile asset stays attached after a reflection. */
+    void **p_file;
+    s32 particle_bank_id;
+} wpNessWeaponVarsPKFire;
+
 typedef struct wpPikachuWeaponVarsThunderJolt
 {
 	s32 line_type;

@@ -246,11 +246,22 @@ GObj* itNessPKFireMakeItem(GObj *weapon_gobj, Vec3f *pos, Vec3f *vel)
 {
     GObj *item_gobj;
     WPStruct *wp = wpGetStruct(weapon_gobj);
+#ifdef SSB_REMIX_PROBE
+    ITDesc desc = dITNessPKFireItemDesc;
+    if (wp->weapon_vars.pkfire.p_file)
+        desc.p_file = wp->weapon_vars.pkfire.p_file;
+#endif
     ITStruct *ip;
     LBParticle *pc;
     LBTransform *xf;
 
-    item_gobj = itManagerMakeItem(weapon_gobj, &dITNessPKFireItemDesc, pos, vel, (ITEM_FLAG_COLLPROJECT | ITEM_FLAG_PARENT_WEAPON));
+    item_gobj = itManagerMakeItem(weapon_gobj,
+#ifdef SSB_REMIX_PROBE
+        &desc,
+#else
+        &dITNessPKFireItemDesc,
+#endif
+        pos, vel, (ITEM_FLAG_COLLPROJECT | ITEM_FLAG_PARENT_WEAPON));
 
     if (item_gobj == NULL)
     {
@@ -281,7 +292,13 @@ GObj* itNessPKFireMakeItem(GObj *weapon_gobj, Vec3f *pos, Vec3f *vel)
 
     ip->lifetime = ITPKFIRE_LIFETIME;
 
-    pc = lbParticleMakeScriptID(gFTNessParticleBankID, 0);
+    pc = lbParticleMakeScriptID(
+#ifdef SSB_REMIX_PROBE
+        wp->weapon_vars.pkfire.particle_bank_id,
+#else
+        gFTNessParticleBankID,
+#endif
+        0);
 
     if (pc != NULL)
     {

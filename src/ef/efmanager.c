@@ -5049,7 +5049,14 @@ GObj* efManagerNessPsychicMagnetMakeEffect(GObj *fighter_gobj)
     EFStruct *ep;
     DObj *dobj;
 
-    effect_gobj = efManagerMakeEffectForce(&dEFManagerNessPsychicMagnetEffectDesc);
+    EFDesc desc = dEFManagerNessPsychicMagnetEffectDesc;
+#ifdef SSB_REMIX_PROBE
+    FTStruct *fp = ftGetStruct(fighter_gobj);
+    if (fp->fkind == NATIVE_REMIX_JNESS_KIND)
+        /* Remix puts Magnet in slot 6 and the new PK Fire art in slot 7. */
+        desc.file_head = fp->data->p_file_special1;
+#endif
+    effect_gobj = efManagerMakeEffectForce(&desc);
 
     if (effect_gobj == NULL)
     {
@@ -5126,7 +5133,12 @@ GObj* efManagerNessPKThunderTrailMakeEffect(GObj *fighter_gobj)
 
     fp = ftGetStruct(fighter_gobj);
 
-    effect_gobj = efManagerMakeEffectNoForce(&dEFManagerNessPKThunderTrailEffectDesc);
+    EFDesc desc = dEFManagerNessPKThunderTrailEffectDesc;
+#ifdef SSB_REMIX_PROBE
+    if (fp->fkind == NATIVE_REMIX_JNESS_KIND)
+        desc.file_head = fp->data->p_file_model;
+#endif
+    effect_gobj = efManagerMakeEffectNoForce(&desc);
 
     if (effect_gobj == NULL)
     {
@@ -5176,7 +5188,13 @@ GObj* efManagerNessPKReflectTrailMakeEffect(GObj *weapon_gobj)
 
     wp = wpGetStruct(weapon_gobj);
 
-    effect_gobj = efManagerMakeEffectNoForce(&dEFManagerNessPKReflectTrailEffectDesc);
+    EFDesc desc = dEFManagerNessPKReflectTrailEffectDesc;
+#ifdef SSB_REMIX_PROBE
+    FTStruct *origin = ftGetStruct(wp->weapon_vars.pkthunder.parent_gobj);
+    if (origin->fkind == NATIVE_REMIX_JNESS_KIND)
+        desc.file_head = origin->data->p_file_model;
+#endif
+    effect_gobj = efManagerMakeEffectNoForce(&desc);
 
     if (effect_gobj == NULL)
     {
@@ -5202,7 +5220,12 @@ GObj* efManagerNessPKReflectTrailMakeEffect(GObj *weapon_gobj)
 GObj* efManagerNessPKThunderWaveMakeEffect(GObj *fighter_gobj)
 {
     FTStruct *fp = ftGetStruct(fighter_gobj);
-    GObj *effect_gobj = efManagerMakeEffectNoForce(&dEFManagerNessPKThunderWaveEffectDesc);
+    EFDesc desc = dEFManagerNessPKThunderWaveEffectDesc;
+#ifdef SSB_REMIX_PROBE
+    if (fp->fkind == NATIVE_REMIX_JNESS_KIND)
+        desc.file_head = fp->data->p_file_model;
+#endif
+    GObj *effect_gobj = efManagerMakeEffectNoForce(&desc);
 
     if (effect_gobj == NULL)
     {

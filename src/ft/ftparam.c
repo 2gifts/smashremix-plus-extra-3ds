@@ -1472,6 +1472,9 @@ void ftParamResetStatUpdateColAnim(GObj *fighter_gobj)
 
     case nFTKindNess:
     case nFTKindNNess:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JNESS_KIND:
+#endif
         if (fp->is_absorb)
         {
             ftParamCheckSetFighterColAnimID(fighter_gobj, nGMColAnimFighterNessSpecialLwHold, 0);

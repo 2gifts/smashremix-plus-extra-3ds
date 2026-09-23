@@ -52,6 +52,7 @@ void ssb_game_init(void) {
     extern void nativeRemixJFalconInit(void);
     extern void nativeRemixJLuigiInit(void);
     extern void nativeRemixJDKInit(void);
+    extern void nativeRemixJNessInit(void);
     nativeRemixProbeInit();
     nativeRemixDKUltInit();
     nativeRemixJPikaInit();
@@ -64,6 +65,7 @@ void ssb_game_init(void) {
     nativeRemixJFalconInit();
     nativeRemixJLuigiInit();
     nativeRemixJDKInit();
+    nativeRemixJNessInit();
 #endif
     port_coroutine_init_main();
     PortCoroutine* co=port_coroutine_create(boot,0,1024*1024);

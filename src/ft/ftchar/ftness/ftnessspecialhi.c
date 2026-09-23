@@ -1,5 +1,8 @@
 #include <ft/fighter.h>
 #include <wp/weapon.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -182,7 +185,12 @@ void ftNessSpecialHiInitStatusVars(GObj *fighter_gobj)
     FTStruct *fp = ftGetStruct(fighter_gobj);
 
     fp->status_vars.ness.specialhi.pkjibaku_delay = FTNESS_PKJIBAKU_DELAY;
+#ifdef SSB_REMIX_PROBE
+    fp->status_vars.ness.specialhi.pkthunder_end_delay =
+        fp->fkind == NATIVE_REMIX_JNESS_KIND ? 20 : FTNESS_PKTHUNDER_END_DELAY;
+#else
     fp->status_vars.ness.specialhi.pkthunder_end_delay = FTNESS_PKTHUNDER_END_DELAY;
+#endif
     fp->status_vars.ness.specialhi.pkthunder_gravity_delay = FTNESS_PKTHUNDER_GRAVITY_DELAY;
     fp->passive_vars.ness.is_thunder_destroy = FALSE;
     fp->passive_vars.ness.pkthunder_trail_id = 0;
@@ -343,7 +351,11 @@ void ftNessSpecialAirHiEndProcUpdate(GObj *fighter_gobj)
 {
     if (fighter_gobj->anim_frame <= 0.0F)
     {
-        ftCommonFallSpecialSetStatus(fighter_gobj, FTNESS_PKTHUNDER_FALLSPECIAL_DRIFT, FALSE, TRUE, TRUE, FTNESS_PKTHUNDER_LANDING_LAG, FALSE);
+        ftCommonFallSpecialSetStatus(fighter_gobj, FTNESS_PKTHUNDER_FALLSPECIAL_DRIFT, FALSE, TRUE, TRUE,
+#ifdef SSB_REMIX_PROBE
+            ftGetStruct(fighter_gobj)->fkind == NATIVE_REMIX_JNESS_KIND ? 0.24F :
+#endif
+            FTNESS_PKTHUNDER_LANDING_LAG, FALSE);
     }
 }
 
