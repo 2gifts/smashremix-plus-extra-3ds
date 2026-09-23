@@ -3,6 +3,12 @@
 #ifdef PORT
 #include "enhancements/enhancements.h"
 #endif
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#define FT_ATTACKAIR_IS_LINK(fp) ((fp)->fkind == nFTKindLink || (fp)->fkind == nFTKindNLink || (fp)->fkind == NATIVE_REMIX_ELINK_KIND)
+#else
+#define FT_ATTACKAIR_IS_LINK(fp) ((fp)->fkind == nFTKindLink || (fp)->fkind == nFTKindNLink)
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -15,7 +21,7 @@ void ftCommonAttackAirLwProcHit(GObj *fighter_gobj)
 {
     FTStruct *fp = ftGetStruct(fighter_gobj);
 
-    if ((fp->fkind == nFTKindLink) || (fp->fkind == nFTKindNLink))
+    if (FT_ATTACKAIR_IS_LINK(fp))
     {
         ftParamClearAttackCollAll(fighter_gobj);
 
@@ -36,7 +42,7 @@ void ftCommonAttackAirLwProcUpdate(GObj *fighter_gobj)
 {
     FTStruct *fp = ftGetStruct(fighter_gobj);
 
-    if ((fp->fkind == nFTKindLink) || (fp->fkind == nFTKindNLink))
+    if (FT_ATTACKAIR_IS_LINK(fp))
     {
         if (fp->status_vars.common.attackair.rehit_timer != 0)
         {

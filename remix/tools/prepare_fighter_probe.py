@@ -257,6 +257,7 @@ def main():
     jdk_data, jdk_motion, jdk_menus, jdk_scripts = emit_variant(ref, 'JDK', dk_external, out)
     epika_data, epika_motion, epika_menus, epika_scripts = emit_variant(ref, 'EPIKA', dk_external, out)
     esamus_data, esamus_motion, esamus_menus, esamus_scripts = emit_variant(ref, 'ESAMUS', dk_external, out)
+    elink_data, elink_motion, elink_menus, elink_scripts = emit_variant(ref, 'ELINK', dk_external, out)
 
     # Keep the proven vanilla UI assets. Add only the validated dependency
     # closure required by this fighter, never ship unresolved reference files.
@@ -281,7 +282,7 @@ def main():
         required.add(fid)
         for dep in entries[fid]['external_files']:
             add(dep)
-    for fid in data[:9] + dk_data[:9] + jp_data[:9] + mario_data[:9] + falcon_data[:9] + luigi_data[:9] + jdk_data[:9] + epika_data[:9] + esamus_data[:9] + [r[0] for r in motion + menus + dk_motion + dk_menus + jp_motion + jp_menus + mario_motion + mario_menus + falcon_motion + falcon_menus + luigi_motion + luigi_menus + jdk_motion + jdk_menus + epika_motion + epika_menus + esamus_motion + esamus_menus]:
+    for fid in data[:9] + dk_data[:9] + jp_data[:9] + mario_data[:9] + falcon_data[:9] + luigi_data[:9] + jdk_data[:9] + epika_data[:9] + esamus_data[:9] + elink_data[:9] + [r[0] for r in motion + menus + dk_motion + dk_menus + jp_motion + jp_menus + mario_motion + mario_menus + falcon_motion + falcon_menus + luigi_motion + luigi_menus + jdk_motion + jdk_menus + epika_motion + epika_menus + esamus_motion + esamus_menus + elink_motion + elink_menus]:
         add(fid)
     bad = [issue for issue in manifest['relocation_issues'] if issue['file_id'] in required]
     if bad:
@@ -312,7 +313,7 @@ def main():
     for name in ('initial-save.bin', 'bottom-ui.bin'):
         shutil.copy2(vanilla / name, assets / name)
     write_json(out / 'manifest.json', {
-        'fixture': 'Nine independently backed fighters selectable beside vanilla parents in VS; not the complete mod',
+        'fixture': 'Ten independently backed fighters selectable beside vanilla parents in VS; not the complete mod',
         'motion_count': len(motion), 'menu_motion_count': len(menus),
         'script_words': len(scripts.words), 'script_pointers': len(scripts.pointers),
         'dkult_motion_count': len(dk_motion), 'dkult_menu_motion_count': len(dk_menus),
@@ -339,10 +340,13 @@ def main():
         'esamus_motion_count': len(esamus_motion), 'esamus_menu_motion_count': len(esamus_menus),
         'esamus_script_words': len(esamus_scripts.words),
         'esamus_script_pointers': len(esamus_scripts.pointers),
+        'elink_motion_count': len(elink_motion), 'elink_menu_motion_count': len(elink_menus),
+        'elink_script_words': len(elink_scripts.words),
+        'elink_script_pointers': len(elink_scripts.pointers),
         'required_files': sorted(required), 'unresolved_relocations': bad,
         'pack_sha256': sha256(assets / 'reloc.pak'),
     })
-    print(f'Nine fighters: {len(motion)} + {len(dk_motion)} + {len(jp_motion)} + {len(epika_motion)} + {len(mario_motion)} + {len(falcon_motion)} + {len(luigi_motion)} + {len(jdk_motion)} + {len(esamus_motion)} actions, {len(required)} validated assets')
+    print(f'Ten fighters: {len(motion)} + {len(dk_motion)} + {len(jp_motion)} + {len(epika_motion)} + {len(mario_motion)} + {len(falcon_motion)} + {len(luigi_motion)} + {len(jdk_motion)} + {len(esamus_motion)} + {len(elink_motion)} actions, {len(required)} validated assets')
 
 
 if __name__ == '__main__':

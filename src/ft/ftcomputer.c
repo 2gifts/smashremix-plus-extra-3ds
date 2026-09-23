@@ -9,8 +9,10 @@
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_roster.h"
 #define FT_COMPUTER_IS_SAMUS(kind) ((kind) == nFTKindSamus || (kind) == NATIVE_REMIX_ESAMUS_KIND)
+#define FT_COMPUTER_IS_LINK(kind) ((kind) == nFTKindLink || (kind) == NATIVE_REMIX_ELINK_KIND)
 #else
 #define FT_COMPUTER_IS_SAMUS(kind) ((kind) == nFTKindSamus)
+#define FT_COMPUTER_IS_LINK(kind) ((kind) == nFTKindLink)
 #endif
 
 // // // // // // // // // // // //
@@ -4274,6 +4276,9 @@ sb32 ftComputerCheckDetectTarget(FTStruct *this_fp, f32 detect_range_base)
 #endif
                                     case nFTKindLuigi:
                                     case nFTKindLink:
+#ifdef SSB_REMIX_PROBE
+                                    case NATIVE_REMIX_ELINK_KIND:
+#endif
                                     case nFTKindPikachu:
                                     case nFTKindMMario:
                                         goto l_continue;
@@ -4340,7 +4345,7 @@ sb32 ftComputerCheckDetectTarget(FTStruct *this_fp, f32 detect_range_base)
                         break;
 
                     case nFTComputerInputStickNButtonZButtonA:
-                        if ((this_fp->fkind != nFTKindLink) && !FT_COMPUTER_IS_SAMUS(this_fp->fkind))
+                        if (!FT_COMPUTER_IS_LINK(this_fp->fkind) && !FT_COMPUTER_IS_SAMUS(this_fp->fkind))
                         {
                             detect_ranges_x[attack_count++] = 4.0F;
                             break;
@@ -6921,6 +6926,9 @@ void func_ovl3_8013877C(FTStruct *this_fp)
             switch (this_fp->fkind)
             {
             case nFTKindLink:
+#ifdef SSB_REMIX_PROBE
+            case NATIVE_REMIX_ELINK_KIND:
+#endif
                 if (ftComputerCheckFindTarget(this_fp) != FALSE)
                 {
                     if (com->target_dist < 1500.0F)
@@ -6988,6 +6996,9 @@ sb32 func_ovl3_80138AA8(FTStruct *this_fp, sb32 is_delay)
         switch (fkind)
         {
         case nFTKindLink:
+#ifdef SSB_REMIX_PROBE
+        case NATIVE_REMIX_ELINK_KIND:
+#endif
             if (com->target_dist < 1500.0F)
             {
                 if (syUtilsRandFloat() < 0.3F)

@@ -44,7 +44,7 @@ def main():
         sound.setparams((2, 2, 32000, 0, 'NONE', 'not compressed'))
         sound.writeframes(bytes(32000 * 4))
     run(tool('bannertool'), 'makesmdh', '-s', 'Remix fighter test', '-l',
-        'Nine fighter integrations via VS bottom screen - full port unfinished', '-p', 'Remix / decomp / port contributors',
+        'Ten fighter integrations via VS bottom screen - full port unfinished', '-p', 'Remix / decomp / port contributors',
         '-i', dst / 'icon.png', '-o', dst / 'icon.smdh', '-r', 'regionfree',
         '-f', 'visible,allow3d,new3ds,recordusage')
     run(tool('bannertool'), 'makebanner', '-i', dst / 'banner.png', '-a', dst / 'silent.wav', '-o', dst / 'banner.bin')

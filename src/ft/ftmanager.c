@@ -501,6 +501,9 @@ void ftManagerDestroyFighterWeapons(GObj *fighter_gobj)
 
     case nFTKindLink:
     case nFTKindNLink:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_ELINK_KIND:
+#endif
         ftLinkSpecialNDestroyBoomerang(fighter_gobj);
         break;
     }
@@ -836,6 +839,9 @@ void ftManagerInitFighter(GObj *fighter_gobj, FTDesc *desc)
 
     case nFTKindLink:
     case nFTKindNLink:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_ELINK_KIND:
+#endif
         fp->passive_vars.link.boomerang_gobj = NULL;
 
         ftParamSetModelPartDefaultID(fighter_gobj, 21, -1);

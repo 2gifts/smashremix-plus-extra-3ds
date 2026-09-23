@@ -12,6 +12,7 @@ extern void port_dump_backtrace(void);
 #include <sys/controller.h>
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_probe.h"
+#include "native_remix_roster.h"
 #endif
 
 extern alSoundEffect* func_800269C0_275C0(u16);
@@ -4235,7 +4236,11 @@ void ftMainProcParams(GObj *fighter_gobj)
         switch (fp->afterimage.is_itemswing)
         {
         case FALSE:
-            if ((fp->fkind == nFTKindLink) && (fp->modelpart_status[11 - nFTPartsJointCommonStart].modelpart_id_curr == 0))
+            if (((fp->fkind == nFTKindLink)
+#ifdef SSB_REMIX_PROBE
+                || (fp->fkind == NATIVE_REMIX_ELINK_KIND)
+#endif
+                ) && (fp->modelpart_status[11 - nFTPartsJointCommonStart].modelpart_id_curr == 0))
             {
                 FTParts *parts = fp->joints[11]->user_data.p;
 

@@ -1,4 +1,7 @@
 #include <ft/fighter.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -76,7 +79,11 @@ void ftCommonCatchWaitSetStatus(GObj *fighter_gobj)
 
     ftParamSetCaptureImmuneMask(fp, FTCATCHKIND_MASK_ALL);
 
-    if ((fp->fkind == nFTKindLink) || (fp->fkind == nFTKindNLink))
+    if ((fp->fkind == nFTKindLink) || (fp->fkind == nFTKindNLink)
+#ifdef SSB_REMIX_PROBE
+        || (fp->fkind == NATIVE_REMIX_ELINK_KIND)
+#endif
+    )
     {
         ftParamSetModelPartID(fighter_gobj, 21, 0);
         ftParamSetModelPartID(fighter_gobj, 19, -1);

@@ -621,7 +621,11 @@ void ftParamLinkResetShieldModelParts(GObj *fighter_gobj)
 {
     FTStruct *fp = ftGetStruct(fighter_gobj);
 
-    if ((fp->fkind == nFTKindLink) || (fp->fkind == nFTKindNLink))
+    if ((fp->fkind == nFTKindLink) || (fp->fkind == nFTKindNLink)
+#ifdef SSB_REMIX_PROBE
+        || (fp->fkind == NATIVE_REMIX_ELINK_KIND)
+#endif
+    )
     {
         ftParamSetModelPartDefaultID(fighter_gobj, 21, 0);
         ftParamSetModelPartDefaultID(fighter_gobj, 19, -1);
@@ -633,7 +637,11 @@ void ftParamSetHammerParams(GObj *fighter_gobj)
 {
     FTStruct *fp = ftGetStruct(fighter_gobj);
 
-    if ((fp->fkind == nFTKindLink) || (fp->fkind == nFTKindNLink))
+    if ((fp->fkind == nFTKindLink) || (fp->fkind == nFTKindNLink)
+#ifdef SSB_REMIX_PROBE
+        || (fp->fkind == NATIVE_REMIX_ELINK_KIND)
+#endif
+    )
     {
         ftParamSetModelPartDefaultID(fighter_gobj, 21, -1);
         ftParamSetModelPartDefaultID(fighter_gobj, 19, 0);

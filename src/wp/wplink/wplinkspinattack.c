@@ -1,6 +1,9 @@
 #include <wp/weapon.h>
 #include <ft/fighter.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -121,7 +124,13 @@ GObj* wpLinkSpinAttackMakeWeapon(GObj *fighter_gobj, Vec3f *pos)
 
     offset.y += WPSPINATTACK_OFF_Y;
 
+#ifdef SSB_REMIX_PROBE
+    WPDesc desc = dWPLinkSpinAttackWeaponDesc;
+    if (fp->fkind == NATIVE_REMIX_ELINK_KIND) desc.p_weapon = fp->data->p_file_main;
+    weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &desc, &offset, WEAPON_FLAG_PARENT_FIGHTER);
+#else
     weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &dWPLinkSpinAttackWeaponDesc, &offset, WEAPON_FLAG_PARENT_FIGHTER);
+#endif
 
     if (weapon_gobj == NULL)
     {

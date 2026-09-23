@@ -1,6 +1,9 @@
 #include <it/item.h>
 #include <ft/fighter.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 #ifdef PORT
 #include <config.h>
@@ -153,7 +156,12 @@ void itLinkBombExplodeWaitUpdateScale(GObj *item_gobj)
 
 	if (ip->item_vars.linkbomb.scale_int == 0)
 	{
+#ifdef SSB_REMIX_PROBE
+		/* The item attributes retain the owning Link variant's file base. */
+		f32 *scales = (f32*) ((uintptr_t)ip->attr + (intptr_t)llLinkMainBombBloatScales - (intptr_t)llLinkMainBombItemAttributes);
+#else
 		f32 *scales = (f32*) ((uintptr_t)*dItLinkBombItemDesc.p_file + (intptr_t)llLinkMainBombBloatScales);
+#endif
 		s32 scale_id = (ip->item_vars.linkbomb.scale_id > ITLINKBOMB_SCALE_INDEX_REWIND) ?
 					      (ITLINKBOMB_SCALE_INDEX_MAX - ip->item_vars.linkbomb.scale_id) :
 					   								    ip->item_vars.linkbomb.scale_id;
@@ -528,7 +536,11 @@ void itLinkBombExplodeInitVars(GObj *item_gobj)
 void itLinkBombExplodeUpdateAttackEvent(GObj *item_gobj)
 {
 	ITStruct *ip = itGetStruct(item_gobj);
+#ifdef SSB_REMIX_PROBE
+	ITAttackEvent *ev = (ITAttackEvent*)((uintptr_t)ip->attr + (intptr_t)llLinkMainBombAttackEvents - (intptr_t)llLinkMainBombItemAttributes);
+#else
 	ITAttackEvent *ev = itGetAttackEvent(dItLinkBombItemDesc, llLinkMainBombAttackEvents);
+#endif
 
 	if (ip->multi == ev[ip->event_id].timer)
 	{
@@ -612,7 +624,14 @@ void itLinkBombExplodeSetStatus(GObj *item_gobj)
 // 0x801865A0
 GObj *itLinkBombMakeItem(GObj *fighter_gobj, Vec3f *pos, Vec3f *vel)
 {
+#ifdef SSB_REMIX_PROBE
+	ITDesc desc = dItLinkBombItemDesc;
+	FTStruct *fp = ftGetStruct(fighter_gobj);
+	if (fp->fkind == NATIVE_REMIX_ELINK_KIND) desc.p_file = fp->data->p_file_main;
+	GObj *item_gobj = itManagerMakeItem(fighter_gobj, &desc, pos, vel, ITEM_FLAG_PARENT_FIGHTER);
+#else
 	GObj *item_gobj = itManagerMakeItem(fighter_gobj, &dItLinkBombItemDesc, pos, vel, ITEM_FLAG_PARENT_FIGHTER);
+#endif
 	DObj *dobj;
 	ITStruct *ip;
 

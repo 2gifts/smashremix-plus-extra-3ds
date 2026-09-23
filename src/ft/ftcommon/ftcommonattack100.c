@@ -16,9 +16,10 @@ static s32 ftCommonAttack100ResolveParentKind(s32 fkind)
 {
     CALL_EVENT(FighterParentKindResolveEvent, fkind, fkind);
 #ifdef SSB_REMIX_PROBE
-    if (fkind == NATIVE_REMIX_JFALCON_KIND) return nFTKindCaptain;
-#endif
+    return nativeRemixParentKind(FighterParentKindResolveEvent_.resolved_fkind);
+#else
     return FighterParentKindResolveEvent_.resolved_fkind;
+#endif
 }
 #define FT_A100_KIND(fp) (ftCommonAttack100ResolveParentKind((fp)->fkind))
 #else

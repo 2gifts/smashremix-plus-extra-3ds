@@ -1,6 +1,9 @@
 #include <wp/weapon.h>
 #include <ft/fighter.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -563,7 +566,13 @@ GObj* wpLinkBoomerangMakeWeapon(GObj *fighter_gobj, Vec3f *pos)
 
     offset.x = (fp->lr == +1) ? offset.x + WPBOOMERANG_OFF_X : offset.x - WPBOOMERANG_OFF_X;
 
+#ifdef SSB_REMIX_PROBE
+    WPDesc desc = dWPLinkBoomerangWeaponDesc;
+    if (fp->fkind == NATIVE_REMIX_ELINK_KIND) desc.p_weapon = fp->data->p_file_special1;
+    weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &desc, &offset, WEAPON_FLAG_PARENT_FIGHTER);
+#else
     weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &dWPLinkBoomerangWeaponDesc, &offset, WEAPON_FLAG_PARENT_FIGHTER);
+#endif
 
     if (weapon_gobj == NULL)
     {
