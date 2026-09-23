@@ -39,12 +39,12 @@ def main():
                             anchor='mm', align='center', spacing=5)
         image.save(path)
     art((48, 48), 'REMIX\nTEST', 11, dst / 'icon.png')
-    art((256, 128), 'REMIX FIGHTER TEST\nFalco / DK Ult / J DK\nJ Pika / J Mario\nJ Falcon / J Luigi\nFull mod in development', 14, dst / 'banner.png')
+    art((256, 128), 'REMIX FIGHTER TEST\nFalco / DK Ult / J DK\nJ Pika / E Pika\nJ Mario / J Falcon / J Luigi\nFull mod in development', 13, dst / 'banner.png')
     with wave.open(str(dst / 'silent.wav'), 'wb') as sound:
         sound.setparams((2, 2, 32000, 0, 'NONE', 'not compressed'))
         sound.writeframes(bytes(32000 * 4))
     run(tool('bannertool'), 'makesmdh', '-s', 'Remix fighter test', '-l',
-        'Seven fighter integrations via VS bottom screen - full port unfinished', '-p', 'Remix / decomp / port contributors',
+        'Eight fighter integrations via VS bottom screen - full port unfinished', '-p', 'Remix / decomp / port contributors',
         '-i', dst / 'icon.png', '-o', dst / 'icon.smdh', '-r', 'regionfree',
         '-f', 'visible,allow3d,new3ds,recordusage')
     run(tool('bannertool'), 'makebanner', '-i', dst / 'banner.png', '-a', dst / 'silent.wav', '-o', dst / 'banner.bin')
@@ -58,7 +58,7 @@ def main():
         run(tool('makerom'), '-f', fmt, *flags, *(['-ver', '1'] if fmt == 'cia' else []),
             '-o', dst / ('smash64-development.' + suffix))
     report = {'development_only': True, 'build_variant': 'fighter-test', 'fully_playable': False,
-              'scope': 'Falco, DK Ult, J DK, J Pikachu, J Mario, J Falcon and J Luigi selectable from their parent VS bottom cards; full Remix roster and menus unfinished',
+              'scope': 'Falco, DK Ult, J DK, J Pikachu, E Pikachu, J Mario, J Falcon and J Luigi selectable from their parent VS bottom cards; full Remix roster and menus unfinished',
               'elf_sha256': sha256(elf), 'title_id': '000400000ff64200', 'files': {}}
     for suffix in ('cia', 'cxi'):
         path = dst / ('smash64-development.' + suffix)

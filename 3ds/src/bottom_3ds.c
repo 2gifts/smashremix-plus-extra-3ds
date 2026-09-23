@@ -46,16 +46,18 @@ void nativeBottomTouch(unsigned x,unsigned y){
         unsigned slot=row*2+col;
         unsigned character=native_bottom_observed.players[slot].character;
         unsigned is_dk=(character==NATIVE_REMIX_DONKEY_KIND||character==NATIVE_REMIX_DKULT_KIND||character==NATIVE_REMIX_JDK_KIND);
+        unsigned is_pika=(character==NATIVE_REMIX_PIKACHU_KIND||character==NATIVE_REMIX_JPIKA_KIND||character==NATIVE_REMIX_EPIKA_KIND);
         unsigned alternate=(character==NATIVE_REMIX_FOX_KIND||character==NATIVE_REMIX_FALCO_KIND)?
             NATIVE_REMIX_FALCO_KIND:
             is_dk?(native_remix_selected_fkind[slot]==NATIVE_REMIX_DKULT_KIND?NATIVE_REMIX_JDK_KIND:
                    native_remix_selected_fkind[slot]==NATIVE_REMIX_JDK_KIND?0:NATIVE_REMIX_DKULT_KIND):
-            (character==NATIVE_REMIX_PIKACHU_KIND||character==NATIVE_REMIX_JPIKA_KIND)?NATIVE_REMIX_JPIKA_KIND:
+            is_pika?(native_remix_selected_fkind[slot]==NATIVE_REMIX_JPIKA_KIND?NATIVE_REMIX_EPIKA_KIND:
+                    native_remix_selected_fkind[slot]==NATIVE_REMIX_EPIKA_KIND?0:NATIVE_REMIX_JPIKA_KIND):
             (character==NATIVE_REMIX_MARIO_KIND||character==NATIVE_REMIX_JMARIO_KIND)?NATIVE_REMIX_JMARIO_KIND:
             (character==NATIVE_REMIX_CAPTAIN_KIND||character==NATIVE_REMIX_JFALCON_KIND)?NATIVE_REMIX_JFALCON_KIND:
             (character==NATIVE_REMIX_LUIGI_KIND||character==NATIVE_REMIX_JLUIGI_KIND)?NATIVE_REMIX_JLUIGI_KIND:0;
-        if(px<148&&py<73&&slot<4&&native_bottom_observed.players[slot].kind<2&&(alternate||is_dk)){
-            native_remix_selected_fkind[slot]=is_dk?alternate:
+        if(px<148&&py<73&&slot<4&&native_bottom_observed.players[slot].kind<2&&(alternate||is_dk||is_pika)){
+            native_remix_selected_fkind[slot]=(is_dk||is_pika)?alternate:
                 native_remix_selected_fkind[slot]==alternate?0:alternate;
             dirty=1;return;
         }

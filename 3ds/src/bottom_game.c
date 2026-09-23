@@ -106,6 +106,8 @@ void nativeBottomSnapshot(NativeBottomState* s){
                 p->character=NATIVE_REMIX_JDK_KIND;
             if(q->fkind==nFTKindPikachu&&native_remix_selected_fkind[i]==NATIVE_REMIX_JPIKA_KIND)
                 p->character=NATIVE_REMIX_JPIKA_KIND;
+            if(q->fkind==nFTKindPikachu&&native_remix_selected_fkind[i]==NATIVE_REMIX_EPIKA_KIND)
+                p->character=NATIVE_REMIX_EPIKA_KIND;
             if(q->fkind==nFTKindMario&&native_remix_selected_fkind[i]==NATIVE_REMIX_JMARIO_KIND)
                 p->character=NATIVE_REMIX_JMARIO_KIND;
             if(q->fkind==nFTKindCaptain&&native_remix_selected_fkind[i]==NATIVE_REMIX_JFALCON_KIND)

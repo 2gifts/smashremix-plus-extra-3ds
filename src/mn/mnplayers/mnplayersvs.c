@@ -4918,6 +4918,11 @@ void mnPlayersVSSetSceneData(void)
 		{
 			gSCManagerTransferBattleState.players[i].fkind = NATIVE_REMIX_JPIKA_KIND;
 		}
+		else if ((gSCManagerTransferBattleState.players[i].fkind == nFTKindPikachu) &&
+		         (native_remix_selected_fkind[i] == NATIVE_REMIX_EPIKA_KIND))
+		{
+			gSCManagerTransferBattleState.players[i].fkind = NATIVE_REMIX_EPIKA_KIND;
+		}
 		else if ((gSCManagerTransferBattleState.players[i].fkind == nFTKindMario) &&
 		         (native_remix_selected_fkind[i] == NATIVE_REMIX_JMARIO_KIND))
 		{
@@ -5317,6 +5322,11 @@ void mnPlayersVSInitPlayer(s32 player)
 	else if (sMNPlayersVSSlots[player].fkind == NATIVE_REMIX_JPIKA_KIND)
 	{
 		native_remix_selected_fkind[player] = NATIVE_REMIX_JPIKA_KIND;
+		sMNPlayersVSSlots[player].fkind = nFTKindPikachu;
+	}
+	else if (sMNPlayersVSSlots[player].fkind == NATIVE_REMIX_EPIKA_KIND)
+	{
+		native_remix_selected_fkind[player] = NATIVE_REMIX_EPIKA_KIND;
 		sMNPlayersVSSlots[player].fkind = nFTKindPikachu;
 	}
 	else if (sMNPlayersVSSlots[player].fkind == NATIVE_REMIX_JMARIO_KIND)

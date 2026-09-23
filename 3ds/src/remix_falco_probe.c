@@ -35,6 +35,7 @@ volatile unsigned native_remix_probe_phantasm_air;
 int nativeRelocIsFighterAnimation(unsigned int fid) {
     extern int nativeRemixDKUltIsAnimation(unsigned);
     extern int nativeRemixJPikaIsAnimation(unsigned);
+    extern int nativeRemixEPikaIsAnimation(unsigned);
     extern int nativeRemixJMarioIsAnimation(unsigned);
     extern int nativeRemixJFalconIsAnimation(unsigned);
     extern int nativeRemixJLuigiIsAnimation(unsigned);
@@ -48,7 +49,7 @@ int nativeRelocIsFighterAnimation(unsigned int fid) {
     for (unsigned i = 0; i < ARRAY_COUNT(remix_menu_motions); i++)
         if (remix_menu_motions[i].anim_file_id == fid &&
             !(remix_menu_motions[i].anim_desc.word & (FTANIM_FLAG_ANIMJOINT | FTANIM_FLAG_SHIELDPOSE))) return 1;
-    return nativeRemixDKUltIsAnimation(fid) || nativeRemixJPikaIsAnimation(fid) ||
+    return nativeRemixDKUltIsAnimation(fid) || nativeRemixJPikaIsAnimation(fid) || nativeRemixEPikaIsAnimation(fid) ||
            nativeRemixJMarioIsAnimation(fid) || nativeRemixJFalconIsAnimation(fid) ||
            nativeRemixJLuigiIsAnimation(fid) || nativeRemixJDKIsAnimation(fid);
 }

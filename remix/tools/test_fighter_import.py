@@ -75,6 +75,8 @@ int main(void) {
     assert(wpPikachuThunderJoltLifetime(&g) == 100);
     f.fkind = NATIVE_REMIX_JPIKA_KIND;
     assert(wpPikachuThunderJoltLifetime(&g) == 120);
+    f.fkind = NATIVE_REMIX_EPIKA_KIND;
+    assert(wpPikachuThunderJoltLifetime(&g) == 100);
     return 0;
 }
 '''
@@ -108,6 +110,7 @@ int main(void) {
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_FALCO_KIND) == nFTKindFox);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_DKULT_KIND) == nFTKindDonkey);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JPIKA_KIND) == nFTKindPikachu);
+    assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_EPIKA_KIND) == nFTKindPikachu);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JMARIO_KIND) == nFTKindMario);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JFALCON_KIND) == nFTKindCaptain);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JLUIGI_KIND) == nFTKindLuigi);
@@ -138,6 +141,9 @@ int main(void) {
         jp_source = (ROOT / '3ds/src/remix_jpika_probe.c').read_text()
         jp_start = jp_source.index('int nativeRemixJPikaIsAnimation(')
         jp_function = jp_source[jp_start:jp_source.index('\n}', jp_start) + 2]
+        ep_source = (ROOT / '3ds/src/remix_epika_probe.c').read_text()
+        ep_start = ep_source.index('int nativeRemixEPikaIsAnimation(')
+        ep_function = ep_source[ep_start:ep_source.index('\n}', ep_start) + 2]
         mario_source = (ROOT / '3ds/src/remix_jmario_probe.c').read_text()
         mario_start = mario_source.index('int nativeRemixJMarioIsAnimation(')
         mario_function = mario_source[mario_start:mario_source.index('\n}', mario_start) + 2]
@@ -160,6 +166,8 @@ static Motion remix_dkult_main_motions[]={{0,{0}},{10,{0}},{11,{8}}};
 static Motion remix_dkult_menu_motions[]={{0,{0}},{12,{0}}};
 static Motion remix_jpika_main_motions[]={{0,{0}},{13,{0}},{14,{8}}};
 static Motion remix_jpika_menu_motions[]={{0,{0}},{15,{0}}};
+static Motion remix_epika_main_motions[]={{0,{0}},{28,{0}},{29,{8}}};
+static Motion remix_epika_menu_motions[]={{0,{0}},{30,{0}}};
 static Motion remix_jmario_main_motions[]={{0,{0}},{16,{0}},{17,{8}}};
 static Motion remix_jmario_menu_motions[]={{0,{0}},{18,{0}}};
 static Motion remix_jfalcon_main_motions[]={{0,{0}},{19,{0}},{20,{8}}};
@@ -172,7 +180,7 @@ static Motion remix_jdk_menu_motions[]={{0,{0}},{27,{0}}};
         for line in (ROOT / 'src/ft/ftdef.h').read_text().splitlines():
             if line.startswith('#define FTANIM_FLAG_ANIMJOINT ') or line.startswith('#define FTANIM_FLAG_SHIELDPOSE '):
                 fixture += line + '\n'
-        fixture += dk_function + '\n' + jp_function + '\n' + mario_function + '\n' + falcon_function + '\n' + luigi_function + '\n' + jdk_function + '\n' + function + '''
+        fixture += dk_function + '\n' + jp_function + '\n' + ep_function + '\n' + mario_function + '\n' + falcon_function + '\n' + luigi_function + '\n' + jdk_function + '\n' + function + '''
 int main(){
     assert(!nativeRelocIsFighterAnimation(0));
     assert(nativeRelocIsFighterAnimation(4));
@@ -199,8 +207,12 @@ int main(){
     assert(nativeRelocIsFighterAnimation(25));
     assert(!nativeRelocIsFighterAnimation(26));
     assert(nativeRelocIsFighterAnimation(27));
+    assert(nativeRelocIsFighterAnimation(28));
+    assert(!nativeRelocIsFighterAnimation(29));
+    assert(nativeRelocIsFighterAnimation(30));
     assert(!nativeRemixDKUltIsAnimation(0));
     assert(!nativeRemixJPikaIsAnimation(0));
+    assert(!nativeRemixEPikaIsAnimation(0));
     assert(!nativeRemixJMarioIsAnimation(0));
     assert(!nativeRemixJFalconIsAnimation(0));
     assert(!nativeRemixJLuigiIsAnimation(0));
