@@ -71,7 +71,7 @@ remix/.venv/Scripts/python.exe remix/tools/build_fighter_probe.py
 
 Output: `3ds/build/falco-test/Remix-Falco-Integration-Test.cia`. The accompanying `package/verified.json` verifies the CIA content against the linked executable and private RomFS, checks its title/capabilities, and checks that scripted controls, automatic screenshots, verbose logs and the debugger boot gate are disabled for ordinary use.
 
-To test on a homebrewed **New Nintendo 3DS / New 3DS XL**, copy this local CIA to the SD card and install it with FBI. Launch **Remix Falco test** and select **Fox** in training or versus mode. Falco occupies that slot. The bottom screen names him Falco; the original selection portrait and announcer still say Fox. The existing 3D slider, display toggle and control options are available.
+To test on a homebrewed **New Nintendo 3DS / New 3DS XL**, copy this local CIA to the SD card and install it with FBI. Launch **Remix Falco test** and select **Fox** in training or versus mode. Falco occupies that visible slot. His separate mod ID 29 has also been registered and tested through an emulator override, but is not selectable in the menu. The bottom screen names him Falco; the original selection portrait and announcer still say Fox. The existing 3D slider, display toggle and control options are available.
 
 The test uses title ID `000400000ff64200`, product code `CTR-P-SMFT`, and `/3ds/ssb64-remix-falco-test/`. It installs alongside the original game. It contains the original menus and stages, not the full Remix/+EXTRA roster or engine. CPU behavior and all modes have not been fully validated for the replacement fighter. See [fixture limits](PORTING-STATUS.md#falco-fixture-limits).
 

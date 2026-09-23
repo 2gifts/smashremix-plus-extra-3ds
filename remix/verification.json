@@ -439,18 +439,22 @@
     "extra_hit_multiplier_state_host_verified": true,
     "extra_hit_multiplier_script_dispatch_gameplay_verified": false,
     "native_roster_fighters_added": 0,
-    "scope": "Motion data only; no new roster entry, native special-move callback, or gameplay validation."
+    "hidden_registered_fighter_ids": [29],
+    "hidden_fighter_29_stereo_match_to_results_verified": true,
+    "hidden_fighter_29_action_states_observed": 33,
+    "fighter_size_prepass_capacity": 128,
+    "scope": "Falco is registered at fkind 29 and was forced into a native stereo match through results. The other imported records are motion-data candidates only; no expanded selection roster is available."
   },
   "falco_development_fixture": {
-    "scope": "Falco replaces Fox; vanilla menus, stages and other fighters; no +EXTRA roster",
+    "scope": "Falco replaces Fox in the visible vanilla menu. A separate fkind 29 is registered and emulator-tested through results but is not selectable. Menus, stages and other fighters remain vanilla; no +EXTRA roster.",
     "complete_falco_parity": false,
     "additional_roster_slot": false,
     "cia_available_locally": true,
     "published_binary": false,
     "title_id": "000400000ff64200",
     "sd_directory": "/3ds/ssb64-remix-falco-test/",
-    "elf_sha256": "7da826371894c5d264ae04a2e6c6f86ca44361caf1fdb7e864eb94ea0aa82607",
-    "cia_sha256": "6993dfde2ac75a8961c53c39a0177f5bcf0c198b325fae5205ba96a0ef415afb",
+    "elf_sha256": "d16fcc4155f1147d6c1a4ada1f2576d7a63538632e3d5c15187ec6aaa738b143",
+    "cia_sha256": "bffc6ae21375c2548df206c44ddaf967659952dc0e927fc2d4bd1020a0340893",
     "cia_bytes": 35529664,
     "main_motions": 219,
     "menu_motions": 15,
@@ -497,7 +501,7 @@
         "passed": true
       }
     ],
-    "emulator_test_elf_sha256": "7da826371894c5d264ae04a2e6c6f86ca44361caf1fdb7e864eb94ea0aa82607",
+    "emulator_test_elf_sha256": "d16fcc4155f1147d6c1a4ada1f2576d7a63538632e3d5c15187ec6aaa738b143",
     "sd_errors_during_move_checks": 0,
     "package_integrity_verified": true,
     "normal_startup_defaults_verified": {
@@ -529,7 +533,8 @@
     "pristine_emulator_startup_verified": true,
     "four_fighter_stereo_match_to_results_verified": true,
     "results_scene_observed": 24,
-    "results_frame_observed": 5175,
+    "results_frame_observed": 5178,
+    "hidden_fighter_29_results_frame_observed": 5136,
     "sd_errors_after_results": 0,
     "emulator_invalid_memory_accesses_detected": false,
     "stereo_capture_eyes_differ": true

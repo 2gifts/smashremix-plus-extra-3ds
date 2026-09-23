@@ -23,7 +23,11 @@ extern void portFixupStructU16(void *base, unsigned int byte_offset, unsigned in
 //                               //
 // // // // // // // // // // // //
 
+#ifdef PORT
+extern FTFileSize gSCManagerFighterFileSizes[PORT_FIGHTER_SLOTS];
+#else
 extern FTFileSize gSCManagerFighterFileSizes[nFTKindEnumCount];
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -93,10 +97,15 @@ void ftManagerSetupFileSize(void)
 
     lbRelocInitSetup(&rl_setup);
 
-    for (i = 0; i < nFTKindEnumCount; i++)
+    for (i = 0; i < ARRAY_COUNT(gSCManagerFighterFileSizes); i++)
     {
         file_size = &gSCManagerFighterFileSizes[i];
+#ifdef PORT
+        data = port_fighter_data(i);
+        if (data == NULL) continue; /* fkind 28 and future unregistered gaps */
+#else
         data = dFTManagerDataFiles[i];
+#endif
 
         largest_size = 0;
 
@@ -184,9 +193,14 @@ void ftManagerAllocFighter(u32 data_flags, s32 allocs_num)
 
     lbRelocGetExternHeapFile((u32)ll_201_FileID, syTaskmanMalloc(lbRelocGetFileSize((u32)ll_201_FileID), 0x10));
 
-    for (i = 0; i < (nFTKindEnumCount + ARRAY_COUNT(gSCManagerFighterFileSizes)) / 2; i++)
+    for (i = 0; i < ARRAY_COUNT(gSCManagerFighterFileSizes); i++)
     {
+#ifdef PORT
+        data = port_fighter_data(i);
+        if (data == NULL) continue;
+#else
         data = dFTManagerDataFiles[i];
+#endif
         file_size = &gSCManagerFighterFileSizes[i];
 
         largest_size = 0;

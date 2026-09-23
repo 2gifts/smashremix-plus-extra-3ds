@@ -62,7 +62,11 @@ u32 gSCManagerCIC;
 s32 gSCManagerUnkown0x800A50F0;
 
 // 0x800A50F8
+#ifdef PORT
+FTFileSize gSCManagerFighterFileSizes[PORT_FIGHTER_SLOTS];
+#else
 FTFileSize gSCManagerFighterFileSizes[nFTKindEnumCount];
+#endif
 
 // 0x800A523C
 s32 sSCManagerUnk0x800A523C;

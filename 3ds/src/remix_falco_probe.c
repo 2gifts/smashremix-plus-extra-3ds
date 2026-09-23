@@ -22,6 +22,9 @@ static float victim_di_mul[4] = {1, 1, 1, 1};
 static unsigned env_color[4];
 static unsigned short pressed[4];
 static FTStatusDesc falco_status[26];
+static FTData falco_slot_data;
+static void *falco_slot_files[9];
+static s32 falco_slot_particle;
 static s32 menu_count = ARRAY_COUNT(remix_menu_motions);
 /* GFXRoutine.PHANTASM_BLUE: overlay, four-frame wait, end. */
 static u32 phantasm_blue[] = {0x24000000, 0x00f0ffe0, 0x04000004, 0};
@@ -335,6 +338,23 @@ void nativeRemixProbeInit(void) {
     desc.special_handler[PORT_FIGHTER_SPECIAL_N] = groundNeutral;
     desc.special_handler[PORT_FIGHTER_SPECIAL_AIR_N] = airNeutral;
     desc.scale = 1.2f;
+    /* Register Falco at the assembled mod's real fkind as well. The test
+     * menu still selects the Fox replacement, but the native registry and
+     * fighter allocation prepass now have an independently backed new row. */
+    falco_slot_data = *data;
+    falco_slot_data.p_file_main = &falco_slot_files[0];
+    falco_slot_data.p_file_mainmotion = &falco_slot_files[1];
+    falco_slot_data.p_file_submotion = &falco_slot_files[2];
+    falco_slot_data.p_file_model = &falco_slot_files[3];
+    falco_slot_data.p_file_shieldpose = &falco_slot_files[4];
+    falco_slot_data.p_file_special1 = &falco_slot_files[5];
+    falco_slot_data.p_file_special2 = &falco_slot_files[6];
+    falco_slot_data.p_file_special3 = &falco_slot_files[7];
+    falco_slot_data.p_file_special4 = &falco_slot_files[8];
+    falco_slot_data.p_particle = &falco_slot_particle;
+    desc.ft_data = &falco_slot_data;
+    port_fighter_register(29, &desc); /* Character.FALCO in the pinned ROM */
+    desc.ft_data = data;
     port_fighter_register(nFTKindFox, &desc);
     native_remix_probe_ready = 1;
     port_log("REMIX PROBE: native Falco registered in Fox slot\n");

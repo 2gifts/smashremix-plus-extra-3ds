@@ -5,6 +5,12 @@
 #include <sys/objdef.h>
 #include <ft/ftdef.h>
 
+#ifdef PORT
+/* The assembled Remix +EXTRA roster reaches fkind 115. Keep room for all
+ * registered rows, including its deliberate gap at fkind 28. */
+#define PORT_FIGHTER_SLOTS 128
+#endif
+
 extern u32 gFTManagerPlayersNum;
 extern u16 gFTManagerMotionCount;
 extern u16 gFTManagerStatUpdateCount;
