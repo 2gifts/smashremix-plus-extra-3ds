@@ -33,6 +33,7 @@ volatile unsigned native_remix_probe_phantasm_ground;
 volatile unsigned native_remix_probe_phantasm_air;
 
 int nativeRelocIsFighterAnimation(unsigned int fid) {
+    extern int nativeRemixDKUltIsAnimation(unsigned);
     /* Motion ID zero means no animation. Relocation file zero is the shared
      * menu artwork and must retain the normal sprite byte-order fixups. */
     if (!fid) return 0;
@@ -42,7 +43,7 @@ int nativeRelocIsFighterAnimation(unsigned int fid) {
     for (unsigned i = 0; i < ARRAY_COUNT(remix_menu_motions); i++)
         if (remix_menu_motions[i].anim_file_id == fid &&
             !(remix_menu_motions[i].anim_desc.word & (FTANIM_FLAG_ANIMJOINT | FTANIM_FLAG_SHIELDPOSE))) return 1;
-    return 0;
+    return nativeRemixDKUltIsAnimation(fid);
 }
 
 void nativeRemixProbeReset(FTStruct *fp) {

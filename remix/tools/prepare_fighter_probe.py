@@ -1,7 +1,7 @@
 """Extract a native fighter integration fixture from the pinned reference build.
 
-This is deliberately separate from release packaging. Falco is selectable via
-the bottom-screen Fox card in VS mode, while other menus remain vanilla. No ROM
+This is deliberately separate from release packaging. Falco and DK Ult are
+selectable via the bottom-screen Fox and DK cards in VS mode. No ROM
 addresses are executed: motion bytecode is decoded and its pointers relocated,
 and special callbacks are supplied by native C implementations.
 """
@@ -145,6 +145,7 @@ class Scripts:
 
 
 def main():
+    from audit_reference_fighters import known_native_script_symbols
     ref = Reference()
     data = ref.words(ref.symbols['Character.FALCO_character_struct'], 30)
     motion = [ref.words(data[25] + i * 12, 3) for i in range(data[27])]
@@ -165,6 +166,35 @@ def main():
     out = BUILD / 'fighter-probe'
     out.mkdir(exist_ok=True)
     (out / 'falco_data.inc').write_text('\n'.join(lines) + '\n')
+
+    # Bring the first +EXTRA fighter's data into the same private fixture.
+    # A generated motion table alone must never mark a fighter as playable;
+    # its native callbacks and selection bridge are built separately.
+    dk_data = ref.words(ref.symbols['Character.DKULT_character_struct'], 30)
+    dk_motion = [ref.words(dk_data[25] + i * 12, 3) for i in range(dk_data[27])]
+    dk_menu_count = ref.words(dk_data[28], 1)[0]
+    dk_menus = [ref.words(dk_data[26] + i * 12, 3) for i in range(dk_menu_count)]
+    dk_external = known_native_script_symbols()
+    dk_scripts = Scripts(ref, allow_custom=True, external_scripts=dk_external)
+    dk_entrypoints = {row[1] for row in dk_motion + dk_menus if row[1] > 0x80000000}
+    for address in sorted(dk_entrypoints):
+        dk_scripts.script(address)
+    dk_lines, dk_indices = dk_scripts.emit('remix_dkult', dk_entrypoints)
+    def dk_pointer(address):
+        if address in dk_external:
+            return f'(intptr_t){dk_external[address]}'
+        if address > 0x80000000:
+            return f'(intptr_t)&remix_dkult_script_words[{dk_indices[address]}]'
+        return f'(intptr_t)0x{address:08x}u'
+    for label, rows in (('main', dk_motion), ('menu', dk_menus)):
+        dk_lines.append(f'static FTMotionDesc remix_dkult_{label}_motions[] = {{')
+        for fid, ptr, flags in rows:
+            dk_lines.append(f'    {{{fid}, {dk_pointer(ptr)}, {{.word = 0x{flags:08x}u}}}},')
+        dk_lines.append('};')
+    dk_lines += [f'static const u32 remix_dkult_files[9] = {{{", ".join(map(str, dk_data[:9]))}}};',
+                 f'static s32 remix_dkult_menu_count = {dk_menu_count};',
+                 f'#define REMIX_DKULT_ATTRIBUTE_OFFSET 0x{dk_data[24]:x}']
+    (out / 'dkult_data.inc').write_text('\n'.join(dk_lines) + '\n')
 
     # Keep the proven vanilla UI assets. Add only the validated dependency
     # closure required by this fighter, never ship unresolved reference files.
@@ -189,7 +219,7 @@ def main():
         required.add(fid)
         for dep in entries[fid]['external_files']:
             add(dep)
-    for fid in data[:9] + [r[0] for r in motion + menus]:
+    for fid in data[:9] + dk_data[:9] + [r[0] for r in motion + menus + dk_motion + dk_menus]:
         add(fid)
     bad = [issue for issue in manifest['relocation_issues'] if issue['file_id'] in required]
     if bad:
@@ -220,13 +250,16 @@ def main():
     for name in ('initial-save.bin', 'bottom-ui.bin'):
         shutil.copy2(vanilla / name, assets / name)
     write_json(out / 'manifest.json', {
-        'fixture': 'Falco selectable beside Fox in VS mode; not the complete Remix mod',
+        'fixture': 'Falco and DK Ult selectable beside their vanilla parents in VS; not the complete mod',
         'motion_count': len(motion), 'menu_motion_count': len(menus),
         'script_words': len(scripts.words), 'script_pointers': len(scripts.pointers),
+        'dkult_motion_count': len(dk_motion), 'dkult_menu_motion_count': len(dk_menus),
+        'dkult_script_words': len(dk_scripts.words),
+        'dkult_script_pointers': len(dk_scripts.pointers),
         'required_files': sorted(required), 'unresolved_relocations': bad,
         'pack_sha256': sha256(assets / 'reloc.pak'),
     })
-    print(f'Falco: {len(motion)} actions, {len(scripts.words)} script words, {len(required)} validated assets')
+    print(f'Falco and DK Ult: {len(motion)} + {len(dk_motion)} actions, {len(required)} validated assets')
 
 
 if __name__ == '__main__':

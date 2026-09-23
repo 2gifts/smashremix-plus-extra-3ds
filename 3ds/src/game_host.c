@@ -41,7 +41,9 @@ void ssb_game_init(void) {
     port_fighter_seed_vanilla();
 #ifdef SSB_REMIX_PROBE
     extern void nativeRemixProbeInit(void);
+    extern void nativeRemixDKUltInit(void);
     nativeRemixProbeInit();
+    nativeRemixDKUltInit();
 #endif
     port_coroutine_init_main();
     PortCoroutine* co=port_coroutine_create(boot,0,1024*1024);

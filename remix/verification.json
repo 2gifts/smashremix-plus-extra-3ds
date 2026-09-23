@@ -427,7 +427,7 @@
     "3ds/src/native_assets.cpp": "de9e583f538f3ee07bb0eae00c65e71c04bc30383180e4d492700bb0a4b649a4",
     "remix/tests/asset_probe.cpp": "62fdc6cffc842e32890f24172e068c69987585495ec72902fbb0d907fc12249c"
   },
-  "scope": "Pinned reference and asset audits, a native Falco fixture, and generated fighter motion-data candidates. Full Remix and +EXTRA roster, stages, menus, saves, AI, and hardware performance remain unverified.",
+  "scope": "Pinned reference and asset audits, native Falco and DK Ult development integrations, and generated fighter motion-data candidates. Full Remix and +EXTRA roster, stages, menus, saves, AI, and hardware performance remain unverified.",
   "fighter_data_import": {
     "reference_table_records": 88,
     "plus_extra_records": 19,
@@ -437,35 +437,42 @@
     "fighters_with_script_target_issues": 4,
     "fighters_requiring_unported_custom_commands": 0,
     "extra_hit_multiplier_state_host_verified": true,
+    "kirby_copy_table_bounds_host_verified": true,
     "extra_hit_multiplier_script_dispatch_gameplay_verified": false,
-    "native_roster_fighters_added": 1,
-    "selectable_fighter_ids": [29],
+    "native_roster_fighters_added": 2,
+    "selectable_fighter_ids": [29, 81],
     "separate_top_screen_portrait_added": false,
     "bottom_screen_touch_selection_match_to_results_verified": true,
-    "bottom_screen_touch_selection_action_states_observed": 46,
+    "bottom_screen_touch_selection_action_states_observed": 40,
     "untouched_fox_selection_remains_fkind_1_verified": true,
     "untouched_fox_original_main_file_id_verified": 209,
     "bottom_touch_falco_main_file_id_verified": 2219,
+    "untouched_donkey_selection_remains_fkind_2_verified": true,
+    "untouched_donkey_original_main_file_id_verified": 213,
+    "bottom_touch_dkult_main_file_id_verified": 5836,
     "fighter_size_prepass_capacity": 128,
-    "scope": "Falco is registered at fkind 29 and selectable in VS mode by tapping the Fox player's bottom-screen card. A timed four-fighter stereo match reached results through that selector. Fighter data is independently backed: Azahar observed Fox's original main file 0xD1 and Falco's imported main file 0x8AB. The other imported records are motion-data candidates only; the expanded selection grid is not available."
+    "scope": "Falco (fkind 29) and DK Ult (fkind 81) are independently registered and selectable in VS mode from the Fox and Donkey Kong bottom cards. Timed four-fighter stereo matches reached results through both selectors. Their original parents remain available with original main files 0xD1 and 0xD5; the imported main files are 0x8AB and 0x16CC. The other imported records are motion-data candidates only; the expanded selection grid is not available."
   },
-  "falco_development_fixture": {
-    "scope": "Falco is selectable as fkind 29 from the VS bottom-screen Fox card; untouched Fox remains fkind 1. The top-screen portrait and other menus remain vanilla; no +EXTRA roster.",
-    "complete_falco_parity": false,
-    "additional_roster_slot": false,
+  "fighter_development_fixture": {
+    "scope": "Falco and DK Ult are selectable as fkinds 29 and 81 from the VS bottom-screen Fox and Donkey Kong cards. The top-screen portraits and other menus remain vanilla; the full Remix/+EXTRA roster is absent.",
+    "complete_character_parity": false,
     "cia_available_locally": true,
     "published_binary": false,
     "title_id": "000400000ff64200",
     "sd_directory": "/3ds/ssb64-remix-falco-test/",
-    "elf_sha256": "9ccf0f5d37b9f500f32408090f15b0369d52371827d521eddf3f4df9072d6486",
-    "cia_sha256": "8310ed1e3d15a862c860f0b9f1ccc9aa54bc4e1e1fb4b296283b220252627e53",
-    "cia_bytes": 35533760,
+    "elf_sha256": "ef9bb942d402b6e653d02df34ff7800a5f6363c60d94eaa7a278d9008c67a6b0",
+    "cia_sha256": "5c6c4d4a16f145445d51757ac86552d35d0a45b03a3fa36d3ae9cbdda9c3b745",
+    "cia_bytes": 35943360,
     "main_motions": 219,
     "menu_motions": 15,
     "motion_words": 813,
     "motion_pointer_tokens": 10,
-    "validated_asset_closure": 179,
-    "asset_pack_sha256": "54ab697beab4c230ccb3b45fd8b3fe2a0b0d1b4b2469b72d5d75da28e545520a",
+    "dkult_main_motions": 222,
+    "dkult_menu_motions": 15,
+    "dkult_motion_words": 942,
+    "dkult_motion_pointer_tokens": 1,
+    "validated_asset_closure": 349,
+    "asset_pack_sha256": "22237c4724813e3eb4ae6475ea19b11907305505faff90fd28fa45014e2dcc7e",
     "unresolved_relocations_in_fixture": [],
     "emulator_move_checks": [
       {
@@ -505,7 +512,25 @@
         "passed": true
       }
     ],
-    "emulator_test_elf_sha256": "9ccf0f5d37b9f500f32408090f15b0369d52371827d521eddf3f4df9072d6486",
+    "dkult_emulator_move_checks": [
+      {
+        "case": "jab action and imported motion",
+        "passed": true
+      },
+      {
+        "case": "Giant Punch charge and speed callback",
+        "passed": true
+      },
+      {
+        "case": "Spinning Kong native physics status",
+        "passed": true
+      },
+      {
+        "case": "aerial down special uses added status 250",
+        "passed": true
+      }
+    ],
+    "emulator_test_elf_sha256": "ef9bb942d402b6e653d02df34ff7800a5f6363c60d94eaa7a278d9008c67a6b0",
     "sd_errors_during_move_checks": 0,
     "package_integrity_verified": true,
     "normal_startup_defaults_verified": {
@@ -533,22 +558,30 @@
       "native_cstick_enabled": "0x0"
     },
     "real_console_performance_measured": false,
-    "remaining": "Expanded roster, menus, stages, mod engine patches, Kirby copy ability, AI parity, music and save integration remain unfinished.",
+    "remaining": "The rest of the roster, expanded menus and stages, mod engine patches, unique Kirby copy abilities for added fighters, AI parity, music and save integration remain unfinished.",
     "pristine_emulator_startup_verified": true,
     "four_fighter_stereo_match_to_results_verified": true,
     "results_scene_observed": 24,
-    "results_frame_observed": 5134,
+    "results_frame_observed": 5693,
     "bottom_touch_fighter_29_results_to_css_verified": true,
-    "bottom_touch_fighter_29_css_return_frame_observed": 5700,
+    "bottom_touch_fighter_29_css_return_frame_observed": 5701,
     "bottom_touch_fighter_29_main_file_id_verified": 2219,
     "untouched_fox_main_file_id_verified": 209,
+    "bottom_touch_fighter_81_results_to_css_verified": true,
+    "bottom_touch_fighter_81_css_return_frame_observed": 6300,
+    "bottom_touch_fighter_81_main_file_id_verified": 5836,
+    "untouched_donkey_main_file_id_verified": 213,
+    "bottom_touch_fighter_81_top_css_proxy_kind": 2,
+    "bottom_touch_fighter_81_bottom_card_kind": 81,
     "bottom_touch_fighter_29_top_css_proxy_kind": 1,
     "bottom_touch_fighter_29_bottom_card_kind": 29,
     "registered_results_fighter_files_loaded": true,
     "results_to_css_no_unmapped_access_verified": true,
     "sd_errors_after_results": 0,
     "emulator_invalid_memory_accesses_detected": false,
-    "stereo_capture_eyes_differ": true
+    "stereo_capture_eyes_differ": true,
+    "stereo_capture_frame": 2672,
+    "stereo_capture_different_pixels": 60517
   },
   "expanded_audio_conversion": {
     "source_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",

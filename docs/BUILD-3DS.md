@@ -1,6 +1,6 @@
 # Remix +EXTRA development setup
 
-The full native gameplay integration is unfinished. These instructions build the pinned **N64 reference mod**, asset diagnostics, and a separate **Falco integration test CIA**. The full-mod release packager remains disabled.
+The full native gameplay integration is unfinished. These instructions build the pinned **N64 reference mod**, asset diagnostics, and a separate **fighter integration test CIA**. The full-mod release packager remains disabled.
 
 ## Requirements
 
@@ -60,7 +60,7 @@ remix/.venv/Scripts/python.exe remix/tools/verify_fighter_catalog.py
 
 These commands use the pinned local reference ROM. Generated `.inc` files stay under ignored `remix/build/fighter-catalog/` and are not linked into the game automatically. The report distinguishes script and asset structure from native gameplay implementation.
 
-## Build the Falco development CIA
+## Build the fighter development CIA
 
 Complete the reference extraction above and configure the existing 3DS toolchain. Set `vanilla_assets` in the ignored `3ds/build-config.json` to the asset directory produced by the original 3DS port's local build. It needs `reloc.pak`, `audio/`, `particles/`, `initial-save.bin` and `bottom-ui.bin`. If omitted, the tool looks for `assets/` two directories above the configured BattleShip checkout, matching the original port's `3ds/vendor/BattleShip` layout.
 
@@ -69,10 +69,10 @@ remix/.venv/Scripts/python.exe remix/tools/test_fighter_import.py
 remix/.venv/Scripts/python.exe remix/tools/build_fighter_probe.py
 ```
 
-Output: `3ds/build/falco-test/Remix-Falco-Integration-Test.cia`. The accompanying `package/verified.json` verifies the CIA content against the linked executable and private RomFS, checks its title/capabilities, and checks that scripted controls, automatic screenshots, verbose logs and the debugger boot gate are disabled for ordinary use.
+Output: `3ds/build/falco-test/Remix-Fighter-Integration-Test.cia`. The accompanying `package/verified.json` verifies the CIA content against the linked executable and private RomFS, checks its title/capabilities, and checks that scripted controls, automatic screenshots, verbose logs and the debugger boot gate are disabled for ordinary use.
 
-To test on a homebrewed **New Nintendo 3DS / New 3DS XL**, copy this local CIA to the SD card and install it with FBI. Launch **Remix Falco test**, enter VS mode, select **Fox** on the top screen, then tap that player's card on the bottom screen to switch to **Falco**. Tap again to switch back to Fox. The bottom card names Falco, while the original top-screen portrait and announcer still say Fox. Training and other modes retain Fox for now. The existing 3D slider, display toggle and control options are available.
+To test on a homebrewed **New Nintendo 3DS / New 3DS XL**, copy this local CIA to the SD card and install it with FBI. Launch **Remix fighter test**, enter VS mode, select **Fox** or **Donkey Kong** on the top screen, then tap that player's bottom-screen card to switch to **Falco** or **DK Ult**. Tap again to return to the vanilla fighter. The bottom card names the imported fighter, while the original top-screen portrait and announcer still use the vanilla parent. Training and other modes do not have this selector. The existing 3D slider, display toggle and control options are available.
 
-The test uses title ID `000400000ff64200`, product code `CTR-P-SMFT`, and `/3ds/ssb64-remix-falco-test/`. It installs alongside the original game. It contains the original menus and stages, not the full Remix/+EXTRA roster or engine. CPU behavior and all modes have not been fully validated for Falco. See [fixture limits](PORTING-STATUS.md#falco-fixture-limits).
+The test uses title ID `000400000ff64200`, product code `CTR-P-SMFT`, and `/3ds/ssb64-remix-falco-test/`. It installs alongside the original game and replaces the earlier Falco-only development title. It contains the original menus and stages, not the full Remix/+EXTRA roster or engine. CPU behavior and all modes have not been fully validated for either imported fighter. See [fixture limits](PORTING-STATUS.md#fighter-fixture-limits).
 
 The CIA contains locally extracted assets and stays local. Do not upload it with source contributions. A debugger-oriented 3DSX can also be linked with `SSB_REMIX_PROBE=falco` and `3ds/tools/build_runtime.py --render`; that variant waits for a harness and is not the normal hardware test build.

@@ -1,4 +1,4 @@
-"""Build a private Falco integration CIA, not a complete Remix +EXTRA release."""
+"""Build a private fighter integration CIA, not a complete Remix +EXTRA release."""
 import os
 import shutil
 import subprocess
@@ -33,18 +33,18 @@ def main():
                             font=ImageFont.load_default(size=font_size), fill=(245, 239, 219),
                             anchor='mm', align='center', spacing=5)
         image.save(path)
-    art((48, 48), 'FALCO\nTEST', 11, dst / 'icon.png')
-    art((256, 128), 'REMIX / FALCO TEST\nNative fighter integration\nFull mod in development', 15, dst / 'banner.png')
+    art((48, 48), 'REMIX\nTEST', 11, dst / 'icon.png')
+    art((256, 128), 'REMIX FIGHTER TEST\nFalco / DK Ult\nFull mod in development', 15, dst / 'banner.png')
     with wave.open(str(dst / 'silent.wav'), 'wb') as sound:
         sound.setparams((2, 2, 32000, 0, 'NONE', 'not compressed'))
         sound.writeframes(bytes(32000 * 4))
-    run(tool('bannertool'), 'makesmdh', '-s', 'Remix Falco test', '-l',
-        'Falco via VS bottom screen - full Remix port unfinished', '-p', 'Remix / decomp / port contributors',
+    run(tool('bannertool'), 'makesmdh', '-s', 'Remix fighter test', '-l',
+        'Falco and DK Ult via VS bottom screen - full port unfinished', '-p', 'Remix / decomp / port contributors',
         '-i', dst / 'icon.png', '-o', dst / 'icon.smdh', '-r', 'regionfree',
         '-f', 'visible,allow3d,new3ds,recordusage')
     run(tool('bannertool'), 'makebanner', '-i', dst / 'banner.png', '-a', dst / 'silent.wav', '-o', dst / 'banner.bin')
     rsf = (ROOT / '3ds/smash64.rsf').read_text()
-    rsf = rsf.replace('Title: RemixExtra', 'Title: FalcoTest').replace('CTR-P-SMXE', 'CTR-P-SMFT').replace('0xFF641', '0xFF642')
+    rsf = rsf.replace('Title: RemixExtra', 'Title: FighterTest').replace('CTR-P-SMXE', 'CTR-P-SMFT').replace('0xFF641', '0xFF642')
     rsf += '\nRomFs:\n  RootPath: "' + (OUT / 'romfs').as_posix() + '"\n'
     (dst / 'smash64.rsf').write_text(rsf)
     flags = ['-target', 't', '-exefslogo', '-elf', dst / 'ssb64-package.elf',
@@ -52,8 +52,8 @@ def main():
     for fmt, suffix in [('cia', 'cia'), ('ncch', 'cxi')]:
         run(tool('makerom'), '-f', fmt, *flags, *(['-ver', '1'] if fmt == 'cia' else []),
             '-o', dst / ('smash64-development.' + suffix))
-    report = {'development_only': True, 'build_variant': 'falco-test', 'fully_playable': False,
-              'scope': 'Falco selectable by tapping the Fox player card on the VS bottom screen; full Remix roster and menus unfinished',
+    report = {'development_only': True, 'build_variant': 'fighter-test', 'fully_playable': False,
+              'scope': 'Falco and DK Ult selectable from the Fox and Donkey Kong VS bottom cards; full Remix roster and menus unfinished',
               'elf_sha256': sha256(elf), 'title_id': '000400000ff64200', 'files': {}}
     for suffix in ('cia', 'cxi'):
         path = dst / ('smash64-development.' + suffix)
@@ -61,7 +61,7 @@ def main():
     write_json(dst / 'package.json', report)
     from verify_package import main as verify
     verify(dst, expected_title=0x000400000ff64200, verify_startup=True)
-    target = OUT / 'falco-test/Remix-Falco-Integration-Test.cia'
+    target = OUT / 'falco-test/Remix-Fighter-Integration-Test.cia'
     shutil.copy2(dst / 'smash64-development.cia', target)
     write_json(BUILD / 'fighter-probe/package.json', report)
     print('Development CIA (not the full mod):', target)

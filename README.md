@@ -2,7 +2,7 @@
 
 A native 3DS port **in development**, derived from [Smash 64 for New Nintendo 3DS](https://github.com/2gifts/smash64-3ds). The target is the complete [Smash Remix](https://github.com/JSsixtyfour/smashremix) base with [Smash Remix +EXTRA](https://github.com/joaorb64/smashremix-plus-extra), retaining the existing port's stereoscopic rendering, widescreen option, bottom-screen HUD, and control settings.
 
-**The complete Remix +EXTRA port is not ready.** A local development CIA now offers native Falco in VS mode: select Fox on the top screen, then tap that player's card on the bottom screen to switch between Fox and Falco. This is a fighter integration test, not the expanded roster or finished mod. The original Smash 64 port remains available in its [own repository](https://github.com/2gifts/smash64-3ds).
+**The complete Remix +EXTRA port is not ready.** A local development CIA offers native Falco and +EXTRA's DK Ult in VS mode: select Fox or Donkey Kong on the top screen, then tap that player's bottom-screen card to switch fighters. This tests two imported fighters, not the expanded roster or finished mod. The original Smash 64 port remains available in its [own repository](https://github.com/2gifts/smash64-3ds).
 
 ## Current progress
 
@@ -11,7 +11,7 @@ A native 3DS port **in development**, derived from [Smash 64 for New Nintendo 3D
 - Reproducible local reference-ROM build using your own US 1.0 ROM.
 - Expanded native asset loader with bounded caching for the larger mod catalogue.
 - Asset conversion checks, host regression tests, and an ARM11 asset diagnostic.
-- First native fighter fixture: Falco model, animations, motion scripts, Phantasm and Firebird adjustments.
+- First two native fighter integrations: Falco's model, motions, Phantasm and Firebird adjustments; DK Ult's model, motions, Giant Punch charge timing, Spinning Kong movement and aerial down special.
 - Expanded sound-bank conversion with validated pointers and unchanged sample payloads.
 - Separate application identity and save directory for the eventual 3DS build.
 
@@ -19,7 +19,7 @@ Remix adds N64 assembly code as well as characters and assets. Its fighter regis
 
 ## Building and contributing
 
-See the [development build guide](docs/BUILD-3DS.md) to build the reference mod, run checks, or build the Falco test CIA from your own assets. Its HOME Menu label is **Remix Falco test**; in VS mode, select Fox and tap the corresponding bottom-screen card to choose Falco. The full-mod release packager remains disabled while integration is unfinished.
+See the [development build guide](docs/BUILD-3DS.md) to build the reference mod, run checks, or build the fighter test CIA from your own assets. Its HOME Menu label is **Remix fighter test**; in VS mode, tap the Fox or Donkey Kong bottom-screen card to choose Falco or DK Ult. The full-mod release packager remains disabled while integration is unfinished.
 
 The target hardware is **New Nintendo 3DS / New 3DS XL**. Gameplay performance and stereo compatibility for Remix are not established yet.
 

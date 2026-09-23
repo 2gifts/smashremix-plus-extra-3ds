@@ -44,11 +44,12 @@ void nativeBottomTouch(unsigned x,unsigned y){
        x>=8&&x<312&&y>=40&&y<192){
         unsigned col=(x-8)/156,row=(y-40)/79,px=(x-8)%156,py=(y-40)%79;
         unsigned slot=row*2+col;
-        if(px<148&&py<73&&slot<4&&native_bottom_observed.players[slot].kind<2&&
-           (native_bottom_observed.players[slot].character==NATIVE_REMIX_FOX_KIND||
-            native_bottom_observed.players[slot].character==NATIVE_REMIX_FALCO_KIND)){
-            native_remix_selected_fkind[slot]=native_remix_selected_fkind[slot]==NATIVE_REMIX_FALCO_KIND?
-                0:NATIVE_REMIX_FALCO_KIND;
+        unsigned character=native_bottom_observed.players[slot].character;
+        unsigned alternate=(character==NATIVE_REMIX_FOX_KIND||character==NATIVE_REMIX_FALCO_KIND)?
+            NATIVE_REMIX_FALCO_KIND:
+            (character==NATIVE_REMIX_DONKEY_KIND||character==NATIVE_REMIX_DKULT_KIND)?NATIVE_REMIX_DKULT_KIND:0;
+        if(px<148&&py<73&&slot<4&&native_bottom_observed.players[slot].kind<2&&alternate){
+            native_remix_selected_fkind[slot]=native_remix_selected_fkind[slot]==alternate?0:alternate;
             dirty=1;return;
         }
     }

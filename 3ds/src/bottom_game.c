@@ -100,6 +100,8 @@ void nativeBottomSnapshot(NativeBottomState* s){
 #ifdef SSB_REMIX_PROBE
             if(q->fkind==nFTKindFox&&native_remix_selected_fkind[i]==NATIVE_REMIX_FALCO_KIND)
                 p->character=NATIVE_REMIX_FALCO_KIND;
+            if(q->fkind==nFTKindDonkey&&native_remix_selected_fkind[i]==NATIVE_REMIX_DKULT_KIND)
+                p->character=NATIVE_REMIX_DKULT_KIND;
 #endif
             p->color=s->teams?(q->team==2?3:q->team):i;p->ready=q->is_fighter_selected;
         }

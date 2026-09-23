@@ -1,5 +1,8 @@
 #include <ft/fighter.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 extern void *func_800269C0_275C0(u16 id);
 
 // // // // // // // // // // // //
@@ -10,6 +13,23 @@ extern void *func_800269C0_275C0(u16 id);
 
 #define FTKIRBY_SPECIALNSTART_STATUS_FLAGS (FTSTATUS_PRESERVE_LOOPSFX | FTSTATUS_PRESERVE_MODELPART | FTSTATUS_PRESERVE_EFFECT)
 #define FTKIRBY_SPECIALNLOOP_STATUS_FLAGS (FTSTATUS_PRESERVE_RUMBLE | FTSTATUS_PRESERVE_LOOPSFX | FTSTATUS_PRESERVE_MODELPART | FTSTATUS_PRESERVE_EFFECT | FTSTATUS_PRESERVE_HIT)
+
+#ifdef PORT
+/* Kirby's main-motion file contains 27 copy rows (Mario through N-Ness).
+ * The fighter registry may contain more kinds, but it cannot extend this
+ * ROM table. Until a fighter has its own Kirby copy implementation, use its
+ * vanilla parent so both the hat and neutral special have valid entries. */
+#define FTKIRBY_COPY_TABLE_COUNT 27
+static s32 ftKirbySpecialNGetCopyTableKind(s32 fkind)
+{
+    if (fkind == nFTKindGDonkey) fkind = nFTKindDonkey;
+#ifdef SSB_REMIX_PROBE
+    if (fkind == NATIVE_REMIX_FALCO_KIND) fkind = NATIVE_REMIX_FOX_KIND;
+    if (fkind == NATIVE_REMIX_DKULT_KIND) fkind = NATIVE_REMIX_DONKEY_KIND;
+#endif
+    return ((u32)fkind < FTKIRBY_COPY_TABLE_COUNT) ? fkind : nFTKindKirby;
+}
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -128,6 +148,9 @@ void ftKirbySpecialNCopyInitCopyVars(GObj *fighter_gobj)
             func_800269C0_275C0(nSYAudioFGMKirbySpecialNCopyThrow); // SFX?
 
             copy_id = fp->status_vars.kirby.specialn.copy_id;
+#ifdef PORT
+            copy_id = ftKirbySpecialNGetCopyTableKind(copy_id);
+#endif
             fp->passive_vars.kirby.copy_id = copy_id;
 
             ftParamSetModelPartDefaultID(fighter_gobj, FTKIRBY_COPY_MODELPARTS_JOINT, copy[copy_id].copy_modelpart_id);
@@ -196,9 +219,19 @@ void ftKirbySpecialNCatchProcUpdate(GObj *fighter_gobj)
         if ((victim_fp->fkind == nFTKindKirby) || (victim_fp->fkind == nFTKindNKirby))
         {
             kirby_fp->status_vars.kirby.specialn.copy_id = victim_fp->passive_vars.kirby.copy_id;
+#ifdef PORT
+            kirby_fp->status_vars.kirby.specialn.copy_id = ftKirbySpecialNGetCopyTableKind(kirby_fp->status_vars.kirby.specialn.copy_id);
+#endif
             victim_fp->status_vars.common.capturekirby.is_kirby = TRUE;
         }
+#ifdef PORT
+        else kirby_fp->status_vars.kirby.specialn.copy_id =
+            copy[ftKirbySpecialNGetCopyTableKind(victim_fp->fkind)].copy_id;
+        kirby_fp->status_vars.kirby.specialn.copy_id =
+            ftKirbySpecialNGetCopyTableKind(kirby_fp->status_vars.kirby.specialn.copy_id);
+#else
         else kirby_fp->status_vars.kirby.specialn.copy_id = copy[victim_fp->fkind].copy_id;
+#endif
 
         func_800269C0_275C0(nSYAudioFGMKirbySpecialNCopyEat);
 

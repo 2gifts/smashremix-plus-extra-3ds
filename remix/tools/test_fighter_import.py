@@ -18,21 +18,62 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_kirby_copy_table_bounds_and_parent_fallback(self):
+        source = (ROOT / 'src/ft/ftchar/ftkirby/ftkirbyspecialn.c').read_text()
+        start = source.index('static s32 ftKirbySpecialNGetCopyTableKind(')
+        function = source[start:source.index('\n}', start) + 2]
+        fixture = '''#include <assert.h>
+#include <stdint.h>
+#include "native_remix_roster.h"
+typedef int32_t s32;
+typedef uint32_t u32;
+enum { nFTKindMario, nFTKindFox, nFTKindDonkey, nFTKindSamus,
+       nFTKindLuigi, nFTKindLink, nFTKindYoshi, nFTKindCaptain,
+       nFTKindKirby, nFTKindGDonkey = 27 };
+#define FTKIRBY_COPY_TABLE_COUNT 27
+''' + function + '''
+int main(void) {
+    assert(ftKirbySpecialNGetCopyTableKind(nFTKindMario) == nFTKindMario);
+    assert(ftKirbySpecialNGetCopyTableKind(nFTKindFox) == nFTKindFox);
+    assert(ftKirbySpecialNGetCopyTableKind(nFTKindGDonkey) == nFTKindDonkey);
+    assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_FALCO_KIND) == nFTKindFox);
+    assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_DKULT_KIND) == nFTKindDonkey);
+    assert(ftKirbySpecialNGetCopyTableKind(28) == nFTKindKirby);
+    assert(ftKirbySpecialNGetCopyTableKind(999) == nFTKindKirby);
+    assert(ftKirbySpecialNGetCopyTableKind(-1) == nFTKindKirby);
+    return 0;
+}
+'''
+        out = BUILD / 'fighter-import-test'
+        out.mkdir(parents=True, exist_ok=True)
+        path, exe = out / 'kirby_copy.c', out / 'kirby-copy-test.exe'
+        path.write_text(fixture)
+        cc = compiler_path(None).replace('clang++', 'clang')
+        subprocess.run([cc, '-std=gnu11', '-DSSB_REMIX_PROBE',
+                        '-I' + str(ROOT / '3ds/include'),
+                        str(path), '-o', str(exe)], check=True)
+        subprocess.run([str(exe)], check=True)
+
     def test_native_animation_classification_does_not_touch_menu_file_zero(self):
         source = (ROOT / '3ds/src/remix_falco_probe.c').read_text()
         start = source.index('int nativeRelocIsFighterAnimation(')
         function = source[start:source.index('\n}', start) + 2]
+        dk_source = (ROOT / '3ds/src/remix_dkult_probe.c').read_text()
+        dk_start = dk_source.index('int nativeRemixDKUltIsAnimation(')
+        dk_function = dk_source[dk_start:dk_source.index('\n}', dk_start) + 2]
         # Compile the actual native predicate against a small motion catalogue.
         fixture = '''#include <cassert>
 #define ARRAY_COUNT(a) (sizeof(a)/sizeof((a)[0]))
 struct Motion {unsigned anim_file_id;struct {unsigned word;} anim_desc;};
 static Motion remix_main_motions[]={{0,{0}},{4,{0}},{5,{8}},{6,{2}},{7,{10}}};
 static Motion remix_menu_motions[]={{0,{0}},{8,{0}}};
+static Motion remix_dkult_main_motions[]={{0,{0}},{10,{0}},{11,{8}}};
+static Motion remix_dkult_menu_motions[]={{0,{0}},{12,{0}}};
 '''
         for line in (ROOT / 'src/ft/ftdef.h').read_text().splitlines():
             if line.startswith('#define FTANIM_FLAG_ANIMJOINT ') or line.startswith('#define FTANIM_FLAG_SHIELDPOSE '):
                 fixture += line + '\n'
-        fixture += function + '''
+        fixture += dk_function + '\n' + function + '''
 int main(){
     assert(!nativeRelocIsFighterAnimation(0));
     assert(nativeRelocIsFighterAnimation(4));
@@ -41,6 +82,10 @@ int main(){
     assert(!nativeRelocIsFighterAnimation(7));
     assert(nativeRelocIsFighterAnimation(8));
     assert(!nativeRelocIsFighterAnimation(9));
+    assert(nativeRelocIsFighterAnimation(10));
+    assert(!nativeRelocIsFighterAnimation(11));
+    assert(nativeRelocIsFighterAnimation(12));
+    assert(!nativeRemixDKUltIsAnimation(0));
 }
 '''
         out = BUILD / 'fighter-import-test'
