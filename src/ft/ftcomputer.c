@@ -6,6 +6,12 @@
 #ifdef PORT
 #include "fighter_registry.h"
 #endif
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#define FT_COMPUTER_IS_SAMUS(kind) ((kind) == nFTKindSamus || (kind) == NATIVE_REMIX_ESAMUS_KIND)
+#else
+#define FT_COMPUTER_IS_SAMUS(kind) ((kind) == nFTKindSamus)
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -4263,6 +4269,9 @@ sb32 ftComputerCheckDetectTarget(FTStruct *this_fp, f32 detect_range_base)
                                     case nFTKindMario:
                                     case nFTKindFox:
                                     case nFTKindSamus:
+#ifdef SSB_REMIX_PROBE
+                                    case NATIVE_REMIX_ESAMUS_KIND:
+#endif
                                     case nFTKindLuigi:
                                     case nFTKindLink:
                                     case nFTKindPikachu:
@@ -4284,6 +4293,9 @@ sb32 ftComputerCheckDetectTarget(FTStruct *this_fp, f32 detect_range_base)
                             break;
 
                         case nFTKindSamus:
+#ifdef SSB_REMIX_PROBE
+                        case NATIVE_REMIX_ESAMUS_KIND:
+#endif
                             if (this_fp->passive_vars.samus.charge_level == FTSAMUS_CHARGE_MAX)
                             {
                                 detect_ranges_x[attack_count++] = 4.0F;
@@ -4328,7 +4340,7 @@ sb32 ftComputerCheckDetectTarget(FTStruct *this_fp, f32 detect_range_base)
                         break;
 
                     case nFTComputerInputStickNButtonZButtonA:
-                        if ((this_fp->fkind != nFTKindLink) && (this_fp->fkind != nFTKindSamus))
+                        if ((this_fp->fkind != nFTKindLink) && !FT_COMPUTER_IS_SAMUS(this_fp->fkind))
                         {
                             detect_ranges_x[attack_count++] = 4.0F;
                             break;
@@ -5871,6 +5883,9 @@ sb32 ftComputerCheckTryChargeSpecialN(FTStruct *fp)
         break;
 
     case nFTKindSamus:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_ESAMUS_KIND:
+#endif
         if
         (
             (fp->status_id != nFTSamusStatusSpecialNStart)     &&
@@ -5948,6 +5963,9 @@ sb32 ftComputerCheckTryCancelSpecialN(FTStruct *fp)
         break;
 
     case nFTKindSamus:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_ESAMUS_KIND:
+#endif
         if
         (
             (fp->status_id == nFTSamusStatusSpecialNStart)             ||
@@ -6950,7 +6968,7 @@ sb32 func_ovl3_80138AA8(FTStruct *this_fp, sb32 is_delay)
         }
         fkind = (this_fp->fkind == nFTKindKirby) ? this_fp->passive_vars.kirby.copy_id : this_fp->fkind;
 
-        if (fkind == nFTKindSamus)
+        if (FT_COMPUTER_IS_SAMUS(fkind))
         {
             if
             (
@@ -6981,6 +6999,9 @@ sb32 func_ovl3_80138AA8(FTStruct *this_fp, sb32 is_delay)
         case nFTKindMario:
         case nFTKindFox:
         case nFTKindSamus:
+#ifdef SSB_REMIX_PROBE
+        case NATIVE_REMIX_ESAMUS_KIND:
+#endif
         case nFTKindLuigi:
         case nFTKindPikachu:
         case nFTKindMMario:
@@ -7049,7 +7070,7 @@ sb32 func_ovl3_80138EE4(FTStruct *fp)
     }
     fkind = (fp->fkind == nFTKindKirby) ? fp->passive_vars.kirby.copy_id : fp->fkind;
 
-    if (fkind == nFTKindSamus)
+    if (FT_COMPUTER_IS_SAMUS(fkind))
     {
         if
         (

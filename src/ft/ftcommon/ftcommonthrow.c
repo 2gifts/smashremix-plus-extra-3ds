@@ -1,4 +1,7 @@
 #include <ft/fighter.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 #ifdef PORT
 extern void port_log(const char *fmt, ...);
@@ -123,7 +126,11 @@ void ftCommonThrowSetStatus(GObj *fighter_gobj, sb32 is_throwf)
     this_fp->motion_vars.flags.flag2 = 0;
     this_fp->motion_vars.flags.flag1 = 0;
 
-    if ((this_fp->fkind == nFTKindSamus) || (this_fp->fkind == nFTKindNSamus))
+    if ((this_fp->fkind == nFTKindSamus) || (this_fp->fkind == nFTKindNSamus)
+#ifdef SSB_REMIX_PROBE
+        || (this_fp->fkind == NATIVE_REMIX_ESAMUS_KIND)
+#endif
+        )
     {
         if (efManagerSamusGrappleBeamGlowMakeEffect(fighter_gobj) != NULL)
         {

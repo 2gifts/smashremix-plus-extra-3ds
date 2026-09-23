@@ -1,6 +1,9 @@
 #include <string.h>
 #include <ft/fighter.h>
 #ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
+#ifdef SSB_REMIX_PROBE
 #include "native_remix_probe.h"
 #endif
 #include <it/item.h>
@@ -1430,6 +1433,9 @@ void ftParamResetStatUpdateColAnim(GObj *fighter_gobj)
         break;
 
     case nFTKindSamus:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_ESAMUS_KIND:
+#endif
     case nFTKindNSamus:
         if (fp->passive_vars.samus.charge_level == FTSAMUS_CHARGE_MAX)
         {
@@ -1995,6 +2001,9 @@ void* ftParamMakeEffect(GObj *fighter_gobj, s32 effect_id, s32 joint_id, Vec3f *
         switch (fp->fkind)
         {
         case nFTKindSamus:
+#ifdef SSB_REMIX_PROBE
+        case NATIVE_REMIX_ESAMUS_KIND:
+#endif
             joint_id = FTSAMUS_CHARGE_EFFECT_JOINT;
 
             effect_pos_mod.z = effect_pos_mod.y = 0.0F;

@@ -110,6 +110,9 @@ void ftPortVanillaEntryMakeEffect(FTStruct *fp)
         break;
 
     case nFTKindSamus:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_ESAMUS_KIND:
+#endif
         efManagerSamusEntryPointMakeEffect(&fp->entry_pos);
         break;
 

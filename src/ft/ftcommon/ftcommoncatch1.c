@@ -1,4 +1,7 @@
 #include <ft/fighter.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 #ifdef PORT
 extern void port_log(const char *fmt, ...);
 #endif
@@ -111,7 +114,11 @@ void ftCommonCatchSetStatus(GObj *fighter_gobj)
 
     fp->is_shield_catch = FALSE;
 
-    if (((fp->fkind == nFTKindSamus) || (fp->fkind == nFTKindNSamus)) && (efManagerSamusGrappleBeamGlowMakeEffect(fighter_gobj) != NULL))
+    if (((fp->fkind == nFTKindSamus) || (fp->fkind == nFTKindNSamus)
+#ifdef SSB_REMIX_PROBE
+        || (fp->fkind == NATIVE_REMIX_ESAMUS_KIND)
+#endif
+        ) && (efManagerSamusGrappleBeamGlowMakeEffect(fighter_gobj) != NULL))
     {
         fp->is_effect_attach = TRUE;
     }

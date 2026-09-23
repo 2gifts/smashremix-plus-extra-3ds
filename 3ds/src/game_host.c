@@ -44,6 +44,7 @@ void ssb_game_init(void) {
     extern void nativeRemixDKUltInit(void);
     extern void nativeRemixJPikaInit(void);
     extern void nativeRemixEPikaInit(void);
+    extern void nativeRemixESamusInit(void);
     extern void nativeRemixJMarioInit(void);
     extern void nativeRemixJFalconInit(void);
     extern void nativeRemixJLuigiInit(void);
@@ -52,6 +53,7 @@ void ssb_game_init(void) {
     nativeRemixDKUltInit();
     nativeRemixJPikaInit();
     nativeRemixEPikaInit();
+    nativeRemixESamusInit();
     nativeRemixJMarioInit();
     nativeRemixJFalconInit();
     nativeRemixJLuigiInit();
