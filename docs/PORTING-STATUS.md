@@ -10,6 +10,7 @@ The scalable porting path is to assemble the pinned N64 mod, extract its final p
 - +EXTRA 0.6.0 and its exact Remix dependency pinned as nested submodules.
 - A local, isolated upstream build completed from the US 1.0 ROM: 80,421,504-byte N64 reference output.
 - Conversion and inspection of all 7,564 relocation assets: 82,246,242-byte reference pack.
+- The asset importer now recognizes six raw animation end-image display lists whose upstream file-table entries incorrectly point relocation at their `G_ENDDL` header. It clears that header only in the native pack, preserves the bytes, and names remaining warnings from the assembled file-ID table. The current host loader checks all 7,564 regenerated payloads; 26 relocation issues remain, so the full pack is still not approved for native gameplay. The earlier Azahar raw-asset diagnostic used the previous pack and is retained only as evidence for that build.
 - Native loader accepts expanded file tables, validates index bounds and dependency IDs, and streams large packs instead of allocating the entire catalogue on the 3DS heap. Small packs retain the original resident fast path. The decoded-file cache remains bounded to 1 MiB.
 - Host checks verify all reference payloads, expanded IDs, bounded caching, reopening, and malformed-index rejection. ARM11 support compilation succeeds. Existing controls, display, and performance-report tests pass.
 - The ARM11 diagnostic passed in Azahar, reading and checksum-verifying all 7,564 payloads. This is a raw-asset test, not a match or frame-rate measurement.

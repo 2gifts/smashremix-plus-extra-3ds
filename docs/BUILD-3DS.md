@@ -34,6 +34,8 @@ Generated ROMs, symbols, extracted assets, and logs remain in ignored build dire
 
 The asset conversion writes `remix/build/assets/reloc.reference.pak` plus a manifest. **Exit code 2 means conversion finished but relocation compatibility issues remain.** Inspect `relocation_issues` in the manifest. The pack is retained for analysis and raw-I/O testing; it is not approved for loading into the native game. Invalid ROM bounds, truncated tables, and other structural failures stop conversion immediately.
 
+The importer recognizes raw `G_ENDDL` animation files whose upstream table incorrectly labels word zero as an internal relocation, and records each one under `normalized_display_lists`. It preserves their payloads and clears only the native pack's false relocation header. The remaining pointer issues are named using the generated `File.asm` ID table; they still block full-pack relocation use. This classification runs across all 7,564 files, without a fighter-specific exception list.
+
 ## Test the loader
 
 ```powershell

@@ -32,11 +32,12 @@
     "files": 7564,
     "dependencies": 11659,
     "pack_bytes": 82246242,
-    "pack_sha256": "1b70f9001aae7f0672f9d449aae4131ca45565d58f2e8c79194004bf4a7bad3e",
+    "pack_sha256": "2c86ac56efa93d9b3da648d62e1868e5b77e90afddd5511f10aa5d36d94ec779",
     "dependency_index_sha256": "503ab3d528bc50a6226e34c5b4ed4b36592b5858c5a44dbfca30587c31d9d8c1",
     "native_3ds_playable": false,
     "native_relocations_validated": false,
-    "relocation_issues": 32
+    "raw_display_lists_normalized": 6,
+    "relocation_issues": 26
   },
   "source_inventory": {
     "base_remix": {
@@ -86,9 +87,9 @@
       "passed": true,
       "detail": "all reference asset payloads and dependency counts match; cache remains bounded",
       "files": 7564,
-      "pack_sha256": "1b70f9001aae7f0672f9d449aae4131ca45565d58f2e8c79194004bf4a7bad3e",
+      "pack_sha256": "2c86ac56efa93d9b3da648d62e1868e5b77e90afddd5511f10aa5d36d94ec779",
       "scope": "Raw I/O and cache only; does not execute relocations, game code, or rendering.",
-      "native_relocation_issues_remaining": 32
+      "native_relocation_issues_remaining": 26
     },
     "passed": true
   },
@@ -169,42 +170,6 @@
       "target": 9408,
       "file_size": 4704,
       "file_name": "PEACH_TURNIP_GFX"
-    },
-    {
-      "file_id": 6379,
-      "kind": "internal_chain",
-      "detail": "Invalid relocation link 0xdf00",
-      "file_name": "MRGAW_ANIM_ENDIMAGE1"
-    },
-    {
-      "file_id": 6380,
-      "kind": "internal_chain",
-      "detail": "Invalid relocation link 0xdf00",
-      "file_name": "MRGAW_ANIM_ENDIMAGE2"
-    },
-    {
-      "file_id": 6537,
-      "kind": "internal_chain",
-      "detail": "Invalid relocation link 0xdf00",
-      "file_name": "MRGAWPLUS_ANIM_ENDIMAGE1"
-    },
-    {
-      "file_id": 6538,
-      "kind": "internal_chain",
-      "detail": "Invalid relocation link 0xdf00",
-      "file_name": "MRGAWPLUS_ANIM_ENDIMAGE2"
-    },
-    {
-      "file_id": 6693,
-      "kind": "internal_chain",
-      "detail": "Invalid relocation link 0xdf00",
-      "file_name": "MRGAWTHREED_ANIM_ENDIMAGE1"
-    },
-    {
-      "file_id": 6694,
-      "kind": "internal_chain",
-      "detail": "Invalid relocation link 0xdf00",
-      "file_name": "MRGAWTHREED_ANIM_ENDIMAGE2"
     },
     {
       "file_id": 2939,

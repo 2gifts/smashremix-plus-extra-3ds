@@ -6,6 +6,7 @@ Zoinkity's SSB.py, retained in the +EXTRA submodule, supplies ROM-table and VPK 
 import hashlib
 import importlib.util
 import json
+import re
 import struct
 import sys
 from pathlib import Path
@@ -21,6 +22,26 @@ def chain(data, first):
         yield first, value & 0xffff
         first = value >> 16
 
+def file_symbols(reference_dir):
+    """Use the appender's final file-ID table, including +EXTRA additions."""
+    source = (reference_dir / 'src' / 'File.asm').read_text(encoding='utf-8')
+    result = {}
+    for name, value in re.findall(r'\bconstant\s+(\w+)\(0x([0-9a-fA-F]+)\)', source):
+        result.setdefault(int(value, 16), name)
+    return result
+
+def unrelocated_end_display_list(data, intern, external):
+    """Recognize raw G_ENDDL assets mislabeled with a link at word zero.
+
+    The +EXTRA injector supplies table offset zero for six animation end-image
+    files. Their first word is the N64 display-list terminator, not a relocation
+    descriptor; interpreting its upper half as a link jumps beyond the file.
+    Only this exact, dependency-free shape can be normalized.
+    """
+    return (intern == 0 and external == 0xffff and len(data) >= 8 and
+            data[:8] == b'\xdf\x00\x00\x00\x00\x00\x00\x00' and
+            0xdf00 * 4 + 4 > len(data))
+
 def main():
     lock, sources = checked_sources()
     reference = json.loads((BUILD / 'reference.json').read_text())
@@ -30,6 +51,10 @@ def main():
     rom_path = (ROOT / reference['rom']).resolve()
     if not rom_path.is_relative_to(BUILD.resolve()) or sha256(rom_path) != reference['rom_sha256']:
         raise ValueError('Reference ROM does not match its local build manifest')
+    reference_dir = (ROOT / reference['directory']).resolve()
+    if not reference_dir.is_relative_to(BUILD.resolve()):
+        raise ValueError('Reference source directory escapes local build')
+    symbols = file_symbols(reference_dir)
     module_path = sources['extra'] / 'SSB.py'
     spec = importlib.util.spec_from_file_location('remix_ssb', module_path)
     ssb = importlib.util.module_from_spec(spec)
@@ -45,6 +70,7 @@ def main():
     payload_start = table + (count + 1) * 12
     entries, metadata, offsets, deps = [], [], [0], bytearray()
     relocation_issues = []
+    normalized_display_lists = []
     target = out / 'reloc.reference.pak'
     temporary = out / 'reloc.reference.pak.tmp'
     position = 16 + count * 20
@@ -67,12 +93,19 @@ def main():
             if not expected - 3 <= len(data) <= expected:
                 raise ValueError(f'Asset {fid:#x}: decompressed size {len(data)} != {expected}')
             data = data.ljust(expected, b'\0')
+            if unrelocated_end_display_list(data, intern, external):
+                # Keep the raw G_ENDDL payload unchanged; only its pack-side
+                # relocation header is wrong for the native reloc loader.
+                intern = 0xffff
+                normalized_display_lists.append({'file_id': fid,
+                                                 'symbol': symbols.get(fid)})
             def inspect_chain(first, kind):
                 links = []
                 try:
                     links.extend(chain(data, first))
                 except ValueError as error:
-                    relocation_issues.append({'file_id': fid, 'kind': kind + '_chain', 'detail': str(error)})
+                    relocation_issues.append({'file_id': fid, 'symbol': symbols.get(fid),
+                                              'kind': kind + '_chain', 'detail': str(error)})
                 return links
             internal_links = inspect_chain(intern, 'internal')
             external_links = inspect_chain(external, 'external')
@@ -84,7 +117,8 @@ def main():
                 raise ValueError(f'Asset {fid:#x}: dependency ID out of bounds')
             for slot, offset in internal_links:
                 if offset * 4 >= len(data):
-                    relocation_issues.append({'file_id': fid, 'kind': 'internal_target_outside_file',
+                    relocation_issues.append({'file_id': fid, 'symbol': symbols.get(fid),
+                                              'kind': 'internal_target_outside_file',
                                               'slot': slot * 4, 'target': offset * 4, 'file_size': len(data)})
             little_ids = struct.pack('<' + str(len(ids)) + 'H', *ids)
             entries.append(struct.pack('<IIIHHI', position, len(data), len(ids), intern, external, 0))
@@ -93,13 +127,16 @@ def main():
             position += len(data) + len(little_ids)
             offsets.append(offsets[-1] + len(ids))
             deps.extend(little_ids)
-            metadata.append({'id': fid, 'size': len(data), 'sha256': hashlib.sha256(data).hexdigest(),
+            metadata.append({'id': fid, 'symbol': symbols.get(fid), 'size': len(data),
+                             'sha256': hashlib.sha256(data).hexdigest(),
                              'external_files': ids, 'external_targets': [n for _, n in external_links]})
         for entry in metadata:
             for dep, offset in zip(entry['external_files'], entry.pop('external_targets')):
                 if offset * 4 >= metadata[dep]['size']:
-                    relocation_issues.append({'file_id': entry['id'], 'kind': 'external_target_outside_file',
-                                              'dependency': dep, 'target': offset * 4,
+                    relocation_issues.append({'file_id': entry['id'], 'symbol': entry['symbol'],
+                                              'kind': 'external_target_outside_file',
+                                              'dependency': dep, 'dependency_symbol': metadata[dep]['symbol'],
+                                              'target': offset * 4,
                                               'file_size': metadata[dep]['size']})
         pack.seek(16)
         pack.write(b''.join(entries))
@@ -115,9 +152,12 @@ def main():
         'pack_bytes': target.stat().st_size, 'pack_sha256': sha256(target),
         'dependency_index_sha256': sha256(out / 'reloc-deps.bin'),
         'native_3ds_playable': False, 'native_relocations_validated': not relocation_issues,
+        'raw_display_lists_normalized': len(normalized_display_lists),
         'relocation_issues': len(relocation_issues),
     }
-    write_json(out / 'manifest.json', {'summary': summary, 'entries': metadata, 'relocation_issues': relocation_issues})
+    write_json(out / 'manifest.json', {'summary': summary, 'entries': metadata,
+                                      'normalized_display_lists': normalized_display_lists,
+                                      'relocation_issues': relocation_issues})
     print(json.dumps(summary, indent=2))
     if relocation_issues:
         print('Reference pack retained for analysis only. Resolve the recorded relocation issues before native use.')
