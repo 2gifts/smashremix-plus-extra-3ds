@@ -1,7 +1,9 @@
 #include <ft/fighter.h>
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_roster.h"
-#define FT_DOKAN_MARIO_KIND(fp) (((fp)->fkind == NATIVE_REMIX_JMARIO_KIND) || ((fp)->fkind == NATIVE_REMIX_JLUIGI_KIND))
+#define FT_DOKAN_MARIO_KIND(fp) (nativeRemixIsVariant((fp)->fkind) && \
+    (nativeRemixParentKind((fp)->fkind) == nFTKindMario || \
+     nativeRemixParentKind((fp)->fkind) == nFTKindLuigi))
 #else
 #define FT_DOKAN_MARIO_KIND(fp) FALSE
 #endif

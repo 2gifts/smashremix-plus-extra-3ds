@@ -492,7 +492,11 @@ void ftManagerDestroyFighterWeapons(GObj *fighter_gobj)
 {
     FTStruct *fp = ftGetStruct(fighter_gobj);
 
+#ifdef SSB_REMIX_PROBE
+    switch (nativeRemixParentKind(fp->fkind))
+#else
     switch (fp->fkind)
+#endif
     {
     case nFTKindKirby:
     case nFTKindNKirby:
@@ -501,10 +505,6 @@ void ftManagerDestroyFighterWeapons(GObj *fighter_gobj)
 
     case nFTKindLink:
     case nFTKindNLink:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_ELINK_KIND:
-    case NATIVE_REMIX_JLINK_KIND:
-#endif
         ftLinkSpecialNDestroyBoomerang(fighter_gobj);
         break;
     }
@@ -668,7 +668,11 @@ void ftManagerInitFighter(GObj *fighter_gobj, FTDesc *desc)
     }
     fp->coll_data.pos_prev = DObjGetStruct(fighter_gobj)->translate.vec.f;
 
+#ifdef SSB_REMIX_PROBE
+    switch (nativeRemixParentKind(fp->fkind))
+#else
     switch (fp->fkind)
+#endif
     {
     case nFTKindMMario:
         fp->knockback_resist_passive = 30.0F;
@@ -676,9 +680,6 @@ void ftManagerInitFighter(GObj *fighter_gobj, FTDesc *desc)
         /* fallthrough */
 
     case nFTKindMario:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_JMARIO_KIND:
-#endif
     case nFTKindNMario:
         fp->passive_vars.mario.is_expend_tornado = FALSE;
         break;
@@ -689,36 +690,22 @@ void ftManagerInitFighter(GObj *fighter_gobj, FTDesc *desc)
         /* fallthrough */
 
     case nFTKindDonkey:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_DKULT_KIND:
-    case NATIVE_REMIX_JDK_KIND:
-#endif
     case nFTKindNDonkey:
         fp->passive_vars.donkey.charge_level = 0;
         break;
 
     case nFTKindSamus:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_ESAMUS_KIND:
-    case NATIVE_REMIX_JSAMUS_KIND:
-#endif
     case nFTKindNSamus:
         fp->passive_vars.samus.charge_level = 0;
         fp->passive_vars.samus.charge_recoil = 0;
         break;
 
     case nFTKindLuigi:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_JLUIGI_KIND:
-#endif
     case nFTKindNLuigi:
         fp->passive_vars.mario.is_expend_tornado = FALSE;
         break;
 
     case nFTKindCaptain:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_JFALCON_KIND:
-#endif
     case nFTKindNCaptain:
         fp->passive_vars.captain.falcon_punch_unk = 0;
         break;
@@ -841,10 +828,6 @@ void ftManagerInitFighter(GObj *fighter_gobj, FTDesc *desc)
 
     case nFTKindLink:
     case nFTKindNLink:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_ELINK_KIND:
-    case NATIVE_REMIX_JLINK_KIND:
-#endif
         fp->passive_vars.link.boomerang_gobj = NULL;
 
         ftParamSetModelPartDefaultID(fighter_gobj, 21, -1);
@@ -853,10 +836,6 @@ void ftManagerInitFighter(GObj *fighter_gobj, FTDesc *desc)
 
     case nFTKindPurin:
     case nFTKindNPurin:
-#ifdef SSB_REMIX_PROBE
-    case NATIVE_REMIX_JPUFF_KIND:
-    case NATIVE_REMIX_EPUFF_KIND:
-#endif
         fp->passive_vars.purin.unk_0x0 = 0;
         break;
 

@@ -60,8 +60,22 @@ wpMarioFireballAttributes dWPMarioFireballWeaponAttributes[/* */] =
         &llLuigiSpecial1FireballWeaponAttributes, // Offset of hitbox/attributes?
 #endif
         1.0F                                      // Animation starting frame?
-    }
+    },
+#ifdef SSB_REMIX_PROBE
+#include "native_fireball_rows.inc"
+#endif
 };
+
+#ifdef SSB_REMIX_PROBE
+s32 nativeRemixFireballIndex(s32 fkind, s32 original_index)
+{
+    switch (fkind)
+    {
+#include "native_fireball_lookup.inc"
+    default: return original_index;
+    }
+}
+#endif
 
 // 0x80188E90
 WPDesc dWPMarioFireballWeaponDesc =
@@ -168,9 +182,6 @@ sb32 wpMarioFireballProcReflector(GObj *weapon_gobj)
     FTStruct *fp = ftGetStruct(wp->owner_gobj);
 
     wp->lifetime = dWPMarioFireballWeaponAttributes[wp->weapon_vars.fireball.index].lifetime;
-#ifdef SSB_REMIX_PROBE
-    if (fp->fkind == NATIVE_REMIX_JLUIGI_KIND) wp->lifetime = 90;
-#endif
 
     wpMainReflectorSetLR(wp, fp);
     wpMainVelSetModelPitch(weapon_gobj);
@@ -187,22 +198,21 @@ GObj* wpMarioFireballMakeWeapon(GObj *fighter_gobj, Vec3f *pos, s32 index)
     f32 angle;
 
 #ifdef SSB_REMIX_PROBE
-    /* Regional variants own different special-asset files. A local
+    /* Imported variants own different special-asset files. A local
      * descriptor avoids mutating the shared Mario/Luigi descriptor. */
     WPDesc desc = dWPMarioFireballWeaponDesc;
-    sb32 is_regional = (fp->fkind == NATIVE_REMIX_JMARIO_KIND) ||
-                       (fp->fkind == NATIVE_REMIX_JLUIGI_KIND);
-    if (is_regional && !*fp->data->p_file_special1)
+    sb32 is_imported = (index >= 2);
+    if (is_imported && !*fp->data->p_file_special1)
     {
         *fp->data->p_file_special1 = lbRelocGetStatusBufferFile(fp->data->file_special1_id);
         if (!*fp->data->p_file_special1)
             *fp->data->p_file_special1 = lbRelocGetExternHeapFile(fp->data->file_special1_id,
                 syTaskmanMalloc(lbRelocGetFileSize(fp->data->file_special1_id), 0x10));
-        port_log("REMIX PROBE: regional Fireball reloaded special file %u handle=%p\n",
+        port_log("REMIX PROBE: imported fireball reloaded special file %u handle=%p\n",
                  fp->data->file_special1_id, *fp->data->p_file_special1);
     }
-    if (is_regional && !*fp->data->p_file_special1) return NULL;
-    desc.p_weapon = is_regional ? fp->data->p_file_special1 :
+    if (is_imported && !*fp->data->p_file_special1) return NULL;
+    desc.p_weapon = is_imported ? fp->data->p_file_special1 :
                     dWPMarioFireballWeaponAttributes[index].p_weapon;
     desc.o_attributes = dWPMarioFireballWeaponAttributes[index].offset;
     weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &desc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_FIGHTER));
@@ -221,9 +231,6 @@ GObj* wpMarioFireballMakeWeapon(GObj *fighter_gobj, Vec3f *pos, s32 index)
     wp->weapon_vars.fireball.index = index;
 
     wp->lifetime = dWPMarioFireballWeaponAttributes[index].lifetime;
-#ifdef SSB_REMIX_PROBE
-    if (fp->fkind == NATIVE_REMIX_JLUIGI_KIND) wp->lifetime = 90;
-#endif
 
     angle = (fp->ga == nMPKineticsAir) ? dWPMarioFireballWeaponAttributes[index].angle_air : dWPMarioFireballWeaponAttributes[index].angle_ground;
 

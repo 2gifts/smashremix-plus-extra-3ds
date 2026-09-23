@@ -2,6 +2,7 @@
 #include <wp/weapon.h>
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_roster.h"
+extern s32 nativeRemixFireballIndex(s32 fkind, s32 original_index);
 #endif
 
 // // // // // // // // // // // //
@@ -33,12 +34,13 @@ void ftMarioSpecialNProcAccessory(GObj *fighter_gobj)
 
         gmCollisionGetFighterPartsWorldPosition(fp->joints[FTMARIO_FIREBALL_SPAWN_JOINT], &pos);
 
+#ifdef SSB_REMIX_PROBE
+        switch (nativeRemixParentKind(fp->fkind))
+#else
         switch (fp->fkind) // jtbl at 0x8018C630
+#endif
         {
         case nFTKindMario:
-#ifdef SSB_REMIX_PROBE
-        case NATIVE_REMIX_JMARIO_KIND:
-#endif
         case nFTKindMMario:
         case nFTKindNMario:
             fireball_item_id = 0;
@@ -52,13 +54,13 @@ void ftMarioSpecialNProcAccessory(GObj *fighter_gobj)
             #endif
 
         case nFTKindLuigi:
-#ifdef SSB_REMIX_PROBE
-        case NATIVE_REMIX_JLUIGI_KIND:
-#endif
         case nFTKindNLuigi:
             fireball_item_id = 1;
             break;
         }
+#ifdef SSB_REMIX_PROBE
+        fireball_item_id = nativeRemixFireballIndex(fp->fkind, fireball_item_id);
+#endif
         wpMarioFireballMakeWeapon(fighter_gobj, &pos, fireball_item_id);
     }
 }

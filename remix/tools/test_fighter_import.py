@@ -17,6 +17,8 @@ from reference_table_patches import (discover_layouts, extract_table_patches,
                                      validate_generic_dispatch)
 from native_action_patches import (load_bindings, render_action_assignments,
                                    vanilla_callback_symbols)
+from native_fireball_patches import FIREBALL_BASE, extract_fireballs, render_rows, render_lookup
+from native_patch_worklist import build_worklist
 
 
 class WordReference:
@@ -28,6 +30,61 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_patch_worklist_groups_shared_consumer_coverage(self):
+        row = {'name': 'TEST', 'fkind': 77, 'changed_from_parent':
+               ['default_costume', 'fireball', 'recovery_logic']}
+        audit = {'reference_rom_sha256': 'same', 'fighters': [{'name': 'TEST',
+                 'fixture_data_ready': True, 'action_table':
+                 {'generic_action_table_compatible': True}}]}
+        tables = {'reference_rom_sha256': 'same', 'fighters': [row]}
+        fireballs = {'reference_rom_sha256': 'same', 'profiles': [{'name': 'TEST'}]}
+        report = build_worklist(audit, tables, fireballs, {'fighters': [{'name': 'TEST'}]})
+        self.assertEqual(report['fighters'][0]['remaining_table_families_to_review'],
+                         ['recovery_logic'])
+        self.assertEqual(report['families']['fireball']['importer_supported_fighters'], ['TEST'])
+        fireballs['reference_rom_sha256'] = 'different'
+        with self.assertRaisesRegex(ValueError, 'different reference ROMs'):
+            build_worklist(audit, tables, fireballs, {'fighters': [{'name': 'TEST'}]})
+
+    def test_fireball_macro_profiles_decode_as_shared_native_data(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            root = Path(dirname)
+            (root / 'reference.z64').write_bytes(b'private fixture')
+            (root / 'src').mkdir()
+            (root / 'src/fireball.asm').write_text('''
+                macro struct(name, defaults, duration, max_speed) {}
+                macro add_to_character(id, struct) {}
+                add_to_character(Character.id.TEST, struct_test)
+            ''')
+            profile_id = 1
+            profile_addr = FIREBALL_BASE + profile_id * 0x30
+            asset_ptr = 0x80400300
+            payload = struct.unpack('>12I', struct.pack('>I8fIIf', 90, 55, 30, 0, .85,
+                .4363323, 0, 0, 36, asset_ptr, 0, 1))
+            data = {profile_addr + i * 4: word for i, word in enumerate(payload)}
+            data[asset_ptr] = 0
+            for table, thunk, jump in [('fireball', 0x80400100, 0x80155ee4),
+                                       ('kirby_fireball', 0x80400120, 0x80156a54)]:
+                words = [0x3c040000, 0x34840000 | profile_id, 0xafa4001c,
+                         0x08000000 | ((jump >> 2) & 0x03ffffff), 0]
+                data.update({thunk + i * 4: word for i, word in enumerate(words)})
+            ref = WordReference(data)
+            ref.path, ref.ram_base = root / 'reference.z64', 0x80400000
+            row = {'name': 'TEST', 'fkind': 77, 'changed_from_parent':
+                   ['fireball', 'kirby_fireball'], 'tables': {
+                       'fireball': list((0x80400100).to_bytes(4, 'big')),
+                       'kirby_fireball': list((0x80400120).to_bytes(4, 'big'))}}
+            tables = {'layouts': {'fireball': 4, 'kirby_fireball': 4}, 'fighters': [row]}
+            audit = {'fighters': [{'name': 'TEST', 'files': [0, 0, 0, 0, 0, 2159]}]}
+            catalog = {'fighters': [{'name': 'TEST'}]}
+            manifest = extract_fireballs(ref, tables, audit, catalog)
+            self.assertEqual(manifest['profiles'][0]['lifetime'], 90)
+            self.assertIn('0.85', render_rows(catalog, manifest))
+            self.assertIn('NATIVE_REMIX_TEST_KIND: return 2', render_lookup(catalog, manifest))
+            data[0x80400100] = 0
+            with self.assertRaisesRegex(ValueError, 'not li a0'):
+                extract_fireballs(ref, tables, audit, catalog)
+
     def test_vanilla_callback_addresses_bind_by_decomp_function_comment(self):
         callbacks = vanilla_callback_symbols()
         self.assertEqual(callbacks[0x800d94c4], 'ftAnimEndSetWait')

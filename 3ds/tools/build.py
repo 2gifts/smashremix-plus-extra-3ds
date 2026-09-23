@@ -59,6 +59,8 @@ def game_flags():
                 UPSTREAM/'port', UPSTREAM/'debug_tools',
                 UPSTREAM/'libultraship/src', UPSTREAM/'libultraship/include']
     includes += [SDK/'libctru/include']
+    if os.environ.get('SSB_REMIX_PROBE') == 'falco':
+        includes += [DECOMP/'remix/build/fighter-probe']
     return [*ARCH, '-std=gnu11', '-O2', '-g', '-fno-short-enums',
             '-fno-strict-aliasing', '-fwrapv', '-ffp-contract=off',
             '-fno-builtin-sinf', '-fno-builtin-cosf',
@@ -84,6 +86,11 @@ def compile_game():
         for h in sorted(folder.rglob('*.h')):
             stamp_hash.update(str(h).encode())
             stamp_hash.update(h.read_bytes())
+    if os.environ.get('SSB_REMIX_PROBE') == 'falco':
+        for inc in ('native_fireball_rows.inc', 'native_fireball_lookup.inc'):
+            path = DECOMP/'remix/build/fighter-probe'/inc
+            stamp_hash.update(inc.encode())
+            stamp_hash.update(path.read_bytes())
     stamp = stamp_hash.hexdigest()
     stampfile = OUT/'game-flags.sha256'
     flags_changed = not stampfile.exists() or stampfile.read_text() != stamp
