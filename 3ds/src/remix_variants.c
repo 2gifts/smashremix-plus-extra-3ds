@@ -33,8 +33,14 @@ typedef struct NativeRemixKirbyInhaleRow {
     s32 star_damage;
 } NativeRemixKirbyInhaleRow;
 
+typedef struct NativeRemixVictoryBGM {
+    u16 fkind;
+    s16 bgm_id;
+} NativeRemixVictoryBGM;
+
 #include "generic_variants_data.inc"
 #include "native_kirby_inhale_rows.inc"
+#include "native_victory_bgm_rows.inc"
 typedef char NativeRemixTablePatchCountCheck[
     ARRAY_COUNT(native_remix_table_patches) == ARRAY_COUNT(native_remix_generic_defs) ? 1 : -1];
 
@@ -47,6 +53,13 @@ s32 nativeRemixKirbyStarDamage(unsigned fkind) {
         native_remix_kirby_inhale_rows[fkind].star_damage > 0)
         return native_remix_kirby_inhale_rows[fkind].star_damage;
     return 17;
+}
+
+s32 nativeRemixVictoryBGM(unsigned fkind) {
+    for (unsigned i = 0; i < ARRAY_COUNT(native_remix_victory_bgm); i++)
+        if (native_remix_victory_bgm[i].fkind == fkind)
+            return native_remix_victory_bgm[i].bgm_id;
+    return -2; /* No compiled Remix override: use the original results path. */
 }
 
 static int has_animation(const FTMotionDesc *motions, unsigned count, unsigned fid) {

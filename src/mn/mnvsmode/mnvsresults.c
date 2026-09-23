@@ -9,6 +9,7 @@
 #include <reloc_data.h>
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_roster.h"
+extern s32 nativeRemixVictoryBGM(unsigned fkind);
 #endif
 extern void func_800266A0_272A0(void);
 
@@ -3291,6 +3292,12 @@ void mnVSResultsUpdateAutoHandicap(void)
 void mnVSResultsPlayWinBGM(void)
 {
 #ifdef SSB_REMIX_PROBE
+	s32 remix_bgm = nativeRemixVictoryBGM(mnVSResultsGetFighterKind(mnVSResultsGetWinPlayer()));
+	if (remix_bgm >= -1)
+	{
+		syAudioPlayBGM(0, (u32)remix_bgm);
+		return;
+	}
 	switch (nativeRemixParentKind(mnVSResultsGetFighterKind(mnVSResultsGetWinPlayer())))
 #else
 	switch (mnVSResultsGetFighterKind(mnVSResultsGetWinPlayer()))

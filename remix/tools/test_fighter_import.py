@@ -20,6 +20,7 @@ from native_action_patches import (load_bindings, render_action_assignments, ren
 from native_fireball_patches import FIREBALL_BASE, extract_fireballs, render_rows, render_lookup
 from native_patch_worklist import build_worklist
 from native_kirby_patches import extract_kirby_rows, render_native_rows
+from native_results_patches import extract_victory_bgm, render_native_rows as render_victory_bgm
 
 
 class WordReference:
@@ -31,6 +32,41 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_victory_music_thunks_decode_for_entire_results_table(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            root = Path(dirname)
+            (root / 'reference.z64').write_bytes(b'private fixture')
+            (root / 'src').mkdir()
+            (root / 'src/resultsscreen.asm').write_text('''
+                macro add_victory_bgm(bgm) {}
+                Character.table_patch_start(winner_bgm, {id}, 0x4)
+            ''')
+            base = 0x80400000
+            code = [0x00002025, 0x0c0082ad, 0x34050045, 0x0804e209, 0x8fbf0014]
+            words = {base + 0x100 + i * 4: word for i, word in enumerate(code)}
+            words.update({base + 0x200 + i * 4: word for i, word in
+                          enumerate([*code[:2], 0x3405ffff, *code[3:]])})
+            ref = WordReference(words)
+            ref.path, ref.ram_base = root / 'reference.z64', base
+            table = {'layouts': {'winner_bgm': 4}, 'fighters': [
+                {'name': 'FALCO', 'fkind': 29,
+                 'tables': {'winner_bgm': list((base + 0x100).to_bytes(4, 'big'))}},
+                {'name': 'PIANO', 'fkind': 116,
+                 'tables': {'winner_bgm': list((base + 0x200).to_bytes(4, 'big'))}},
+                {'name': 'RANDOM', 'fkind': 27,
+                 'tables': {'winner_bgm': list((0x801387c8).to_bytes(4, 'big'))}}]}
+            audit = {'fighters': [{'name': row['name'], 'fkind': row['fkind']}
+                                  for row in table['fighters']]}
+            manifest = extract_victory_bgm(ref, table, audit)
+            self.assertEqual([(row['name'], row['bgm_id']) for row in manifest['fighters']],
+                             [('FALCO', 69), ('PIANO', -1)])
+            self.assertEqual(manifest['inherited_victory_bgm'], ['RANDOM'])
+            self.assertIn('{29, 69}', render_victory_bgm(manifest))
+            self.assertIn('{116, -1}', render_victory_bgm(manifest))
+            words[base + 0x100 + 4] = 0
+            with self.assertRaisesRegex(ValueError, 'unknown victory BGM thunk'):
+                extract_victory_bgm(ref, table, audit)
+
     def test_kirby_inhale_rows_decode_without_vanilla_table_overrun(self):
         with tempfile.TemporaryDirectory() as dirname:
             root = Path(dirname)

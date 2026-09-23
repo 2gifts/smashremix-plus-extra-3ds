@@ -7,7 +7,8 @@ from collections import defaultdict
 from common import BUILD, write_json
 
 
-IMPORTED_TABLES = frozenset({'default_costume', 'entry_action', 'down_bound_fgm'})
+IMPORTED_TABLES = frozenset({'default_costume', 'entry_action', 'down_bound_fgm',
+                             'winner_bgm'})
 
 
 def build_worklist(audit, tables, fireballs, catalog):

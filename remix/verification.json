@@ -921,10 +921,24 @@
       "pcm_second_8_rms": 2252.8
     }
   },
+  "compiled_results_bgm": {
+    "decoded_added_fighters": 87,
+    "inherited_results_path": ["RANDOM"],
+    "azahar_falco_match": {
+      "passed": true,
+      "development_cia_sha256": "55d7e92a3ab028835bd40e946d871daaa5c4f88d77938a1f34e61c2c3051a643",
+      "winner_fkind": 29,
+      "compiled_victory_sequence_id": 69,
+      "observed_sequence_id_at_results_tic_133": 69,
+      "stereo_enabled": true,
+      "game_abort_or_unmapped_access_detected": false
+    },
+    "scope": "Compiled victory BGM table import and one Falco results transition; not the expanded stage-music selector."
+  },
   "fighter_import_host_tests": {
     "passed": true,
-    "tests": 16,
-    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking and malformed music table ranges, and shared fighter parent/cycle mapping"
+    "tests": 27,
+    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors, and victory BGM thunk decoding"
   },
   "save_writer_host_tests": {
     "passed": true,
