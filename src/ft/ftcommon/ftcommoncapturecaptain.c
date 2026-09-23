@@ -1,6 +1,9 @@
 #include <ft/fighter.h>
 #include <it/item.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // 0x8014D0F0
 void ftCommonCaptureCaptainUpdatePositions(GObj *fighter_gobj, GObj *capture_gobj, Vec3f *pos)
@@ -10,6 +13,15 @@ void ftCommonCaptureCaptainUpdatePositions(GObj *fighter_gobj, GObj *capture_gob
 
     FTStruct *this_fp = ftGetStruct(fighter_gobj);
     FTStruct *capture_fp = ftGetStruct(capture_gobj);
+    s32 offset_kind = capture_fp->fkind;
+#ifdef PORT
+#ifdef SSB_REMIX_PROBE
+    offset_kind = nativeRemixParentKind(offset_kind);
+#endif
+    /* Captain's motion file has only the 27 vanilla grab-position rows. */
+    if (offset_kind == nFTKindGDonkey) offset_kind = nFTKindDonkey;
+    if ((u32)offset_kind >= 27) offset_kind = nFTKindMario;
+#endif
 #ifdef PORT
     Vec2h *offset_add = lbRelocGetFileData(Vec2h*, gFTDataCaptainMainMotion, llCaptainMainMotionSpecialHiVec2h);
 #else
@@ -24,8 +36,8 @@ void ftCommonCaptureCaptainUpdatePositions(GObj *fighter_gobj, GObj *capture_gob
     gmCollisionGetFighterPartsWorldPosition(this_fp->joints[29], pos);
     gmCollisionGetFighterPartsWorldPosition(capture_fp->joints[nFTPartsJointTopN], &offset);
 
-    offset.x += (offset_add[capture_fp->fkind].x * this_fp->lr);
-    offset.y += offset_add[capture_fp->fkind].y;
+    offset.x += (offset_add[offset_kind].x * this_fp->lr);
+    offset.y += offset_add[offset_kind].y;
 
     syVectorSub3D(pos, &offset);
 }

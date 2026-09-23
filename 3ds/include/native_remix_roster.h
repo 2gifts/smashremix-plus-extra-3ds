@@ -31,6 +31,7 @@
 #define NATIVE_REMIX_EPUFF_KIND 47u
 #define NATIVE_REMIX_VS_CSS_SCENE 16u
 extern volatile unsigned native_remix_selected_fkind[4];
+int nativeRemixKirbyStarDamage(unsigned fkind);
 
 typedef struct NativeRemixVariant {
     unsigned fkind;

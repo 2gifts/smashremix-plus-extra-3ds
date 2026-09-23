@@ -19,6 +19,7 @@ from native_action_patches import (load_bindings, render_action_assignments,
                                    vanilla_callback_symbols)
 from native_fireball_patches import FIREBALL_BASE, extract_fireballs, render_rows, render_lookup
 from native_patch_worklist import build_worklist
+from native_kirby_patches import extract_kirby_rows, render_native_rows
 
 
 class WordReference:
@@ -30,6 +31,29 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_kirby_inhale_rows_decode_without_vanilla_table_overrun(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            root = Path(dirname)
+            (root / 'reference.z64').write_bytes(b'private fixture')
+            (root / 'src').mkdir()
+            (root / 'src/Character.asm').write_text('''
+                scope kirby_inhale_struct {
+                origin kirby_inhale_struct.TABLE_ORIGIN + (id.{name} * 0xC)
+                }
+            ''')
+            ref = SimpleNamespace(path=root / 'reference.z64')
+            payload = list(struct.pack('>HhfI', 77, 18, 1.5, 25))
+            tables = {'layouts': {'kirby_inhale_struct': 12}, 'fighters': [
+                {'name': 'TEST', 'fkind': 77, 'tables': {'kirby_inhale_struct': payload}}]}
+            audit = {'fighters': [{'name': 'TEST', 'fkind': 77}]}
+            manifest = extract_kirby_rows(ref, tables, audit)
+            self.assertEqual(manifest['fighters'][0]['star_damage'], 25)
+            self.assertIn('[77] = {77, 18, 1.5F, 25}', render_native_rows(manifest))
+            tables['fighters'][0]['tables']['kirby_inhale_struct'] = list(
+                struct.pack('>HhfI', 77, 18, 1.5, 0))
+            with self.assertRaisesRegex(ValueError, 'invalid Kirby star damage'):
+                extract_kirby_rows(ref, tables, audit)
+
     def test_patch_worklist_groups_shared_consumer_coverage(self):
         row = {'name': 'TEST', 'fkind': 77, 'changed_from_parent':
                ['default_costume', 'fireball', 'recovery_logic']}

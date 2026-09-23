@@ -26,13 +26,28 @@ typedef struct NativeRemixTablePatch {
     s32 down_bounce_fgm;
 } NativeRemixTablePatch;
 
+typedef struct NativeRemixKirbyInhaleRow {
+    u16 copy_id;
+    s16 hat_id;
+    f32 star_scale;
+    s32 star_damage;
+} NativeRemixKirbyInhaleRow;
+
 #include "generic_variants_data.inc"
+#include "native_kirby_inhale_rows.inc"
 typedef char NativeRemixTablePatchCountCheck[
     ARRAY_COUNT(native_remix_table_patches) == ARRAY_COUNT(native_remix_generic_defs) ? 1 : -1];
 
 static FTData native_remix_generic_data[ARRAY_COUNT(native_remix_generic_defs)];
 static void *native_remix_generic_files[ARRAY_COUNT(native_remix_generic_defs)][9];
 static s32 native_remix_generic_particles[ARRAY_COUNT(native_remix_generic_defs)];
+
+s32 nativeRemixKirbyStarDamage(unsigned fkind) {
+    if (fkind < ARRAY_COUNT(native_remix_kirby_inhale_rows) &&
+        native_remix_kirby_inhale_rows[fkind].star_damage > 0)
+        return native_remix_kirby_inhale_rows[fkind].star_damage;
+    return 17;
+}
 
 static int has_animation(const FTMotionDesc *motions, unsigned count, unsigned fid) {
     for (unsigned i = 0; i < count; i++)

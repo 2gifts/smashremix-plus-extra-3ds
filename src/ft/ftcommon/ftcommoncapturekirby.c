@@ -1,4 +1,7 @@
 #include <ft/fighter.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 #include <it/item.h>
 #include <reloc_data.h>
 
@@ -498,7 +501,23 @@ void ftCommonThrownKirbyStarSetStatus(GObj *fighter_gobj)
 
         if (attack_coll->attack_state == nGMAttackStateNew)
         {
+#ifdef PORT
+            /* The vanilla Kirby file has 27 rows. Expanded fighter IDs (and
+             * Giant DK) must never index it directly. */
+#ifdef SSB_REMIX_PROBE
+            if (nativeRemixIsVariant(fp->fkind))
+                attack_coll->damage = nativeRemixKirbyStarDamage(fp->fkind);
+            else
+#endif
+            if (fp->fkind == nFTKindGDonkey)
+                attack_coll->damage = copy[nFTKindDonkey].star_damage;
+            else if ((u32)fp->fkind < 27)
+                attack_coll->damage = copy[fp->fkind].star_damage;
+            else
+                attack_coll->damage = 17;
+#else
             attack_coll->damage = copy[fp->fkind].star_damage;
+#endif
         }
     }
     fp->is_invisible = fp->is_shadow_hide = TRUE;
