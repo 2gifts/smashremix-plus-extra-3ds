@@ -15,8 +15,9 @@ from audit_reference_fighters import ActionTableAudit, callback_worklist
 from reference_table_patches import (discover_layouts, extract_table_patches,
                                      render_native_tables, source_layouts,
                                      validate_generic_dispatch)
-from native_action_patches import (load_bindings, render_action_assignments, render_flags,
-                                   vanilla_callback_symbols)
+from native_action_patches import (action_table_bindable, load_bindings,
+                                   render_action_assignments, render_flags,
+                                   render_generic_action_tables, vanilla_callback_symbols)
 from native_fireball_patches import FIREBALL_BASE, extract_fireballs, render_rows, render_lookup
 from native_patch_worklist import build_worklist
 from native_kirby_patches import extract_kirby_rows, render_native_rows
@@ -420,6 +421,62 @@ class MotionTests(unittest.TestCase):
             self.assertIn('extern void nativeRemixCollision_80500000(GObj *);', output)
             self.assertIn('proc_interrupt = nativeRemixCollision_80500000;', output)
 
+    def test_generic_action_tables_apply_compiled_deltas_without_per_fighter_code(self):
+        fighter = {'name': 'TEST', 'action_table': {
+            'inherited_statuses': 2, 'added_statuses': 1,
+            'generic_action_table_compatible': False,
+            'changed_inherited_statuses': [{'status_id': 0xdd, 'flags': None,
+                'callbacks': {'map': {'original': '00000000', 'remix': '80500000'}}}],
+            'added_status_records': [{'status_id': 0xde,
+                'words': ['00000000', '00000000', '00000000',
+                          '00000000', '80500000']}]}}
+        catalog = {'fighters': [{'name': 'TEST', 'fkind': 199, 'parent': 'FOX',
+                                 'registration': 'generic'}]}
+        audit = {'fighters': [fighter]}
+        bindings = {0x80500000: 'nativeRemixCollision_80500000'}
+        self.assertTrue(action_table_bindable(fighter, bindings))
+        output = render_generic_action_tables(catalog, audit, bindings)
+        self.assertIn('native_remix_test_actions[3]', output)
+        self.assertIn('memcpy(native_remix_test_actions, desc->special_descs, '
+                      '2 * sizeof(FTStatusDesc));', output)
+        self.assertIn('NATIVE_REMIX_ACTION_STATUS[2].proc_map = '
+                      'nativeRemixCollision_80500000;', output)
+        self.assertIn('desc->special_descs_count = 3;', output)
+        with self.assertRaisesRegex(ValueError, 'unbound generic action callbacks'):
+            render_generic_action_tables(catalog, audit, {})
+        fixture = '''#include <assert.h>
+#include <string.h>
+typedef struct GObj { int unused; } GObj;
+typedef struct FTStatusDesc {
+    struct { int motion_id, attack_id; } mflags;
+    struct { unsigned short halfword; } sflags;
+    void (*proc_update)(GObj *), (*proc_interrupt)(GObj *);
+    void (*proc_physics)(GObj *), (*proc_map)(GObj *);
+} FTStatusDesc;
+typedef struct FighterDescriptor { FTStatusDesc *special_descs; int special_descs_count; } FighterDescriptor;
+#define NATIVE_REMIX_TEST_KIND 199u
+#define ARRAY_COUNT(x) (sizeof(x) / sizeof((x)[0]))
+void nativeRemixCollision_80500000(GObj *g) { (void)g; }
+''' + output + '''
+int main(void) {
+    FTStatusDesc parent[2] = {0};
+    parent[1].mflags.motion_id = 7;
+    FighterDescriptor desc = {parent, 2};
+    nativeRemixApplyGenericActionTable(199, &desc);
+    assert(desc.special_descs_count == 3 && desc.special_descs != parent);
+    assert(desc.special_descs[1].mflags.motion_id == 7);
+    assert(desc.special_descs[1].proc_map == nativeRemixCollision_80500000);
+    assert(desc.special_descs[2].proc_map == nativeRemixCollision_80500000);
+    return 0;
+}
+'''
+        with tempfile.TemporaryDirectory() as dirname:
+            path, exe = Path(dirname) / 'actions.c', Path(dirname) / 'actions.exe'
+            path.write_text(fixture)
+            cc = compiler_path(None).replace('clang++', 'clang')
+            subprocess.run([cc, '-std=gnu11', str(path), '-o', str(exe)], check=True)
+            subprocess.run([str(exe)], check=True)
+
     def test_compiled_status_flags_reject_incomplete_words(self):
         self.assertEqual(render_flags(0, '30c40010'), [
             'NATIVE_REMIX_ACTION_STATUS[0].mflags.motion_id = 195;',
@@ -572,6 +629,7 @@ class MotionTests(unittest.TestCase):
             audit.write_text(json.dumps(report))
             with self.assertRaisesRegex(ValueError, 'action table requires a custom registration'):
                 validate_reference(catalog, audit)
+            validate_reference(catalog, audit, bindable_action_fighters={generic[0]['name']})
 
     def test_roster_cycle_match_and_results_share_parent(self):
         fixture = '''#include <assert.h>
@@ -584,6 +642,12 @@ int main(void) {
     assert(nativeRemixNextKind(NATIVE_REMIX_JPIKA_KIND, NATIVE_REMIX_JPIKA_KIND) == NATIVE_REMIX_EPIKA_KIND);
     assert(nativeRemixNextKind(NATIVE_REMIX_EPIKA_KIND, NATIVE_REMIX_EPIKA_KIND) == 0);
     assert(nativeRemixNextKind(NATIVE_REMIX_MARIO_KIND, 0) == NATIVE_REMIX_JMARIO_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_LUIGI_KIND, 0) == NATIVE_REMIX_JLUIGI_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_JLUIGI_KIND, NATIVE_REMIX_JLUIGI_KIND) == NATIVE_REMIX_DRL_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_DRL_KIND, NATIVE_REMIX_DRL_KIND) == NATIVE_REMIX_MLUIGI_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_MLUIGI_KIND, NATIVE_REMIX_MLUIGI_KIND) == 0);
+    assert(nativeRemixParentKind(NATIVE_REMIX_DRL_KIND) == NATIVE_REMIX_LUIGI_KIND);
+    assert(nativeRemixParentKind(NATIVE_REMIX_MLUIGI_KIND) == NATIVE_REMIX_LUIGI_KIND);
     assert(nativeRemixNextKind(NATIVE_REMIX_SAMUS_KIND, 0) == NATIVE_REMIX_JSAMUS_KIND);
     assert(nativeRemixNextKind(NATIVE_REMIX_JSAMUS_KIND, NATIVE_REMIX_JSAMUS_KIND) == NATIVE_REMIX_ESAMUS_KIND);
     assert(nativeRemixNextKind(NATIVE_REMIX_ESAMUS_KIND, NATIVE_REMIX_ESAMUS_KIND) == 0);

@@ -20,7 +20,8 @@ from native_results_patches import write_results_patches
 from native_crowd_patches import write_crowd_chants
 from native_entry_patches import write_entry_effects
 from native_patch_worklist import write_worklist
-from native_action_patches import write_action_patches
+from native_action_patches import (action_table_bindable, load_bindings,
+                                   write_action_patches)
 from classify_action_callbacks import classify as classify_action_callbacks
 from native_transition_templates import write_native_transitions
 
@@ -190,7 +191,18 @@ def main():
     ref = Reference()
     catalog = load_catalog()
     audit = json.loads((BUILD / 'fighter-audit.json').read_text())
-    validate_reference(catalog, BUILD / 'fighter-audit.json', sha256(ref.path))
+    out = BUILD / 'fighter-probe'
+    out.mkdir(exist_ok=True)
+    worklist = json.loads((BUILD / 'action-callback-worklist.json').read_text())
+    families = classify_action_callbacks(ref, worklist)
+    native_transitions = write_native_transitions(ref, families, out)
+    auto_bindings = {int(row['address'], 16): row['native']
+                     for row in native_transitions['wrappers']}
+    _, bindings = load_bindings(symbols=ref.symbols)
+    bindings.update(auto_bindings)
+    bindable = {row['name'] for row in audit['fighters']
+                if action_table_bindable(row, bindings)}
+    validate_reference(catalog, BUILD / 'fighter-audit.json', sha256(ref.path), bindable)
     if HEADER.read_text() != render_header(catalog) or UI.read_text() != render_ui(catalog):
         raise ValueError('Native fighter tables are stale; run native_fighter_catalog.py')
     data = ref.words(ref.symbols['Character.FALCO_character_struct'], 30)
@@ -209,13 +221,6 @@ def main():
         lines.append('};')
     lines += [f'static const u32 remix_probe_files[9] = {{{",".join(map(str, data[:9]))}}};',
               f'#define REMIX_PROBE_ATTRIBUTE_OFFSET 0x{data[24]:x}']
-    out = BUILD / 'fighter-probe'
-    out.mkdir(exist_ok=True)
-    worklist = json.loads((BUILD / 'action-callback-worklist.json').read_text())
-    families = classify_action_callbacks(ref, worklist)
-    native_transitions = write_native_transitions(ref, families, out)
-    auto_bindings = {int(row['address'], 16): row['native']
-                     for row in native_transitions['wrappers']}
     write_action_patches(ref, audit, catalog, out, auto_bindings=auto_bindings)
     (out / 'falco_data.inc').write_text('\n'.join(lines) + '\n')
 

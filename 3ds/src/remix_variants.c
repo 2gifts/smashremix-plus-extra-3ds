@@ -66,6 +66,7 @@ typedef struct NativeRemixEntryEffect {
 #include "native_crowd_chant_rows.inc"
 #include "native_entry_effect_rows.inc"
 #include "native_collision_templates.inc"
+#include "generic_action_tables.inc"
 volatile s32 native_remix_last_winner_fgm = -1;
 volatile s32 native_remix_last_results_text_fkind = -1;
 typedef char NativeRemixTablePatchCountCheck[
@@ -180,6 +181,7 @@ void nativeRemixGenericInit(void) {
         desc.entry_appear_status[0] = native_remix_table_patches[i].entry_status[0];
         desc.entry_appear_status[1] = native_remix_table_patches[i].entry_status[1];
         desc.down_bounce_fgm = native_remix_table_patches[i].down_bounce_fgm;
+        nativeRemixApplyGenericActionTable(def->kind, &desc);
         def->relocate_scripts();
         port_fighter_register(def->kind, &desc);
         port_log("REMIX PROBE: generic fighter registered at fkind %u\n", def->kind);

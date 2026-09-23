@@ -37,7 +37,8 @@ def load_catalog(path=CATALOG):
     return catalog
 
 
-def validate_reference(catalog, audit_path, reference_sha256=None):
+def validate_reference(catalog, audit_path, reference_sha256=None,
+                       bindable_action_fighters=()):
     """Do not expose a new fighter merely because its ROM struct exists."""
     report = json.loads(Path(audit_path).read_text())
     if report.get('schema') != 2 or (reference_sha256 is not None and
@@ -50,7 +51,9 @@ def validate_reference(catalog, audit_path, reference_sha256=None):
             raise ValueError(f"Reference fighter mismatch: {fighter['name']}")
         if not row['fixture_data_ready']:
             raise ValueError(f"Reference assets/scripts unready: {fighter['name']}")
-        if fighter['registration'] == 'generic' and not row['action_table']['generic_action_table_compatible']:
+        if (fighter['registration'] == 'generic' and
+                not row['action_table']['generic_action_table_compatible'] and
+                fighter['name'] not in bindable_action_fighters):
             raise ValueError(f"Native action table requires a custom registration: {fighter['name']}")
 
 

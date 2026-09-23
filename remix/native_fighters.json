@@ -28,6 +28,8 @@
     {"name": "JMARIO", "fkind": 42, "parent": "MARIO", "label": "J MARIO", "registration": "generic"},
     {"name": "JFALCON", "fkind": 40, "parent": "CAPTAIN", "label": "J FALCON", "registration": "generic"},
     {"name": "JLUIGI", "fkind": 43, "parent": "LUIGI", "label": "J LUIGI", "registration": "generic"},
+    {"name": "DRL", "fkind": 75, "parent": "LUIGI", "label": "DR LUIGI", "registration": "generic"},
+    {"name": "MLUIGI", "fkind": 69, "parent": "LUIGI", "label": "M LUIGI", "registration": "generic"},
     {"name": "JNESS", "fkind": 37, "parent": "NESS", "label": "J NESS", "registration": "generic"},
     {"name": "JPUFF", "fkind": 46, "parent": "JIGGLYPUFF", "label": "J PUFF", "registration": "generic"},
     {"name": "EPUFF", "fkind": 47, "parent": "JIGGLYPUFF", "label": "E PUFF", "registration": "generic"}

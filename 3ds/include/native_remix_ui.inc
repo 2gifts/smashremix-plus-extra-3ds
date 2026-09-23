@@ -14,6 +14,8 @@ static const struct { unsigned kind, art; const char *label; } native_remix_ui[]
     {42u, 0u, "J MARIO"},
     {40u, 7u, "J FALCON"},
     {43u, 4u, "J LUIGI"},
+    {75u, 4u, "DR LUIGI"},
+    {69u, 4u, "M LUIGI"},
     {37u, 11u, "J NESS"},
     {46u, 10u, "J PUFF"},
     {47u, 10u, "E PUFF"},

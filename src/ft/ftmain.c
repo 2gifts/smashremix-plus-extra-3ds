@@ -588,6 +588,15 @@ void ftMainParseMotionEvent(GObj *fighter_gobj, FTStruct *fp, FTMotionScript *ms
         {
             fkind = fp->throw_fkind;
 
+#ifdef PORT
+#ifdef SSB_REMIX_PROBE
+            /* The damage-script matrix has only original fighter columns.
+             * Expanded throwers use their original parent's throw animation. */
+            fkind = nativeRemixParentKind(fkind);
+#endif
+            if ((u32)fkind >= nFTKindEnumCount) fkind = nFTKindMario;
+#endif
+
             ftMotionEventAdvance(ms, FTMotionEventSetDamageThrown1);
 
 #ifdef PORT

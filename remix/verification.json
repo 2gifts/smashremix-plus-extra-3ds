@@ -427,7 +427,7 @@
     "3ds/src/native_assets.cpp": "de9e583f538f3ee07bb0eae00c65e71c04bc30383180e4d492700bb0a4b649a4",
     "remix/tests/asset_probe.cpp": "62fdc6cffc842e32890f24172e068c69987585495ec72902fbb0d907fc12249c"
   },
-  "scope": "Pinned reference and asset audits, sixteen native fighter development integrations including Japanese and Electric Jigglypuff, and generated fighter motion-data candidates. Full Remix and +EXTRA roster, stages, menus, saves, AI, and hardware performance remain unverified.",
+  "scope": "Pinned reference and asset audits, nineteen native fighter development integrations including Dr. Luigi and Metal Luigi, and generated fighter motion-data candidates. Full Remix and +EXTRA roster, stages, menus, saves, AI, and hardware performance remain unverified.",
   "fighter_data_import": {
     "reference_table_records": 88,
     "plus_extra_records": 19,
@@ -1009,10 +1009,26 @@
     "azahar_stereo_falco_match_frame": 2036,
     "scope": "Compiled callbacks are generated and available to the shared action importer. A Falco stereo match regressed the existing fixture; the new generated callbacks were not invoked and their move behavior has not been exercised in a match."
   },
+  "generic_action_table_import": {
+    "development_catalog_fighters": 19,
+    "action_table_bindable_audit_fighters": 28,
+    "native_bound_expansion_callbacks": 24,
+    "total_expansion_callbacks": 852,
+    "validated_fixture_assets": 1737,
+    "development_cia_sha256": "f9bfca305ede8ca466cc6582a41542bda71cef2643a25f4a56cb2b871c028f8e",
+    "development_cxi_sha256": "03eea50ed3db5aa167423ace2a491e851750e78eb2d9a0ccab0badbf0bbf2a56",
+    "development_elf_sha256": "918046c44f4963e5e7de8083c94312c0498e7b563cccfba419de308be8f4001b",
+    "azahar_stereo_four_fighter_results": {
+      "DRL": {"frame": 5138, "compiled_action_callback_pointers_verified": 1},
+      "MLUIGI": {"frame": 5145, "regression_passed_after_thrower_parent_mapping_fix": true}
+    },
+    "game_abort_stale_token_or_unmapped_access_detected": false,
+    "scope": "The shared importer installs bound compiled action-table deltas without fighter-specific registration code. Dr. Luigi and Metal Luigi reached results in separate stereo development matches; this does not validate all moves or imply that the other structurally bindable fighters are playable."
+  },
   "fighter_import_host_tests": {
     "passed": true,
-    "tests": 32,
-    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors, victory BGM thunk decoding, winner voice bounds, compiled results text validation, crowd chant ID bounds, compiled entry-effect pointer reuse, callback-family classification, and strict native transition-template generation"
+    "tests": 33,
+    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors and compiled generic action-table C execution, victory BGM thunk decoding, winner voice bounds, compiled results text validation, crowd chant ID bounds, compiled entry-effect pointer reuse, callback-family classification, and strict native transition-template generation"
   },
   "save_writer_host_tests": {
     "passed": true,

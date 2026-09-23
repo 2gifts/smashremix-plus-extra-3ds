@@ -45,6 +45,20 @@ def render_callback(index, role, address, bindings):
     return f'NATIVE_REMIX_ACTION_STATUS[{index}].{ROLES[role]} = {native};'
 
 
+def action_callback_addresses(fighter):
+    table = fighter['action_table']
+    changed = (int(callback['remix'], 16)
+               for status in table['changed_inherited_statuses']
+               for callback in status['callbacks'].values() if callback is not None)
+    added = (int(word, 16) for status in table['added_status_records']
+             for word in status['words'][1:])
+    return {address for address in (*changed, *added) if address}
+
+
+def action_table_bindable(fighter, bindings):
+    return action_callback_addresses(fighter) <= bindings.keys()
+
+
 def vanilla_callback_symbols(root=ROOT / 'src'):
     """Use decomp address comments to bind existing void(GObj *) callbacks."""
     result = {}
@@ -138,6 +152,47 @@ def render_action_assignments(fighter, bindings, status_count):
     return '\n'.join([*(f'extern void {name}(GObj *);' for name in generated), *lines]) + '\n'
 
 
+def render_generic_action_tables(catalog, audit, bindings):
+    """Generate one shared native registrar patch for every enabled generic delta."""
+    rows = {row['name']: row for row in audit['fighters']}
+    patches = []
+    for entry in catalog['fighters']:
+        if entry['registration'] != 'generic':
+            continue
+        fighter = rows[entry['name']]
+        table = fighter['action_table']
+        if table['generic_action_table_compatible']:
+            continue
+        if not action_table_bindable(fighter, bindings):
+            missing = sorted(action_callback_addresses(fighter) - bindings.keys())
+            raise ValueError(f"{entry['name']}: unbound generic action callbacks "
+                             + ', '.join(f'{address:08x}' for address in missing))
+        inherited = table['inherited_statuses']
+        count = inherited + table['added_statuses']
+        if not 0 < inherited <= count < 512:
+            raise ValueError(f"{entry['name']}: invalid compiled action table size")
+        patches.append((entry, fighter, inherited, count))
+    lines = ['/* Generated native action deltas for catalogued generic fighters. */']
+    for entry, _, _, count in patches:
+        lines.append(f'static FTStatusDesc native_remix_{entry["name"].lower()}_actions[{count}];')
+    lines += ['', 'static void nativeRemixApplyGenericActionTable(unsigned kind, FighterDescriptor *desc) {',
+              '    switch (kind) {']
+    for entry, fighter, inherited, count in patches:
+        name = f'native_remix_{entry["name"].lower()}_actions'
+        lines += [f'    case NATIVE_REMIX_{entry["name"]}_KIND:',
+                  f'        memcpy({name}, desc->special_descs, {inherited} * sizeof(FTStatusDesc));']
+        for address in sorted(action_callback_addresses(fighter)):
+            lines.append(f'        extern void {bindings[address]}(GObj *);')
+        lines += [f'#define NATIVE_REMIX_ACTION_STATUS {name}',
+                  render_action_assignments(fighter, bindings, inherited).rstrip(),
+                  '#undef NATIVE_REMIX_ACTION_STATUS',
+                  f'        desc->special_descs = {name};',
+                  f'        desc->special_descs_count = {count};',
+                  '        return;']
+    lines += ['    default: return;', '    }', '}', '']
+    return '\n'.join(lines)
+
+
 def write_action_patches(ref, audit, catalog, out, auto_bindings=None):
     if audit.get('reference_rom_sha256') != sha256(ref.path):
         raise ValueError('Action audit does not match the pinned reference')
@@ -151,6 +206,21 @@ def write_action_patches(ref, audit, catalog, out, auto_bindings=None):
         raise ValueError('Action callback worklist does not match the pinned reference')
     unresolved = [row for row in worklist['targets']
                   if int(row['address'], 16) not in bindings]
+    fighter_coverage = []
+    for fighter in audit['fighters']:
+        needed = action_callback_addresses(fighter)
+        missing = sorted(needed - bindings.keys())
+        fighter_coverage.append({
+            'name': fighter['name'], 'fkind': fighter['fkind'],
+            'mod': fighter['origin']['mod'],
+            'fixture_data_ready': fighter['fixture_data_ready'],
+            'added_statuses': fighter['action_table']['added_statuses'],
+            'callbacks_required': len(needed),
+            'callbacks_bound': len(needed) - len(missing),
+            'unbound_addresses': [f'{address:08x}' for address in missing],
+        })
+    fighter_coverage.sort(key=lambda row: (len(row['unbound_addresses']),
+                                           not row['fixture_data_ready'], row['fkind']))
     write_json(BUILD / 'native-callback-coverage.json', {
         'schema': 1,
         'reference_rom_sha256': sha256(ref.path),
@@ -161,6 +231,7 @@ def write_action_patches(ref, audit, catalog, out, auto_bindings=None):
             {'address': row['address'], 'symbols': row['symbols'],
              'uses': len(row['uses'])}
             for row in sorted(unresolved, key=lambda item: (-len(item['uses']), item['address']))[:30]],
+        'fighter_action_coverage': fighter_coverage,
     })
     rows = {row['name']: row for row in audit['fighters']}
     enabled = {row['name']: row for row in catalog['fighters']}
@@ -175,4 +246,6 @@ def write_action_patches(ref, audit, catalog, out, auto_bindings=None):
             raise ValueError(f'Reference fighter mismatch: {name}')
         data = render_action_assignments(row, bindings, row['action_table']['inherited_statuses'])
         (Path(out) / f'{name.lower()}_action_patches.inc').write_text(data)
+    (Path(out) / 'generic_action_tables.inc').write_text(
+        render_generic_action_tables(catalog, audit, bindings))
     return names
