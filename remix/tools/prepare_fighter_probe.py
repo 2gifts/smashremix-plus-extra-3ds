@@ -21,6 +21,8 @@ from native_crowd_patches import write_crowd_chants
 from native_entry_patches import write_entry_effects
 from native_patch_worklist import write_worklist
 from native_action_patches import write_action_patches
+from classify_action_callbacks import classify as classify_action_callbacks
+from native_transition_templates import write_native_transitions
 
 
 class Reference:
@@ -209,64 +211,21 @@ def main():
               f'#define REMIX_PROBE_ATTRIBUTE_OFFSET 0x{data[24]:x}']
     out = BUILD / 'fighter-probe'
     out.mkdir(exist_ok=True)
-    write_action_patches(ref, audit, catalog, out)
+    worklist = json.loads((BUILD / 'action-callback-worklist.json').read_text())
+    families = classify_action_callbacks(ref, worklist)
+    native_transitions = write_native_transitions(ref, families, out)
+    auto_bindings = {int(row['address'], 16): row['native']
+                     for row in native_transitions['wrappers']}
+    write_action_patches(ref, audit, catalog, out, auto_bindings=auto_bindings)
     (out / 'falco_data.inc').write_text('\n'.join(lines) + '\n')
 
-    # Bring the first +EXTRA fighter's data into the same private fixture.
-    # A generated motion table alone must never mark a fighter as playable;
-    # its native callbacks and selection bridge are built separately.
-    dk_data = ref.words(ref.symbols['Character.DKULT_character_struct'], 30)
-    dk_motion = [ref.words(dk_data[25] + i * 12, 3) for i in range(dk_data[27])]
-    dk_menu_count = ref.words(dk_data[28], 1)[0]
-    dk_menus = [ref.words(dk_data[26] + i * 12, 3) for i in range(dk_menu_count)]
-    dk_external = known_native_script_symbols()
-    dk_scripts = Scripts(ref, allow_custom=True, external_scripts=dk_external)
-    dk_entrypoints = {row[1] for row in dk_motion + dk_menus if row[1] > 0x80000000}
-    for address in sorted(dk_entrypoints):
-        dk_scripts.script(address)
-    dk_lines, dk_indices = dk_scripts.emit('remix_dkult', dk_entrypoints)
-    def dk_pointer(address):
-        if address in dk_external:
-            return f'(intptr_t){dk_external[address]}'
-        if address > 0x80000000:
-            return f'(intptr_t)&remix_dkult_script_words[{dk_indices[address]}]'
-        return f'(intptr_t)0x{address:08x}u'
-    for label, rows in (('main', dk_motion), ('menu', dk_menus)):
-        dk_lines.append(f'static FTMotionDesc remix_dkult_{label}_motions[] = {{')
-        for fid, ptr, flags in rows:
-            dk_lines.append(f'    {{{fid}, {dk_pointer(ptr)}, {{.word = 0x{flags:08x}u}}}},')
-        dk_lines.append('};')
-    dk_lines += [f'static const u32 remix_dkult_files[9] = {{{", ".join(map(str, dk_data[:9]))}}};',
-                 f'static s32 remix_dkult_menu_count = {dk_menu_count};',
-                 f'#define REMIX_DKULT_ATTRIBUTE_OFFSET 0x{dk_data[24]:x}']
-    (out / 'dkult_data.inc').write_text('\n'.join(dk_lines) + '\n')
+    # Custom fighters use the same compiled-data path as generic variants;
+    # their move callbacks and selection bridges remain separate native code.
+    native_scripts = known_native_script_symbols()
+    dk_data, dk_motion, dk_menus, dk_scripts = emit_variant(ref, 'DKULT', native_scripts, out)
+    jp_data, jp_motion, jp_menus, jp_scripts = emit_variant(ref, 'JPIKA', native_scripts, out)
 
-    jp_data = ref.words(ref.symbols['Character.JPIKA_character_struct'], 30)
-    jp_motion = [ref.words(jp_data[25] + i * 12, 3) for i in range(jp_data[27])]
-    jp_menu_count = ref.words(jp_data[28], 1)[0]
-    jp_menus = [ref.words(jp_data[26] + i * 12, 3) for i in range(jp_menu_count)]
-    jp_scripts = Scripts(ref, allow_custom=True, external_scripts=dk_external)
-    jp_entrypoints = {row[1] for row in jp_motion + jp_menus if row[1] > 0x80000000}
-    for address in sorted(jp_entrypoints):
-        jp_scripts.script(address)
-    jp_lines, jp_indices = jp_scripts.emit('remix_jpika', jp_entrypoints)
-    def jp_pointer(address):
-        if address in dk_external:
-            return f'(intptr_t){dk_external[address]}'
-        if address > 0x80000000:
-            return f'(intptr_t)&remix_jpika_script_words[{jp_indices[address]}]'
-        return f'(intptr_t)0x{address:08x}u'
-    for label, rows in (('main', jp_motion), ('menu', jp_menus)):
-        jp_lines.append(f'static FTMotionDesc remix_jpika_{label}_motions[] = {{')
-        for fid, ptr, flags in rows:
-            jp_lines.append(f'    {{{fid}, {jp_pointer(ptr)}, {{.word = 0x{flags:08x}u}}}},')
-        jp_lines.append('};')
-    jp_lines += [f'static const u32 remix_jpika_files[9] = {{{", ".join(map(str, jp_data[:9]))}}};',
-                 f'static s32 remix_jpika_menu_count = {jp_menu_count};',
-                 f'#define REMIX_JPIKA_ATTRIBUTE_OFFSET 0x{jp_data[24]:x}']
-    (out / 'jpika_data.inc').write_text('\n'.join(jp_lines) + '\n')
-
-    generic = {row['name']: emit_variant(ref, row['name'], dk_external, out)
+    generic = {row['name']: emit_variant(ref, row['name'], native_scripts, out)
                for row in catalog['fighters'] if row['registration'] == 'generic'}
     table_manifest = write_reference_tables(ref, audit, catalog, out)
     fireball_manifest = write_fireballs(ref, table_manifest, audit, catalog, out)

@@ -9,7 +9,7 @@ import json
 import re
 from pathlib import Path
 
-from common import ROOT, sha256
+from common import BUILD, ROOT, sha256, write_json
 
 
 BINDINGS = ROOT / 'remix/native_callback_bindings.json'
@@ -126,13 +126,42 @@ def render_action_assignments(fighter, bindings, status_count):
             line = render_callback(index, role, int(word, 16), bindings)
             if line is not None:
                 lines.append(line)
-    return '\n'.join(lines) + '\n'
+    generated = sorted({bindings[int(callback['remix'], 16)]
+                        for status in table['changed_inherited_statuses']
+                        for callback in status['callbacks'].values()
+                        if callback is not None and int(callback['remix'], 16) in bindings
+                        and bindings[int(callback['remix'], 16)].startswith('nativeRemixCollision_')}
+                       | {bindings[int(word, 16)]
+                          for status in added for word in status['words'][1:]
+                          if int(word, 16) in bindings
+                          and bindings[int(word, 16)].startswith('nativeRemixCollision_')})
+    return '\n'.join([*(f'extern void {name}(GObj *);' for name in generated), *lines]) + '\n'
 
 
-def write_action_patches(ref, audit, catalog, out):
+def write_action_patches(ref, audit, catalog, out, auto_bindings=None):
     if audit.get('reference_rom_sha256') != sha256(ref.path):
         raise ValueError('Action audit does not match the pinned reference')
     config, bindings = load_bindings(symbols=ref.symbols)
+    for address, native in (auto_bindings or {}).items():
+        if address in bindings and bindings[address] != native:
+            raise ValueError(f'Conflicting generated action callback binding {address:08x}')
+        bindings[address] = native
+    worklist = json.loads((BUILD / 'action-callback-worklist.json').read_text())
+    if worklist['reference_rom_sha256'] != sha256(ref.path):
+        raise ValueError('Action callback worklist does not match the pinned reference')
+    unresolved = [row for row in worklist['targets']
+                  if int(row['address'], 16) not in bindings]
+    write_json(BUILD / 'native-callback-coverage.json', {
+        'schema': 1,
+        'reference_rom_sha256': sha256(ref.path),
+        'unique_expansion_callbacks': len(worklist['targets']),
+        'native_bound_callbacks': len(worklist['targets']) - len(unresolved),
+        'unbound_callbacks': len(unresolved),
+        'highest_fanout_unbound': [
+            {'address': row['address'], 'symbols': row['symbols'],
+             'uses': len(row['uses'])}
+            for row in sorted(unresolved, key=lambda item: (-len(item['uses']), item['address']))[:30]],
+    })
     rows = {row['name']: row for row in audit['fighters']}
     enabled = {row['name']: row for row in catalog['fighters']}
     names = config.get('auto_action_patches')

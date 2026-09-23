@@ -2,6 +2,9 @@
  * callbacks. Private motion scripts and file IDs are generated from the
  * pinned, assembled Remix reference. Custom moves stay in dedicated code. */
 #include <ft/fighter.h>
+#include <ft/ftmain.h>
+#include <ft/ftphysics.h>
+#include <mp/mpcommon.h>
 #include <string.h>
 #include "fighter_registry.h"
 #include "native_remix_roster.h"
@@ -62,6 +65,7 @@ typedef struct NativeRemixEntryEffect {
 #include "native_results_text_rows.inc"
 #include "native_crowd_chant_rows.inc"
 #include "native_entry_effect_rows.inc"
+#include "native_collision_templates.inc"
 volatile s32 native_remix_last_winner_fgm = -1;
 volatile s32 native_remix_last_results_text_fkind = -1;
 typedef char NativeRemixTablePatchCountCheck[

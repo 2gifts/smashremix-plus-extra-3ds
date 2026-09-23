@@ -27,6 +27,8 @@ from native_results_patches import (extract_victory_bgm, extract_winner_fgm,
 from native_crowd_patches import extract_crowd_chants, render_native_rows as render_crowd_chants
 from native_entry_patches import extract_entry_effects, render_native_rows as render_entry_effects
 from classify_action_callbacks import classify as classify_action_callbacks
+from native_transition_templates import (TEMPLATES, extract_native_transitions,
+                                         render_native_code)
 
 
 class WordReference:
@@ -38,6 +40,42 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_exact_collision_transition_templates_generate_shared_native_code(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            path = Path(dirname) / 'reference.z64'
+            path.write_bytes(b'private fixture')
+            wrapper_address, transition_address = 0x80500000, 0x80500100
+            transition = [0x340500ed if word is None else word
+                          for word in TEMPLATES['air_and_clamp_a']]
+            wrapper = [0x27bdffe8, 0xafbf0014, 0x3c058050, 0x34a50100,
+                       0x0c0377a1, 0, 0x8fbf0014, 0x27bd0018,
+                       0x03e00008, 0]
+            code = {wrapper_address: wrapper, transition_address: transition}
+            ref = SimpleNamespace(path=path,
+                                  words=lambda address, count:
+                                  (code[address] + [0] * count)[:count])
+            families = {'reference_rom_sha256': sha256(path),
+                        'wrappers': [{'address': f'{wrapper_address:08x}',
+                                      'symbols': ['Fixture.air_collision_'],
+                                      'helper': 'mpCommonProcFighterOnEdge',
+                                      'helper_address': '800dde84',
+                                      'transition_address': f'{transition_address:08x}'}]}
+            result = extract_native_transitions(ref, families)
+            self.assertEqual(result['recognized_transition_count'], 1)
+            self.assertEqual(result['recognized_collision_callback_count'], 1)
+            native = render_native_code(result)
+            self.assertIn('ftMainSetStatus(fighter_gobj, 237,', native)
+            self.assertIn('mpCommonSetFighterAir(fp);', native)
+            self.assertIn('ftPhysicsClampAirVelXMax(fp);', native)
+            self.assertIn('mpCommonProcFighterOnEdge(fighter_gobj,', native)
+            transition[11] = 0xafa50010  # Nonzero preserve flags are not known safe.
+            self.assertEqual(extract_native_transitions(ref, families)
+                             ['recognized_collision_callback_count'], 0)
+            transition[11] = TEMPLATES['air_and_clamp_a'][11]
+            wrapper[5] = 0x00000021  # Additional wrapper logic is not safe to skip.
+            self.assertEqual(extract_native_transitions(ref, families)
+                             ['recognized_collision_callback_count'], 0)
+
     def test_callback_family_audit_links_compiled_collision_wrapper_to_transition(self):
         with tempfile.TemporaryDirectory() as dirname:
             path = Path(dirname) / 'reference.z64'
@@ -376,6 +414,11 @@ class MotionTests(unittest.TestCase):
             fighter['action_table']['added_status_records'][0]['status_id'] = 0xdf
             with self.assertRaisesRegex(ValueError, 'not contiguous'):
                 render_action_assignments(fighter, bindings, 2)
+            fighter['action_table']['added_status_records'][0]['status_id'] = 0xde
+            bindings[0x80500000] = 'nativeRemixCollision_80500000'
+            output = render_action_assignments(fighter, bindings, 2)
+            self.assertIn('extern void nativeRemixCollision_80500000(GObj *);', output)
+            self.assertIn('proc_interrupt = nativeRemixCollision_80500000;', output)
 
     def test_compiled_status_flags_reject_incomplete_words(self):
         self.assertEqual(render_flags(0, '30c40010'), [

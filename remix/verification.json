@@ -996,12 +996,23 @@
     "collision_wrappers": 180,
     "unique_collision_transition_targets": 169,
     "normalized_transition_shapes": 80,
-    "scope": "Compiled MIPS callback dependencies grouped by shared original collision helper and transition instruction shape. No transition has been translated or bound by this audit."
+    "scope": "Compiled MIPS callback dependencies grouped by shared original collision helper and transition instruction shape. Four exact transition patterns now generate 20 native transitions and 20 collision wrappers; the remaining patterns are unbound."
+  },
+  "native_transition_templates": {
+    "exact_transition_patterns": 4,
+    "generated_transitions": 20,
+    "generated_collision_callbacks": 20,
+    "native_bound_expansion_callbacks": 24,
+    "total_expansion_callbacks": 852,
+    "host_pattern_rejection_test": true,
+    "development_cia_build_and_package_checks": true,
+    "azahar_stereo_falco_match_frame": 2036,
+    "scope": "Compiled callbacks are generated and available to the shared action importer. A Falco stereo match regressed the existing fixture; the new generated callbacks were not invoked and their move behavior has not been exercised in a match."
   },
   "fighter_import_host_tests": {
     "passed": true,
-    "tests": 31,
-    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors, victory BGM thunk decoding, winner voice bounds, compiled results text validation, crowd chant ID bounds, compiled entry-effect pointer reuse, and callback-family classification"
+    "tests": 32,
+    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors, victory BGM thunk decoding, winner voice bounds, compiled results text validation, crowd chant ID bounds, compiled entry-effect pointer reuse, callback-family classification, and strict native transition-template generation"
   },
   "save_writer_host_tests": {
     "passed": true,

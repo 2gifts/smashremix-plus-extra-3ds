@@ -9,7 +9,6 @@ import struct
 from collections import defaultdict
 
 from common import BUILD, sha256, write_json
-from prepare_fighter_probe import Reference
 
 
 COLLISION_HELPERS = {
@@ -111,6 +110,7 @@ def classify(ref, worklist):
 
 
 def main():
+    from prepare_fighter_probe import Reference
     ref = Reference()
     worklist = json.loads((BUILD / 'action-callback-worklist.json').read_text())
     report = classify(ref, worklist)
