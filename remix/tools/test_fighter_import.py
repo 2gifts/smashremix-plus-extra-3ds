@@ -6,7 +6,7 @@ import json
 import tempfile
 from pathlib import Path
 from types import SimpleNamespace
-from common import ROOT, BUILD
+from common import ROOT, BUILD, sha256
 from prepare_fighter_probe import Scripts, Reference
 from prepare_reference_audio import Bank, package, repack_sequence_bank, verify_bank
 from test_asset_loader import compiler_path
@@ -26,6 +26,7 @@ from native_results_patches import (extract_victory_bgm, extract_winner_fgm,
                                     render_winner_fgm_rows)
 from native_crowd_patches import extract_crowd_chants, render_native_rows as render_crowd_chants
 from native_entry_patches import extract_entry_effects, render_native_rows as render_entry_effects
+from classify_action_callbacks import classify as classify_action_callbacks
 
 
 class WordReference:
@@ -37,6 +38,35 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_callback_family_audit_links_compiled_collision_wrapper_to_transition(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            path = Path(dirname) / 'reference.z64'
+            path.write_bytes(b'private fixture')
+            base = 0x80400000
+            wrapper = [0x27bdffe8, 0xafbf0014, 0x3c058040, 0x0c0379b9,
+                       0x24a50200, 0x8fbf0014, 0x03e00008, 0x27bd0018]
+            transition = [0x27bdfff0, 0xafbf0008, 0x03e00008, 0x27bd0010]
+            code = {base + 0x100: wrapper, base + 0x200: transition}
+            ref = SimpleNamespace(path=path, ram_base=base,
+                                  symbols={'Fixture.air_collision_': base + 0x100,
+                                           'Fixture.air_to_ground_': base + 0x200},
+                                  words=lambda address, count: (code[address] + [0] * count)[:count])
+            worklist = {'reference_rom_sha256': sha256(path),
+                        'targets': [{'address': f'{base + 0x100:08x}',
+                                     'symbols': ['Fixture.air_collision_'],
+                                     'uses': [{'fighter': 'FIXTURE', 'status_id': 220,
+                                               'role': 'map'}]}]}
+            result = classify_action_callbacks(ref, worklist)
+            self.assertEqual(result['collision_wrappers'], 1)
+            self.assertEqual(result['unique_collision_transition_targets'], 1)
+            self.assertEqual(result['collision_transition_shapes'], 1)
+            self.assertEqual(result['wrappers'][0]['helper'], 'mpCommonProcFighterLanding')
+            self.assertEqual(result['wrappers'][0]['transition_symbols'],
+                             ['Fixture.air_to_ground_'])
+            wrapper[4] = 0
+            with self.assertRaisesRegex(ValueError, 'lacks expansion transition'):
+                classify_action_callbacks(ref, worklist)
+
     def test_entry_effect_pointer_family_reuses_vanilla_and_lists_custom_code(self):
         with tempfile.TemporaryDirectory() as dirname:
             root = Path(dirname)

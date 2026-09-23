@@ -984,16 +984,24 @@
       "passed": true,
       "tested_cxi_sha256": "3754298448c12c50cc145027c3bd29c375fe0776c1289092d38bf0621dd368e9",
       "tested_elf_sha256": "fde70466fe65a274096d47f46fe027f82ae8356624dad433fd9251d30e572be8",
-      "package_verified_cia_sha256": "0a4253885c0e5fde9b99173b90dced3127fc4fbc0a6192a9372d6447c77a7fc4",
+      "package_verified_cia_sha256": "6d6d0071caac49e9bc63bb79d770eb24eebfdbfc5e90594a5bab1fb409ecc1f8",
       "rows_verified": 88
     },
     "azahar_stereo_falco_match_to_results": true,
     "scope": "All generated entry-effect rows matched Azahar memory and a stereo Falco match reached results; six custom routines and visual effect fidelity remain unverified."
   },
+  "action_callback_family_audit": {
+    "unique_compiled_expansion_targets": 852,
+    "short_single_call_candidates": 241,
+    "collision_wrappers": 180,
+    "unique_collision_transition_targets": 169,
+    "normalized_transition_shapes": 80,
+    "scope": "Compiled MIPS callback dependencies grouped by shared original collision helper and transition instruction shape. No transition has been translated or bound by this audit."
+  },
   "fighter_import_host_tests": {
     "passed": true,
-    "tests": 30,
-    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors, victory BGM thunk decoding, winner voice bounds, compiled results text validation, crowd chant ID bounds, and compiled entry-effect pointer reuse"
+    "tests": 31,
+    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors, victory BGM thunk decoding, winner voice bounds, compiled results text validation, crowd chant ID bounds, compiled entry-effect pointer reuse, and callback-family classification"
   },
   "save_writer_host_tests": {
     "passed": true,

@@ -23,6 +23,7 @@ def main():
     if (audit_meta.get('schema') != 2 or audit_meta.get('reference_rom_sha256') != reference_sha or
             audit_meta.get('audit_script_sha256') != sha256(audit_source)):
         run(sys.executable, ROOT / 'remix/tools/audit_reference_fighters.py')
+    run(sys.executable, ROOT / 'remix/tools/classify_action_callbacks.py')
     run(sys.executable, ROOT / 'remix/tools/prepare_fighter_probe.py')
     config_path = ROOT / '3ds/build-config.json'
     config = json.loads(config_path.read_text()) if config_path.exists() else {}
