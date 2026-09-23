@@ -11,5 +11,7 @@
 #define NATIVE_REMIX_MARIO_KIND 0u
 #define NATIVE_REMIX_JFALCON_KIND 40u
 #define NATIVE_REMIX_CAPTAIN_KIND 7u
+#define NATIVE_REMIX_JLUIGI_KIND 43u
+#define NATIVE_REMIX_LUIGI_KIND 4u
 #define NATIVE_REMIX_VS_CSS_SCENE 16u
 extern volatile unsigned native_remix_selected_fkind[4];

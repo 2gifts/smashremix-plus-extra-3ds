@@ -696,6 +696,9 @@ void ftManagerInitFighter(GObj *fighter_gobj, FTDesc *desc)
         break;
 
     case nFTKindLuigi:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JLUIGI_KIND:
+#endif
     case nFTKindNLuigi:
         fp->passive_vars.mario.is_expend_tornado = FALSE;
         break;

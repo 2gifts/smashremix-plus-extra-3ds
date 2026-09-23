@@ -82,10 +82,14 @@ void ftPortVanillaEntryMakeEffect(FTStruct *fp)
     case NATIVE_REMIX_JMARIO_KIND:
 #endif
     case nFTKindLuigi:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JLUIGI_KIND:
+#endif
     case nFTKindMMario:
         efManagerMarioEntryDokanMakeEffect(&fp->entry_pos,
 #ifdef SSB_REMIX_PROBE
-            fp->fkind == NATIVE_REMIX_JMARIO_KIND ? nFTKindMario : fp->fkind
+            fp->fkind == NATIVE_REMIX_JMARIO_KIND ? nFTKindMario :
+            fp->fkind == NATIVE_REMIX_JLUIGI_KIND ? nFTKindLuigi : fp->fkind
 #else
             fp->fkind
 #endif

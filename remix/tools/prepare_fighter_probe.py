@@ -253,6 +253,7 @@ def main():
 
     mario_data, mario_motion, mario_menus, mario_scripts = emit_variant(ref, 'JMARIO', dk_external, out)
     falcon_data, falcon_motion, falcon_menus, falcon_scripts = emit_variant(ref, 'JFALCON', dk_external, out)
+    luigi_data, luigi_motion, luigi_menus, luigi_scripts = emit_variant(ref, 'JLUIGI', dk_external, out)
 
     # Keep the proven vanilla UI assets. Add only the validated dependency
     # closure required by this fighter, never ship unresolved reference files.
@@ -277,7 +278,7 @@ def main():
         required.add(fid)
         for dep in entries[fid]['external_files']:
             add(dep)
-    for fid in data[:9] + dk_data[:9] + jp_data[:9] + mario_data[:9] + falcon_data[:9] + [r[0] for r in motion + menus + dk_motion + dk_menus + jp_motion + jp_menus + mario_motion + mario_menus + falcon_motion + falcon_menus]:
+    for fid in data[:9] + dk_data[:9] + jp_data[:9] + mario_data[:9] + falcon_data[:9] + luigi_data[:9] + [r[0] for r in motion + menus + dk_motion + dk_menus + jp_motion + jp_menus + mario_motion + mario_menus + falcon_motion + falcon_menus + luigi_motion + luigi_menus]:
         add(fid)
     bad = [issue for issue in manifest['relocation_issues'] if issue['file_id'] in required]
     if bad:
@@ -308,7 +309,7 @@ def main():
     for name in ('initial-save.bin', 'bottom-ui.bin'):
         shutil.copy2(vanilla / name, assets / name)
     write_json(out / 'manifest.json', {
-        'fixture': 'Falco, DK Ult, J Pikachu, J Mario and J Falcon selectable beside their vanilla parents in VS; not the complete mod',
+        'fixture': 'Falco, DK Ult, J Pikachu, J Mario, J Falcon and J Luigi selectable beside their vanilla parents in VS; not the complete mod',
         'motion_count': len(motion), 'menu_motion_count': len(menus),
         'script_words': len(scripts.words), 'script_pointers': len(scripts.pointers),
         'dkult_motion_count': len(dk_motion), 'dkult_menu_motion_count': len(dk_menus),
@@ -323,10 +324,13 @@ def main():
         'jfalcon_motion_count': len(falcon_motion), 'jfalcon_menu_motion_count': len(falcon_menus),
         'jfalcon_script_words': len(falcon_scripts.words),
         'jfalcon_script_pointers': len(falcon_scripts.pointers),
+        'jluigi_motion_count': len(luigi_motion), 'jluigi_menu_motion_count': len(luigi_menus),
+        'jluigi_script_words': len(luigi_scripts.words),
+        'jluigi_script_pointers': len(luigi_scripts.pointers),
         'required_files': sorted(required), 'unresolved_relocations': bad,
         'pack_sha256': sha256(assets / 'reloc.pak'),
     })
-    print(f'Falco, DK Ult, J Pikachu, J Mario and J Falcon: {len(motion)} + {len(dk_motion)} + {len(jp_motion)} + {len(mario_motion)} + {len(falcon_motion)} actions, {len(required)} validated assets')
+    print(f'Falco, DK Ult, J Pikachu, J Mario, J Falcon and J Luigi: {len(motion)} + {len(dk_motion)} + {len(jp_motion)} + {len(mario_motion)} + {len(falcon_motion)} + {len(luigi_motion)} actions, {len(required)} validated assets')
 
 
 if __name__ == '__main__':

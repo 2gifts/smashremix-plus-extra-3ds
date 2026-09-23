@@ -1,7 +1,7 @@
 #include <ft/fighter.h>
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_roster.h"
-#define FT_DOKAN_MARIO_KIND(fp) ((fp)->fkind == NATIVE_REMIX_JMARIO_KIND)
+#define FT_DOKAN_MARIO_KIND(fp) (((fp)->fkind == NATIVE_REMIX_JMARIO_KIND) || ((fp)->fkind == NATIVE_REMIX_JLUIGI_KIND))
 #else
 #define FT_DOKAN_MARIO_KIND(fp) FALSE
 #endif
@@ -107,7 +107,7 @@ void ftCommonDokanStartSetStatus(GObj *fighter_gobj, s32 material)
     if
     (
         (fp->fkind == nFTKindMario) || FT_DOKAN_MARIO_KIND(fp) || (fp->fkind == nFTKindMMario) || (fp->fkind == nFTKindNMario) ||
-        (fp->fkind == nFTKindLuigi) || (fp->fkind == nFTKindNLuigi)
+        (fp->fkind == nFTKindLuigi) || (fp->fkind == nFTKindNLuigi) || FT_DOKAN_MARIO_KIND(fp)
     )
     {
         fp->status_vars.common.dokan.turn_stop_wait = 0;

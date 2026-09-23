@@ -50,7 +50,8 @@ void nativeBottomTouch(unsigned x,unsigned y){
             (character==NATIVE_REMIX_DONKEY_KIND||character==NATIVE_REMIX_DKULT_KIND)?NATIVE_REMIX_DKULT_KIND:
             (character==NATIVE_REMIX_PIKACHU_KIND||character==NATIVE_REMIX_JPIKA_KIND)?NATIVE_REMIX_JPIKA_KIND:
             (character==NATIVE_REMIX_MARIO_KIND||character==NATIVE_REMIX_JMARIO_KIND)?NATIVE_REMIX_JMARIO_KIND:
-            (character==NATIVE_REMIX_CAPTAIN_KIND||character==NATIVE_REMIX_JFALCON_KIND)?NATIVE_REMIX_JFALCON_KIND:0;
+            (character==NATIVE_REMIX_CAPTAIN_KIND||character==NATIVE_REMIX_JFALCON_KIND)?NATIVE_REMIX_JFALCON_KIND:
+            (character==NATIVE_REMIX_LUIGI_KIND||character==NATIVE_REMIX_JLUIGI_KIND)?NATIVE_REMIX_JLUIGI_KIND:0;
         if(px<148&&py<73&&slot<4&&native_bottom_observed.players[slot].kind<2&&alternate){
             native_remix_selected_fkind[slot]=native_remix_selected_fkind[slot]==alternate?0:alternate;
             dirty=1;return;

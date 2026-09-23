@@ -52,6 +52,9 @@ void ftMarioSpecialNProcAccessory(GObj *fighter_gobj)
             #endif
 
         case nFTKindLuigi:
+#ifdef SSB_REMIX_PROBE
+        case NATIVE_REMIX_JLUIGI_KIND:
+#endif
         case nFTKindNLuigi:
             fireball_item_id = 1;
             break;

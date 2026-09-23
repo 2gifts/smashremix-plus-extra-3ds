@@ -15,6 +15,7 @@ static s32 ftCommonAttack1ResolveParentKind(s32 fkind)
     if (fkind == NATIVE_REMIX_JMARIO_KIND) return nFTKindMario;
     if (fkind == NATIVE_REMIX_JPIKA_KIND) return nFTKindPikachu;
     if (fkind == NATIVE_REMIX_JFALCON_KIND) return nFTKindCaptain;
+    if (fkind == NATIVE_REMIX_JLUIGI_KIND) return nFTKindLuigi;
 #endif
     return FighterParentKindResolveEvent_.resolved_fkind;
 }
