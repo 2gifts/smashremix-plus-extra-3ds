@@ -37,6 +37,31 @@ TEMPLATES = {
         0x8fbf001c, 0x27bd0050, 0x03e00008, 0x00000000),
 }
 
+# These compiled forms preserve a specific status flag or derive the next
+# status from the live status ID. They are kept separate from the zero-flag
+# templates so a new MIPS side effect cannot be accepted accidentally.
+SHARED_TEMPLATES = {
+    'air_status_plus_3_loop_sfx': (
+        0x27bdffc8, 0xafbf001c, 0xafa40038, 0x8c840084,
+        0x0c037bb2, 0xafa40034, 0x8fa20034, 0x8fa40038,
+        0x8c4f0024, 0x25e50003, 0x8c860078, 0x3c073f80,
+        0x340e0800, 0x0c039bc9, 0xafae0010, 0x0c0363ae,
+        0x8fa40034, 0x8fbf001c, 0x27bd0038, 0x03e00008,
+        0x00000000),
+    'ground_status_minus_3_loop_sfx': (
+        0x27bdffc8, 0xafbf001c, 0xafa40038, 0x8c840084,
+        0x0c037ba6, 0xafa40034, 0x8fa20034, 0x8fa40038,
+        0x8c4f0024, 0x25e5fffd, 0x8c860078, 0x3c073f80,
+        0x340e0800, 0x0c039bc9, 0xafae0010, 0x8fbf001c,
+        0x27bd0038, 0x03e00008, 0x00000000),
+    'ground_fixed_preserve_hit': (
+        0x27bdffc8, 0xafbf001c, 0xafa40038, 0x8c840084,
+        0x0c037ba6, 0xafa40034, 0x8fa20034, 0x8fa40038,
+        0x24050000, 0x8c860078, 0x3c073f80, 0x340e0001,
+        0x0c039bc9, 0xafae0010, 0x8fbf001c, 0x27bd0038,
+        0x03e00008, 0x00000000),
+}
+
 WRAPPER_ENDINGS = (
     (0x27bd0018, 0x03e00008, 0x00000000),
     (0x03e00008, 0x27bd0018),
@@ -90,7 +115,31 @@ def decode_transition(ref, address):
         return {'address': f'{address:08x}', 'template': name,
                 'status_id': status_id,
                 'kinetics': 'ground' if name.startswith('ground') else 'air',
-                'clamp_air_speed': not name.startswith('ground')}
+                'clamp_air_speed': not name.startswith('ground'),
+                'preserve_flags': 0}
+    for name, pattern in SHARED_TEMPLATES.items():
+        if len(actual) != len(pattern):
+            continue
+        if name == 'ground_fixed_preserve_hit':
+            if actual[8] & 0xffff0000 != 0x24050000:
+                continue
+            status_id = actual[8] & 0xffff
+            if not 0xdc <= status_id < 0x4000:
+                raise ValueError(f'Invalid compiled transition status {status_id} at {address:08x}')
+            expected = list(pattern)
+            expected[8] = actual[8]
+        else:
+            status_id = None
+            expected = pattern
+        if tuple(actual) != tuple(expected):
+            continue
+        return {'address': f'{address:08x}', 'template': name,
+                'status_id': status_id,
+                'status_delta': (3 if name.startswith('air_status') else -3)
+                                if status_id is None else None,
+                'kinetics': 'ground' if name.startswith('ground') else 'air',
+                'clamp_air_speed': name.startswith('air'),
+                'preserve_flags': 1 if name == 'ground_fixed_preserve_hit' else 0x800}
     return None
 
 
@@ -124,11 +173,15 @@ def render_native_code(manifest):
     lines = ['/* Exact compiled MIPS collision-transition templates. */']
     for row in manifest['transitions']:
         address = row['address']
+        status = (str(row['status_id']) if row['status_id'] is not None else
+                  f'fp->status_id {"+" if row["status_delta"] > 0 else "-"} {abs(row["status_delta"])}')
+        flags = {0: 'FTSTATUS_PRESERVE_NONE', 1: 'FTSTATUS_PRESERVE_HIT',
+                 0x800: 'FTSTATUS_PRESERVE_LOOPSFX'}[row['preserve_flags']]
         lines += [f'static void nativeRemixTransition_{address}(GObj *fighter_gobj) {{',
                   '    FTStruct *fp = ftGetStruct(fighter_gobj);',
                   f'    mpCommonSetFighter{("Ground" if row["kinetics"] == "ground" else "Air")}(fp);',
-                  f'    ftMainSetStatus(fighter_gobj, {row["status_id"]}, fighter_gobj->anim_frame,',
-                  '                    1.0F, FTSTATUS_PRESERVE_NONE);']
+                  f'    ftMainSetStatus(fighter_gobj, {status}, fighter_gobj->anim_frame,',
+                  f'                    1.0F, {flags});']
         if row['clamp_air_speed']:
             lines.append('    ftPhysicsClampAirVelXMax(fp);')
         lines += ['}', '']

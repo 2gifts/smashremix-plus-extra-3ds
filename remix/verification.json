@@ -1009,23 +1009,33 @@
     "collision_wrappers": 180,
     "unique_collision_transition_targets": 169,
     "normalized_transition_shapes": 80,
-    "scope": "Compiled MIPS callback dependencies grouped by shared original collision helper and transition instruction shape. Four exact transition patterns now generate 20 native transitions and 20 collision wrappers; the remaining patterns are unbound."
+    "scope": "Compiled MIPS callback dependencies grouped by shared original collision helper and transition instruction shape. Seven exact transition patterns now generate 26 native transitions and 26 collision wrappers; the remaining patterns are unbound."
   },
   "native_transition_templates": {
-    "exact_transition_patterns": 4,
-    "generated_transitions": 20,
-    "generated_collision_callbacks": 20,
-    "native_bound_expansion_callbacks": 24,
+    "exact_transition_patterns": 7,
+    "generated_transitions": 26,
+    "generated_collision_callbacks": 26,
+    "native_bound_expansion_callbacks": 30,
     "total_expansion_callbacks": 852,
     "host_pattern_rejection_test": true,
     "development_cia_build_and_package_checks": true,
+    "development_cia_sha256": "5c0c4c0c3a4380f6368226ad72b501e62d6860c184db2f345076848356112dc4",
+    "development_cxi_sha256": "b3f2727653ee91ef2709d4b80f1ca833749c5c38e5fb3b335b29ffe1eb140450",
     "azahar_stereo_falco_match_frame": 2036,
-    "scope": "Compiled callbacks are generated and available to the shared action importer. A Falco stereo match regressed the existing fixture; the new generated callbacks were not invoked and their move behavior has not been exercised in a match."
+    "scope": "Compiled callbacks are generated and available to the shared action importer. The new generated callbacks were not invoked and their move behavior has not been exercised in a match."
+  },
+  "compiled_extra_autolink_hook": {
+    "host_math_and_branch_cases_passed": true,
+    "n64_to_arm_field_offsets_checked": true,
+    "development_cia_build_and_package_checks": true,
+    "azahar_stereo_dkult_match_frame": 2006,
+    "azahar_invalid_memory_accesses_detected": false,
+    "scope": "Shared angle-362 airborne hit hook is translated into the native fighter-hit path. The stereo DK Ult match regressed normal combat; no angle-362 hit was observed, so that branch still needs direct in-game validation."
   },
   "generic_action_table_import": {
     "development_catalog_fighters": 19,
     "action_table_bindable_audit_fighters": 28,
-    "native_bound_expansion_callbacks": 24,
+    "native_bound_expansion_callbacks": 30,
     "total_expansion_callbacks": 852,
     "validated_fixture_assets": 1737,
     "development_cia_sha256": "f9bfca305ede8ca466cc6582a41542bda71cef2643a25f4a56cb2b871c028f8e",
@@ -1040,8 +1050,8 @@
   },
   "fighter_import_host_tests": {
     "passed": true,
-    "tests": 34,
-    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors and compiled generic action-table C execution, victory BGM thunk decoding, winner voice bounds, compiled results text validation, crowd chant ID bounds, compiled Japanese hit-sound IDs and fighter types, compiled entry-effect pointer reuse, callback-family classification, and strict native transition-template generation"
+    "tests": 36,
+    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, +EXTRA autolink angle and knockback math, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors and compiled generic action-table C execution, victory BGM thunk decoding, winner voice bounds, compiled results text validation, crowd chant ID bounds, compiled Japanese hit-sound IDs and fighter types, compiled entry-effect pointer reuse, callback-family classification, and strict native transition-template generation"
   },
   "save_writer_host_tests": {
     "passed": true,

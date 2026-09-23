@@ -29,7 +29,8 @@ from native_crowd_patches import extract_crowd_chants, render_native_rows as ren
 from native_hit_sound_patches import extract_hit_sounds, render_native_rows as render_hit_sounds
 from native_entry_patches import extract_entry_effects, render_native_rows as render_entry_effects
 from classify_action_callbacks import classify as classify_action_callbacks
-from native_transition_templates import (TEMPLATES, extract_native_transitions,
+from native_transition_templates import (TEMPLATES, SHARED_TEMPLATES,
+                                         decode_transition, extract_native_transitions,
                                          render_native_code)
 
 
@@ -42,6 +43,38 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_extra_autolink_angle_matches_ground_air_and_reverse_hit_rules(self):
+        fixture = r'''
+#include <assert.h>
+#include <math.h>
+#include "native_remix_autolink.h"
+int main(void) {
+    NativeRemixAutolinkResult r;
+    r = nativeRemixAutolinkAngle(361, 40, 1, 1, 3, 4, 0, 0, 0, 0, -5);
+    assert(r.angle == 361 && r.knockback == 40);
+    r = nativeRemixAutolinkAngle(362, 40, 0, 1, 3, 4, 0, 0, 0, 0, -5);
+    assert(r.angle == 362 && r.knockback == 40);
+    r = nativeRemixAutolinkAngle(362, 80, 1, 1, 3, 4, 0, 0, 0, 0, -5);
+    assert(r.angle == 362 && r.knockback == 80);
+    r = nativeRemixAutolinkAngle(362, 40, 1, 0, 3, 4, 0, 0, 0, 0, -5);
+    assert(r.angle == 80 && r.knockback == 40);
+    r = nativeRemixAutolinkAngle(362, 40, 1, 1, 3, 4, 0, 0, 0, 0, -5);
+    assert(r.angle == 53 && fabsf(r.knockback - 5.0f) < 0.0001f);
+    r = nativeRemixAutolinkAngle(362, 40, 1, 1, 3, 4, 0, 0, 0, 0, 5);
+    assert(r.angle == 127 && fabsf(r.knockback - 5.0f) < 0.0001f);
+    r = nativeRemixAutolinkAngle(362, 40, 1, 1, 0, 0, 10, 0, 0, 0, -5);
+    assert(r.angle == 0 && fabsf(r.knockback - 0.40771484f) < 0.0001f);
+    return 0;
+}
+'''
+        with tempfile.TemporaryDirectory() as dirname:
+            path, exe = Path(dirname) / 'autolink.c', Path(dirname) / 'autolink.exe'
+            path.write_text(fixture)
+            cc = compiler_path(None).replace('clang++', 'clang')
+            subprocess.run([cc, '-std=gnu11', '-I', str(ROOT / '3ds/include'),
+                            str(path), '-lm', '-o', str(exe)], check=True)
+            subprocess.run([str(exe)], check=True)
+
     def test_compiled_japanese_hit_sounds_cover_all_fighters_and_audio_ids(self):
         with tempfile.TemporaryDirectory() as dirname:
             root = Path(dirname)
@@ -116,13 +149,35 @@ class MotionTests(unittest.TestCase):
             self.assertIn('mpCommonSetFighterAir(fp);', native)
             self.assertIn('ftPhysicsClampAirVelXMax(fp);', native)
             self.assertIn('mpCommonProcFighterOnEdge(fighter_gobj,', native)
-            transition[11] = 0xafa50010  # Nonzero preserve flags are not known safe.
+            transition[11] = 0xafa50010  # This template requires zero preserve flags.
             self.assertEqual(extract_native_transitions(ref, families)
                              ['recognized_collision_callback_count'], 0)
             transition[11] = TEMPLATES['air_and_clamp_a'][11]
             wrapper[5] = 0x00000021  # Additional wrapper logic is not safe to skip.
             self.assertEqual(extract_native_transitions(ref, families)
                              ['recognized_collision_callback_count'], 0)
+
+    def test_compiled_status_delta_and_preserve_flag_templates(self):
+        for name, pattern in SHARED_TEMPLATES.items():
+            with self.subTest(template=name):
+                words = list(pattern)
+                if name == 'ground_fixed_preserve_hit':
+                    words[8] = 0x240500e4
+                ref = SimpleNamespace(words=lambda address, count:
+                                      (words + [0] * count)[:count])
+                row = decode_transition(ref, 0x80500000)
+                self.assertEqual(row['template'], name)
+                if name == 'ground_fixed_preserve_hit':
+                    self.assertEqual(row['status_id'], 0xe4)
+                    self.assertEqual(row['preserve_flags'], 1)
+                else:
+                    self.assertEqual(row['status_delta'], 3 if name.startswith('air') else -3)
+                    self.assertEqual(row['preserve_flags'], 0x800)
+                code = render_native_code({'transitions': [row], 'wrappers': []})
+                self.assertIn('FTSTATUS_PRESERVE_HIT' if row['preserve_flags'] == 1
+                              else 'FTSTATUS_PRESERVE_LOOPSFX', code)
+                words[12] ^= 1  # Changed MIPS instruction must fail recognition.
+                self.assertIsNone(decode_transition(ref, 0x80500000))
 
     def test_callback_family_audit_links_compiled_collision_wrapper_to_transition(self):
         with tempfile.TemporaryDirectory() as dirname:

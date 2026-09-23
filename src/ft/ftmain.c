@@ -13,6 +13,7 @@ extern void port_dump_backtrace(void);
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_probe.h"
 #include "native_remix_roster.h"
+#include "native_remix_autolink.h"
 #endif
 
 extern alSoundEffect* func_800269C0_275C0(u16);
@@ -3052,6 +3053,23 @@ void ftMainProcessHitCollisionStatsMain(GObj *fighter_gobj)
         attacker_fp = ftGetStruct(attacker_gobj);
         this_fp->damage_angle = ft_attack_coll->angle;
         this_fp->damage_element = ft_attack_coll->element;
+
+#ifdef SSB_REMIX_PROBE
+        if (this_fp->damage_angle == 362 &&
+            attacker_fp->ga == nMPKineticsAir && knockback < 80.0F)
+        {
+            NativeRemixAutolinkResult autolink = nativeRemixAutolinkAngle(
+                this_fp->damage_angle, knockback,
+                attacker_fp->ga == nMPKineticsAir, this_fp->ga == nMPKineticsAir,
+                attacker_fp->physics.vel_air.x, attacker_fp->physics.vel_air.y,
+                ft_attack_coll->pos_curr.x, ft_attack_coll->pos_curr.y,
+                DObjGetStruct(fighter_gobj)->translate.vec.f.x,
+                DObjGetStruct(fighter_gobj)->translate.vec.f.y + this_fp->coll_data.map_coll.center,
+                DObjGetStruct(attacker_gobj)->translate.vec.f.x);
+            this_fp->damage_angle = autolink.angle;
+            knockback = autolink.knockback;
+        }
+#endif
 
         this_fp->damage_lr = (DObjGetStruct(fighter_gobj)->translate.vec.f.x < DObjGetStruct(attacker_gobj)->translate.vec.f.x) ? +1 : -1;
 

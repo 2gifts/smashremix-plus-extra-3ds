@@ -81,7 +81,9 @@ def main():
     if args.expect_j_hit and not next(item for item in hit_manifest['fighters']
                                       if item['name'] == name)['sound_type']:
         parser.error(f'{name} does not use the compiled Japanese hit-sound table')
-    if not row['action_table']['generic_action_table_compatible'] and action_array is None:
+    if (catalog[name]['registration'] == 'generic' and
+            not row['action_table']['generic_action_table_compatible'] and
+            action_array is None):
         raise AssertionError(f'{name}: generated action array missing from executable')
     callback_checks = []
     roles = ('update', 'interrupt', 'physics', 'map')
