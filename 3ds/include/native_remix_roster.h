@@ -7,5 +7,7 @@
 #define NATIVE_REMIX_DONKEY_KIND 2u
 #define NATIVE_REMIX_JPIKA_KIND 50u
 #define NATIVE_REMIX_PIKACHU_KIND 9u
+#define NATIVE_REMIX_JMARIO_KIND 42u
+#define NATIVE_REMIX_MARIO_KIND 0u
 #define NATIVE_REMIX_VS_CSS_SCENE 16u
 extern volatile unsigned native_remix_selected_fkind[4];

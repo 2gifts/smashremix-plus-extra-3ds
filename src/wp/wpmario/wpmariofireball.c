@@ -1,6 +1,10 @@
 #include <wp/weapon.h>
 #include <ft/fighter.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+extern void port_log(const char *, ...);
+#endif
 #ifdef PORT
 extern void *func_800269C0_275C0(u16 id);
 #endif
@@ -179,10 +183,29 @@ GObj* wpMarioFireballMakeWeapon(GObj *fighter_gobj, Vec3f *pos, s32 index)
     WPStruct *wp;
     f32 angle;
 
+#ifdef SSB_REMIX_PROBE
+    /* The regional variant owns a different special-asset file. A local
+     * descriptor avoids mutating the shared Mario/Luigi descriptor. */
+    WPDesc desc = dWPMarioFireballWeaponDesc;
+    if (fp->fkind == NATIVE_REMIX_JMARIO_KIND && !*fp->data->p_file_special1)
+    {
+        *fp->data->p_file_special1 = lbRelocGetStatusBufferFile(fp->data->file_special1_id);
+        if (!*fp->data->p_file_special1)
+            *fp->data->p_file_special1 = lbRelocGetExternHeapFile(fp->data->file_special1_id,
+                syTaskmanMalloc(lbRelocGetFileSize(fp->data->file_special1_id), 0x10));
+        port_log("REMIX PROBE: J Mario Fireball reloaded special file %u handle=%p\n",
+                 fp->data->file_special1_id, *fp->data->p_file_special1);
+    }
+    if (fp->fkind == NATIVE_REMIX_JMARIO_KIND && !*fp->data->p_file_special1) return NULL;
+    desc.p_weapon = fp->fkind == NATIVE_REMIX_JMARIO_KIND ? fp->data->p_file_special1 :
+                    dWPMarioFireballWeaponAttributes[index].p_weapon;
+    desc.o_attributes = dWPMarioFireballWeaponAttributes[index].offset;
+    weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &desc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_FIGHTER));
+#else
     dWPMarioFireballWeaponDesc.p_weapon = dWPMarioFireballWeaponAttributes[index].p_weapon;
     dWPMarioFireballWeaponDesc.o_attributes = dWPMarioFireballWeaponAttributes[index].offset;
-
     weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &dWPMarioFireballWeaponDesc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_FIGHTER));
+#endif
 
     if (weapon_gobj == NULL)
     {

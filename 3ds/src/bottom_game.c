@@ -104,6 +104,8 @@ void nativeBottomSnapshot(NativeBottomState* s){
                 p->character=NATIVE_REMIX_DKULT_KIND;
             if(q->fkind==nFTKindPikachu&&native_remix_selected_fkind[i]==NATIVE_REMIX_JPIKA_KIND)
                 p->character=NATIVE_REMIX_JPIKA_KIND;
+            if(q->fkind==nFTKindMario&&native_remix_selected_fkind[i]==NATIVE_REMIX_JMARIO_KIND)
+                p->character=NATIVE_REMIX_JMARIO_KIND;
 #endif
             p->color=s->teams?(q->team==2?3:q->team):i;p->ready=q->is_fighter_selected;
         }

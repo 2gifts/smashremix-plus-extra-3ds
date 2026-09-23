@@ -1,5 +1,8 @@
 #include <ft/fighter.h>
 #include <wp/weapon.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -33,6 +36,9 @@ void ftMarioSpecialNProcAccessory(GObj *fighter_gobj)
         switch (fp->fkind) // jtbl at 0x8018C630
         {
         case nFTKindMario:
+#ifdef SSB_REMIX_PROBE
+        case NATIVE_REMIX_JMARIO_KIND:
+#endif
         case nFTKindMMario:
         case nFTKindNMario:
             fireball_item_id = 0;

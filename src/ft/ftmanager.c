@@ -12,6 +12,9 @@ extern void port_log(const char *fmt, ...);
 extern void portFixupFTAttributes(void *attr);
 extern void portFixupStructU16(void *base, unsigned int byte_offset, unsigned int num_words);
 #include "fighter_registry.h"
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 /* Length of the FTKirbyCopy table in 228_KirbyMainMotion (dKirbyMainMotion_0x0000):
  * one row per inhalable fighter, nFTKindMario..nFTKindNNess. NOT nFTKindEnumCount. */
 #define FTKIRBY_COPY_TABLE_COUNT 27
@@ -332,6 +335,21 @@ void ftManagerSetupFilesMainKind(s32 fkind)
 }
 
 // 0x800D7710
+#ifdef SSB_REMIX_PROBE
+static void* ftManagerGetModStatusFile(s32 fkind, u32 file_id)
+{
+    void *file = lbRelocGetStatusBufferFile(file_id);
+    /* The original results scene preloads vanilla file IDs. An imported
+     * fighter's specials may not be in that scene's status-buffer list even
+     * when its main model is present. Keep the file alive in the scene arena. */
+    if (file == NULL && fkind > nFTKindPlayableEnd)
+        file = lbRelocGetExternHeapFile(file_id, syTaskmanMalloc(lbRelocGetFileSize(file_id), 0x10));
+    return file;
+}
+#define FT_MANAGER_STATUS_FILE(id) ftManagerGetModStatusFile(fkind, (id))
+#else
+#define FT_MANAGER_STATUS_FILE(id) lbRelocGetStatusBufferFile(id)
+#endif
 void ftManagerSetupFilesKind(s32 fkind)
 {
 #ifdef PORT
@@ -342,33 +360,33 @@ void ftManagerSetupFilesKind(s32 fkind)
 
     if (data->file_mainmotion_id != 0)
     {
-        *data->p_file_mainmotion = lbRelocGetStatusBufferFile(data->file_mainmotion_id);
+        *data->p_file_mainmotion = FT_MANAGER_STATUS_FILE(data->file_mainmotion_id);
     }
     if (data->file_submotion_id != 0)
     {
-        *data->p_file_submotion = lbRelocGetStatusBufferFile(data->file_submotion_id);
+        *data->p_file_submotion = FT_MANAGER_STATUS_FILE(data->file_submotion_id);
     }
-    *data->p_file_model = lbRelocGetStatusBufferFile(data->file_model_id);
+    *data->p_file_model = FT_MANAGER_STATUS_FILE(data->file_model_id);
 
     if (data->file_shieldpose_id != 0)
     {
-        data->p_file_shieldpose = lbRelocGetStatusBufferFile(data->file_shieldpose_id);
+        data->p_file_shieldpose = FT_MANAGER_STATUS_FILE(data->file_shieldpose_id);
     }
     if (data->file_special1_id != 0)
     {
-        *data->p_file_special1 = lbRelocGetStatusBufferFile(data->file_special1_id);
+        *data->p_file_special1 = FT_MANAGER_STATUS_FILE(data->file_special1_id);
     }
     if (data->file_special2_id != 0)
     {
-        *data->p_file_special2 = lbRelocGetStatusBufferFile(data->file_special2_id);
+        *data->p_file_special2 = FT_MANAGER_STATUS_FILE(data->file_special2_id);
     }
     if (data->file_special3_id != 0)
     {
-        *data->p_file_special3 = lbRelocGetStatusBufferFile(data->file_special3_id);
+        *data->p_file_special3 = FT_MANAGER_STATUS_FILE(data->file_special3_id);
     }
     if (data->file_special4_id != 0)
     {
-        *data->p_file_special4 = lbRelocGetStatusBufferFile(data->file_special4_id);
+        *data->p_file_special4 = FT_MANAGER_STATUS_FILE(data->file_special4_id);
     }
     if (data->particles_script_lo != 0x0)
     {
@@ -654,6 +672,9 @@ void ftManagerInitFighter(GObj *fighter_gobj, FTDesc *desc)
         /* fallthrough */
 
     case nFTKindMario:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JMARIO_KIND:
+#endif
     case nFTKindNMario:
         fp->passive_vars.mario.is_expend_tornado = FALSE;
         break;

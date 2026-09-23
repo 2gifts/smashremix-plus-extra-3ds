@@ -25,6 +25,9 @@
 #include <sc/scsubsys/scsubsys.h>
 
 #include "fighter_registry.h"
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 /* Per-character status descs (used as the ft_data row's special_descs). */
 extern FTStatusDesc *dFTMainSpecialStatusDescs[];
@@ -75,9 +78,18 @@ void ftPortVanillaEntryMakeEffect(FTStruct *fp)
     switch (fp->fkind)
     {
     case nFTKindMario:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JMARIO_KIND:
+#endif
     case nFTKindLuigi:
     case nFTKindMMario:
-        efManagerMarioEntryDokanMakeEffect(&fp->entry_pos, fp->fkind);
+        efManagerMarioEntryDokanMakeEffect(&fp->entry_pos,
+#ifdef SSB_REMIX_PROBE
+            fp->fkind == NATIVE_REMIX_JMARIO_KIND ? nFTKindMario : fp->fkind
+#else
+            fp->fkind
+#endif
+        );
         break;
 
     case nFTKindFox:

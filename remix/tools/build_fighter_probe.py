@@ -34,7 +34,7 @@ def main():
                             anchor='mm', align='center', spacing=5)
         image.save(path)
     art((48, 48), 'REMIX\nTEST', 11, dst / 'icon.png')
-    art((256, 128), 'REMIX FIGHTER TEST\nFalco / DK Ult / J Pika\nFull mod in development', 15, dst / 'banner.png')
+    art((256, 128), 'REMIX FIGHTER TEST\nFalco / DK Ult\nJ Pika / J Mario\nFull mod in development', 15, dst / 'banner.png')
     with wave.open(str(dst / 'silent.wav'), 'wb') as sound:
         sound.setparams((2, 2, 32000, 0, 'NONE', 'not compressed'))
         sound.writeframes(bytes(32000 * 4))

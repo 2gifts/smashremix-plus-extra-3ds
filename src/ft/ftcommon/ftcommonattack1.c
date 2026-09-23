@@ -2,15 +2,19 @@
 #include <it/item.h>
 
 #ifdef PORT
-/* Jab2->Jab3 and the Captain-branch jab transitions key on fp->fkind; a synth's
- * fkind misses these whitelists, so its jab combo never advances to Jab3 (the
- * gateway into rapid jab). Resolve the synth's PARENT kind first via the
- * FighterParentKindResolveEvent query; with no listener (or for a non-synth
- * fighter) the payload comes back unchanged and the vanilla gates apply. */
+/* Jab follow-ups key on fp->fkind. Resolve a derived fighter to its parent
+ * before the vanilla gates; an unmodified fighter keeps its original kind. */
 #include "hooks/Events.h"
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 static s32 ftCommonAttack1ResolveParentKind(s32 fkind)
 {
     CALL_EVENT(FighterParentKindResolveEvent, fkind, fkind);
+#ifdef SSB_REMIX_PROBE
+    if (fkind == NATIVE_REMIX_JMARIO_KIND) return nFTKindMario;
+    if (fkind == NATIVE_REMIX_JPIKA_KIND) return nFTKindPikachu;
+#endif
     return FighterParentKindResolveEvent_.resolved_fkind;
 }
 #define FT_A1_KIND(fp) (ftCommonAttack1ResolveParentKind((fp)->fkind))
@@ -52,7 +56,7 @@ void ftCommonAttack11ProcUpdate(GObj *fighter_gobj)
 
     if ((fp->motion_vars.flags.flag1 != 0) && (fp->status_vars.common.attack1.is_goto_followup != FALSE))
     {
-        if ((fp->fkind == nFTKindPikachu) || (fp->fkind == nFTKindNPikachu))
+        if ((FT_A1_KIND(fp) == nFTKindPikachu) || (FT_A1_KIND(fp) == nFTKindNPikachu))
         {
             ftCommonAttack11SetStatus(fighter_gobj);
         }
@@ -105,7 +109,7 @@ void ftCommonAttack11ProcInterrupt(GObj *fighter_gobj)
     }
     if (ftCommonAttack100StartCheckInterruptCommon(fighter_gobj) == FALSE)
     {
-        if ((fp->fkind == nFTKindPikachu) || (fp->fkind == nFTKindNPikachu))
+        if ((FT_A1_KIND(fp) == nFTKindPikachu) || (FT_A1_KIND(fp) == nFTKindNPikachu))
         {
             if (ftCommonAttack11CheckGoto(fighter_gobj) != FALSE)
             {
@@ -182,7 +186,7 @@ void ftCommonAttack12SetStatus(GObj *fighter_gobj)
 
         fp->attack1_status_id = fp->status_id;
 
-        switch (fp->fkind)
+        switch (FT_A1_KIND(fp))
         {
         case nFTKindMario:
         case nFTKindMMario:
@@ -221,7 +225,7 @@ void ftCommonAttack13SetStatus(GObj *fighter_gobj)
 
     if (ftCommonGetCheckInterruptCommon(fighter_gobj) == FALSE)
     {
-        switch (fp->fkind)
+        switch (FT_A1_KIND(fp))
         {
         case nFTKindMario:
         case nFTKindMMario:
@@ -296,7 +300,7 @@ sb32 ftCommonAttack1CheckInterruptCommon(GObj *fighter_gobj)
             switch (fp->attack1_status_id)
             {
             case nFTCommonStatusAttack11:
-                if ((fp->fkind == nFTKindPikachu) || (fp->fkind == nFTKindNPikachu))
+                if ((FT_A1_KIND(fp) == nFTKindPikachu) || (FT_A1_KIND(fp) == nFTKindNPikachu))
                 {
                     if (attr->is_have_attack11)
                     {
