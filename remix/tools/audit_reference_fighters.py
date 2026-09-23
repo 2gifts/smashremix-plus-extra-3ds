@@ -195,6 +195,7 @@ def audit_fighter(ref, name, fkind, manifest, issue_map, origin, external_script
         'script_entrypoints': len(pointers),
         'decoded_script_words': len(scripts.words),
         'script_pointer_fixups': len(scripts.pointers),
+        'null_subroutine_stops': len(scripts.null_subroutines),
         'custom_commands': {f'{byte:02x}': count for byte, count in sorted(scripts.custom_commands.items())},
         'unported_custom_commands': [f'{byte:02x}' for byte in sorted(scripts.custom_commands)
                                      if byte not in NATIVE_CUSTOM_COMMANDS],
@@ -247,6 +248,7 @@ def main():
         'plus_extra_fighters': sum(f['origin']['mod'] == 'plus_extra' for f in fighters),
         'fixture_data_ready': sum(f['fixture_data_ready'] for f in fighters),
         'script_failures': sum(sum(f['script_failures'].values()) for f in fighters),
+        'null_subroutine_stops': sum(f['null_subroutine_stops'] for f in fighters),
         'fighters_with_relocation_issues': sum(bool(f['asset_relocation_issues']) for f in fighters),
         'fighters_requiring_more_custom_commands': sum(bool(f['unported_custom_commands']) for f in fighters),
         'fighters_with_unported_action_table_changes': sum(not f['action_table']['generic_action_table_compatible'] for f in fighters),

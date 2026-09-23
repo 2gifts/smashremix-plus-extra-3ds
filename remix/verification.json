@@ -213,14 +213,16 @@
   "fighter_data_import": {
     "reference_table_records": 88,
     "plus_extra_records": 19,
-    "structurally_importable_motion_sets": 82,
+    "structurally_importable_motion_sets": 85,
     "fighters_with_unported_action_table_changes": 70,
     "structurally_ready_with_inherited_action_tables": 18,
     "unique_expansion_action_callback_targets": 852,
     "action_callback_audit_schema": 2,
-    "arm11_syntax_checked": 82,
+    "arm11_syntax_checked": 85,
     "fighters_with_relocation_issues": 2,
-    "fighters_with_script_target_issues": 5,
+    "fighters_with_script_target_issues": 1,
+    "script_failure_records": 2,
+    "compiled_null_subroutine_stops": 3,
     "fighters_requiring_unported_custom_commands": 0,
     "extra_hit_multiplier_state_host_verified": true,
     "kirby_copy_table_bounds_host_verified": true,
@@ -795,6 +797,16 @@
     "development_cxi_sha256": "6de5ace9858dedcf292259c481f1d185dc8587f1e2d42fbc9cf85d02db1e8738",
     "development_cia_sha256": "3d6ee1dff949977a9f7327b825d2f616a4255c019bb9453208924293904454eb",
     "scope": "All compiled variant identity rows match Azahar guest memory. The bottom-screen vanilla portrait fallback consumes the original-ID table. Expanded CSS, new fighter portraits, and full variant gameplay remain unimplemented."
+  },
+  "compiled_null_subroutine_scripts": {
+    "affected_fighters": ["MRGAW", "MRGAWPLUS", "MRGAWTHREED"],
+    "compiled_null_subroutine_stops": 3,
+    "structurally_importable_motion_sets": 85,
+    "arm11_syntax_checked": 85,
+    "remaining_script_failures": 2,
+    "development_cia_package_sha256": "8716810cf37f8d08ff55da6eb9851271ea4b4553b98b60502ab1dcc2a1eeca49",
+    "azahar_stereo_drl_regression_frame": 2037,
+    "scope": "The common motion-script importer treats compiled null subroutine operands as script stops, matching the native event loop. All three Game & Watch motion sets now extract and pass ARM syntax checks. They are not in the development CIA, and their moves remain untested; Spider-Man's two SetDamageThrown operands still fail validation."
   },
   "action_callback_family_audit": {
     "unique_compiled_expansion_targets": 852,

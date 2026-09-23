@@ -82,6 +82,7 @@ class Scripts:
         self.pointers = {}
         self.visited = set()
         self.custom_commands = Counter()
+        self.null_subroutines = set()
 
     def script(self, address):
         if address in self.external_scripts:
@@ -93,7 +94,10 @@ class Scripts:
             byte = word >> 24
             known_custom = byte in ((self.CUSTOM_LENGTHS if self.allow_custom else
                                      {0xd0: 1, 0xd2: 1, 0xd3: 1}))
-            if (op > 51 and not known_custom) or op == 13:
+            if op == 13:
+                operand = self.ref.words(address + 4, 1)[0]
+                raise ValueError(f'Unsupported SetDamageThrown operand {operand:08x} at {address:08x}')
+            if op > 51 and not known_custom:
                 raise ValueError(f'Unported command byte {byte:#x} at {address:08x}')
             count = self.CUSTOM_LENGTHS[byte] if op > 51 else self.LENGTHS.get(op, 1)
             if byte in (0xdd, 0xde) and known_custom:
@@ -121,6 +125,12 @@ class Scripts:
             if op in (34, 36, 46):
                 target = self.words[address + 4]
                 if not target:
+                    if op == 34 and word == 34 << 26:
+                        # The compiled subroutine command may have a zero
+                        # operand. The native event loop then ends this script;
+                        # there is no target to visit or relocate.
+                        self.null_subroutines.add(address)
+                        return
                     raise ValueError(f'Null branch target from {address:08x}')
                 self.pointers[address + 4] = target
                 self.script(target)

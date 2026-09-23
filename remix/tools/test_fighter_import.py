@@ -1291,9 +1291,26 @@ int main(){
         self.assertEqual(indices[0x334], indices[0x300] + 13)
         self.assertEqual(sum('portRelocRegisterPointer' in s for s in lines), 3)
 
+    def test_compiled_null_subroutine_stops_script_without_relocating_zero(self):
+        words = {0x100: 34 << 26, 0x104: 0, 0x108: 0xfc000000}
+        scripts = Scripts(WordReference(words))
+        scripts.script(0x100)
+        self.assertEqual(scripts.null_subroutines, {0x100})
+        self.assertEqual(scripts.pointers, {})
+        self.assertEqual(set(scripts.words), {0x100, 0x104})
+        lines, _ = scripts.emit()
+        self.assertFalse(any('portRelocRegisterPointer' in line for line in lines))
+        for op in (36, 46):
+            with self.subTest(op=op), self.assertRaisesRegex(ValueError, 'Null branch target'):
+                Scripts(WordReference({0x100: op << 26, 0x104: 0})).script(0x100)
+        with self.assertRaisesRegex(ValueError, 'Null branch target'):
+            Scripts(WordReference({0x100: (34 << 26) | 1, 0x104: 0})).script(0x100)
+
     def test_unknown_extended_command_is_rejected(self):
         with self.assertRaisesRegex(ValueError, 'Unported command'):
             Scripts(WordReference({0x100: 0xd4000000})).script(0x100)
+        with self.assertRaisesRegex(ValueError, 'Unsupported SetDamageThrown operand 04000004'):
+            Scripts(WordReference({0x100: 13 << 26, 0x104: 0x04000004})).script(0x100)
 
     def test_extra_hit_multipliers_decode_and_validate(self):
         valid = {0x100: 0xdd003f80, 0x104: 0xde103f00, 0x108: 0}
