@@ -1,6 +1,9 @@
 #include <ft/fighter.h>
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_roster.h"
+#define FT_JUMP_FKIND(fp) nativeRemixParentKind((fp)->fkind)
+#else
+#define FT_JUMP_FKIND(fp) ((fp)->fkind)
 #endif
 
 #ifdef PORT
@@ -107,7 +110,7 @@ void ftCommonJumpAerialProcPhysics(GObj *fighter_gobj)
 
     (fp->is_fastfall) ? ftPhysicsApplyFastFall(fp, attr) : ftPhysicsApplyGravityDefault(fp, attr);
 
-    switch (fp->fkind)
+    switch (FT_JUMP_FKIND(fp))
     {
     case nFTKindKirby:
     case nFTKindNKirby:
@@ -214,7 +217,7 @@ void ftCommonJumpAerialMultiSetStatus(GObj *fighter_gobj, s32 input_source)
     s32 stick_range_x;
     s32 stick_range_y = I_CONTROLLER_RANGE_MAX;
 
-    switch (fp->fkind)
+    switch (FT_JUMP_FKIND(fp))
     {
     case nFTKindKirby:
     case nFTKindNKirby:
@@ -248,7 +251,7 @@ void ftCommonJumpAerialMultiSetStatus(GObj *fighter_gobj, s32 input_source)
 
         fp->tap_stick_y = FTINPUT_STICKBUFFER_TICS_MAX;
     }
-    else switch (fp->fkind)
+    else switch (FT_JUMP_FKIND(fp))
     {
     case nFTKindKirby:
     case nFTKindNKirby:
@@ -317,7 +320,7 @@ sb32 ftCommonJumpAerialCheckInterruptCommon(GObj *fighter_gobj)
     {
         return FALSE;
     }
-    else if ((fp->fkind == nFTKindKirby) || (fp->fkind == nFTKindNKirby) || (fp->fkind == nFTKindPurin) || (fp->fkind == nFTKindNPurin))
+    else if ((FT_JUMP_FKIND(fp) == nFTKindKirby) || (fp->fkind == nFTKindNKirby) || (FT_JUMP_FKIND(fp) == nFTKindPurin) || (fp->fkind == nFTKindNPurin))
     {
         if (fp->jumps_used < fp->attr->jumps_max)
         {
@@ -332,7 +335,7 @@ sb32 ftCommonJumpAerialCheckInterruptCommon(GObj *fighter_gobj)
                     return TRUE;
                 }
             }
-            else switch (fp->fkind)
+            else switch (FT_JUMP_FKIND(fp))
             {
             case nFTKindKirby:
             case nFTKindNKirby:

@@ -1,0 +1,19 @@
+/* Generated from remix/native_fighters.json. */
+static const struct { unsigned kind, art; const char *label; } native_remix_ui[] = {
+    {29u, 1u, "FALCO"},
+    {81u, 2u, "DK ULT"},
+    {44u, 2u, "J DK"},
+    {36u, 3u, "J SAMUS"},
+    {51u, 3u, "E SAMUS"},
+    {35u, 5u, "E LINK"},
+    {39u, 5u, "J LINK"},
+    {49u, 6u, "J YOSHI"},
+    {50u, 9u, "J PIKA"},
+    {45u, 9u, "E PIKA"},
+    {42u, 0u, "J MARIO"},
+    {40u, 7u, "J FALCON"},
+    {43u, 4u, "J LUIGI"},
+    {37u, 11u, "J NESS"},
+    {46u, 10u, "J PUFF"},
+    {47u, 10u, "E PUFF"},
+};

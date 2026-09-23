@@ -10,6 +10,7 @@
 #define NATIVE_REMIX_YOSHI_KIND 6u
 #define NATIVE_REMIX_CAPTAIN_KIND 7u
 #define NATIVE_REMIX_PIKACHU_KIND 9u
+#define NATIVE_REMIX_JIGGLYPUFF_KIND 10u
 #define NATIVE_REMIX_NESS_KIND 11u
 #define NATIVE_REMIX_FALCO_KIND 29u
 #define NATIVE_REMIX_DKULT_KIND 81u
@@ -25,6 +26,8 @@
 #define NATIVE_REMIX_JFALCON_KIND 40u
 #define NATIVE_REMIX_JLUIGI_KIND 43u
 #define NATIVE_REMIX_JNESS_KIND 37u
+#define NATIVE_REMIX_JPUFF_KIND 46u
+#define NATIVE_REMIX_EPUFF_KIND 47u
 #define NATIVE_REMIX_VS_CSS_SCENE 16u
 extern volatile unsigned native_remix_selected_fkind[4];
 
@@ -48,12 +51,30 @@ static const NativeRemixVariant native_remix_variants[] = {
     {NATIVE_REMIX_JFALCON_KIND, NATIVE_REMIX_CAPTAIN_KIND},
     {NATIVE_REMIX_JLUIGI_KIND, NATIVE_REMIX_LUIGI_KIND},
     {NATIVE_REMIX_JNESS_KIND, NATIVE_REMIX_NESS_KIND},
+    {NATIVE_REMIX_JPUFF_KIND, NATIVE_REMIX_JIGGLYPUFF_KIND},
+    {NATIVE_REMIX_EPUFF_KIND, NATIVE_REMIX_JIGGLYPUFF_KIND},
 };
 
 static inline unsigned nativeRemixParentKind(unsigned fkind) {
-    for (unsigned i = 0; i < sizeof(native_remix_variants) / sizeof(native_remix_variants[0]); i++)
-        if (native_remix_variants[i].fkind == fkind) return native_remix_variants[i].parent;
-    return fkind;
+    switch (fkind) {
+    case NATIVE_REMIX_FALCO_KIND: return NATIVE_REMIX_FOX_KIND;
+    case NATIVE_REMIX_DKULT_KIND: return NATIVE_REMIX_DONKEY_KIND;
+    case NATIVE_REMIX_JDK_KIND: return NATIVE_REMIX_DONKEY_KIND;
+    case NATIVE_REMIX_JSAMUS_KIND: return NATIVE_REMIX_SAMUS_KIND;
+    case NATIVE_REMIX_ESAMUS_KIND: return NATIVE_REMIX_SAMUS_KIND;
+    case NATIVE_REMIX_ELINK_KIND: return NATIVE_REMIX_LINK_KIND;
+    case NATIVE_REMIX_JLINK_KIND: return NATIVE_REMIX_LINK_KIND;
+    case NATIVE_REMIX_JYOSHI_KIND: return NATIVE_REMIX_YOSHI_KIND;
+    case NATIVE_REMIX_JPIKA_KIND: return NATIVE_REMIX_PIKACHU_KIND;
+    case NATIVE_REMIX_EPIKA_KIND: return NATIVE_REMIX_PIKACHU_KIND;
+    case NATIVE_REMIX_JMARIO_KIND: return NATIVE_REMIX_MARIO_KIND;
+    case NATIVE_REMIX_JFALCON_KIND: return NATIVE_REMIX_CAPTAIN_KIND;
+    case NATIVE_REMIX_JLUIGI_KIND: return NATIVE_REMIX_LUIGI_KIND;
+    case NATIVE_REMIX_JNESS_KIND: return NATIVE_REMIX_NESS_KIND;
+    case NATIVE_REMIX_JPUFF_KIND: return NATIVE_REMIX_JIGGLYPUFF_KIND;
+    case NATIVE_REMIX_EPUFF_KIND: return NATIVE_REMIX_JIGGLYPUFF_KIND;
+    default: return fkind;
+    }
 }
 
 static inline unsigned nativeRemixIsVariant(unsigned fkind) {

@@ -853,6 +853,10 @@ void ftManagerInitFighter(GObj *fighter_gobj, FTDesc *desc)
 
     case nFTKindPurin:
     case nFTKindNPurin:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JPUFF_KIND:
+    case NATIVE_REMIX_EPUFF_KIND:
+#endif
         fp->passive_vars.purin.unk_0x0 = 0;
         break;
 

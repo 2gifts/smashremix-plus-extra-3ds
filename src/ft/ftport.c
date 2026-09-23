@@ -139,6 +139,10 @@ void ftPortVanillaEntryMakeEffect(FTStruct *fp)
 
     case nFTKindPikachu:
     case nFTKindPurin:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JPUFF_KIND:
+    case NATIVE_REMIX_EPUFF_KIND:
+#endif
         efManagerMBallThrownMakeEffect(&fp->entry_pos, fp->status_vars.common.entry.lr);
         break;
 

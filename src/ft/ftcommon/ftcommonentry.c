@@ -100,7 +100,11 @@ void ftCommonAppearUpdateEffects(GObj *fighter_gobj)
 
     if (fp->motion_vars.flags.flag1 != 0)
     {
-        if ((fp->fkind == nFTKindPikachu) || (fp->fkind == nFTKindPurin) || (fp->fkind == nFTKindNPikachu) || (fp->fkind == nFTKindNPurin))
+        if ((fp->fkind == nFTKindPikachu) || (fp->fkind == nFTKindPurin) || (fp->fkind == nFTKindNPikachu) || (fp->fkind == nFTKindNPurin)
+#ifdef SSB_REMIX_PROBE
+            || (nativeRemixParentKind(fp->fkind) == nFTKindPurin)
+#endif
+        )
         {
             efManagerMBallRaysMakeEffect(&fp->entry_pos);
         }
@@ -257,6 +261,10 @@ void ftCommonAppearSetStatus(GObj *fighter_gobj)
 
     case nFTKindPikachu:
     case nFTKindPurin:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JPUFF_KIND:
+    case NATIVE_REMIX_EPUFF_KIND:
+#endif
         efManagerMBallThrownMakeEffect(&fp->entry_pos, fp->status_vars.common.entry.lr);
         break;
 

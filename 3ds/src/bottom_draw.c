@@ -12,6 +12,9 @@ static const uint16_t paper=RGB(244,237,213),gold=RGB(248,198,62),muted=RGB(167,
 static const uint16_t colors[4]={RGB(235,68,63),RGB(75,140,235),RGB(241,190,43),RGB(65,188,105)};
 #define FOX_SLOT_NAME "FOX"
 static const char* names[12]={"MARIO",FOX_SLOT_NAME,"DONKEY KONG","SAMUS","LUIGI","LINK","YOSHI","C. FALCON","KIRBY","PIKACHU","JIGGLYPUFF","NESS"};
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_ui.inc"
+#endif
 static const char* stages[9]={"PEACH'S CASTLE","SECTOR Z","KONGO JUNGLE","PLANET ZEBES","HYRULE CASTLE","YOSHI'S ISLAND","DREAM LAND","SAFFRON CITY","MUSHROOM KINGDOM"};
 typedef struct {uint32_t w,h,offset;} Art;
 typedef struct {uint16_t color;uint8_t alpha,pad;} Pixel;
@@ -88,8 +91,20 @@ static void plate(int x,int y,int w,int h,uint16_t c){
     rect(x,y,w,h,c);rect(x,y,w,1,RGB(127,122,108));rect(x,y,1,h,RGB(98,94,85));
     rect(x+w-1,y+1,1,h-1,RGB(12,12,12));rect(x+1,y+h-1,w-1,1,RGB(8,8,8));
 }
-static unsigned fighterArt(unsigned c){return c==29?1:c==81?2:c==44?2:c==50?9:c==45?9:c==51?3:c==35?5:c==39?5:c==49?6:c==42?0:c==40?7:c==43?4:c==37?11:c==13?0:c==26?2:c>=14&&c<26?c-14:c;}
-static const char* fighterName(unsigned c){return c==29?"FALCO":c==81?"DK ULT":c==44?"J DK":c==50?"J PIKA":c==45?"E PIKA":c==36?"J SAMUS":c==51?"E SAMUS":c==35?"E LINK":c==39?"J LINK":c==49?"J YOSHI":c==42?"J MARIO":c==40?"J FALCON":c==43?"J LUIGI":c==37?"J NESS":c==12?"MASTER HAND":c==13?"METAL MARIO":c==26?"GIANT DK":c>=14&&c<26?"POLYGON":c<12?names[c]:"SELECT";}
+static unsigned fighterArt(unsigned c){
+#ifdef SSB_REMIX_PROBE
+    for(unsigned i=0;i<sizeof(native_remix_ui)/sizeof(native_remix_ui[0]);i++)
+        if(native_remix_ui[i].kind==c)return native_remix_ui[i].art;
+#endif
+    return c==13?0:c==26?2:c>=14&&c<26?c-14:c;
+}
+static const char* fighterName(unsigned c){
+#ifdef SSB_REMIX_PROBE
+    for(unsigned i=0;i<sizeof(native_remix_ui)/sizeof(native_remix_ui[0]);i++)
+        if(native_remix_ui[i].kind==c)return native_remix_ui[i].label;
+#endif
+    return c==12?"MASTER HAND":c==13?"METAL MARIO":c==26?"GIANT DK":c>=14&&c<26?"POLYGON":c<12?names[c]:"SELECT";
+}
 static void background(void){
     if(backdropReady){memcpy(canvas,backdrop,sizeof(backdrop));return;}
     rect(0,0,320,240,RGB(29,29,27));

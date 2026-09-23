@@ -12,6 +12,10 @@ extern float port_widescreen_clip_x_scale(void);
 #endif
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_probe.h"
+#include "native_remix_roster.h"
+#define FT_DISPLAY_IS_PUFF(kind) (nativeRemixParentKind(kind) == nFTKindPurin)
+#else
+#define FT_DISPLAY_IS_PUFF(kind) ((kind) == nFTKindPurin)
 #endif
 
 // // // // // // // // // // // //
@@ -787,7 +791,7 @@ void ftDisplayMainDrawDefault(DObj *dobj)
             case 0:
                 sp58 = gcPrepDObjMatrix(gSYTaskmanDLHeads, dobj);
 
-                if ((parts != NULL) && (parts->gobj != NULL) && (fp->fkind == nFTKindPurin))
+                if ((parts != NULL) && (parts->gobj != NULL) && FT_DISPLAY_IS_PUFF(fp->fkind))
                 {
                     ftDisplayMainDrawAccessory(fp, dobj, parts);
                 }
@@ -827,7 +831,7 @@ void ftDisplayMainDrawDefault(DObj *dobj)
         {
             sp58 = gcPrepDObjMatrix(gSYTaskmanDLHeads, dobj);
 
-            if ((parts != NULL) && (parts->gobj != NULL) && (fp->fkind == nFTKindPurin))
+            if ((parts != NULL) && (parts->gobj != NULL) && FT_DISPLAY_IS_PUFF(fp->fkind))
             {
                 ftDisplayMainDrawAccessory(fp, dobj, parts);
             }

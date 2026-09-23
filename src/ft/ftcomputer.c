@@ -11,10 +11,12 @@
 #define FT_COMPUTER_IS_SAMUS(kind) ((kind) == nFTKindSamus || (kind) == NATIVE_REMIX_ESAMUS_KIND || (kind) == NATIVE_REMIX_JSAMUS_KIND)
 #define FT_COMPUTER_IS_LINK(kind) ((kind) == nFTKindLink || (kind) == NATIVE_REMIX_ELINK_KIND || (kind) == NATIVE_REMIX_JLINK_KIND)
 #define FT_COMPUTER_IS_NESS(kind) ((kind) == nFTKindNess || (kind) == NATIVE_REMIX_JNESS_KIND)
+#define FT_COMPUTER_IS_PUFF(kind) (nativeRemixParentKind(kind) == nFTKindPurin)
 #else
 #define FT_COMPUTER_IS_SAMUS(kind) ((kind) == nFTKindSamus)
 #define FT_COMPUTER_IS_LINK(kind) ((kind) == nFTKindLink)
 #define FT_COMPUTER_IS_NESS(kind) ((kind) == nFTKindNess)
+#define FT_COMPUTER_IS_PUFF(kind) ((kind) == nFTKindPurin)
 #endif
 
 // // // // // // // // // // // //
@@ -4560,7 +4562,7 @@ sb32 ftComputerCheckDetectTarget(FTStruct *this_fp, f32 detect_range_base)
                 default:
                     break;
                 }
-                if ((this_fp->fkind == nFTKindPurin) && (com->input_kind == nFTComputerInputStickSmashHiButtonB) && (syUtilsRandFloat() < 0.9F))
+                if (FT_COMPUTER_IS_PUFF(this_fp->fkind) && (com->input_kind == nFTComputerInputStickSmashHiButtonB) && (syUtilsRandFloat() < 0.9F))
                 {
                     return FALSE;
                 }
@@ -5093,7 +5095,7 @@ void ftComputerFollowObjectiveWalk(FTStruct *fp)
             com->target_pos.y = sp90.y;
         }
     }
-    else if ((fp->ga == nMPKineticsGround) || (fp->physics.vel_air.y < 0.0F) || (fp->fkind == nFTKindKirby) || (fp->fkind == nFTKindPurin))
+    else if ((fp->ga == nMPKineticsGround) || (fp->physics.vel_air.y < 0.0F) || (fp->fkind == nFTKindKirby) || FT_COMPUTER_IS_PUFF(fp->fkind))
     {
         if (fp->joints[nFTPartsJointTopN]->translate.vec.f.x < com->target_pos.x)
         {
@@ -5200,7 +5202,7 @@ void ftComputerFollowObjectiveWalk(FTStruct *fp)
                     }
                     if ((com->objective == nFTComputerObjectiveRecover) && !(com->is_attempt_specialhi_recovery))
                     {
-                        if ((fp->fkind != nFTKindYoshi) && (fp->fkind != nFTKindPurin)
+                        if ((fp->fkind != nFTKindYoshi) && !FT_COMPUTER_IS_PUFF(fp->fkind)
 #ifdef SSB_REMIX_PROBE
                             && (fp->fkind != NATIVE_REMIX_JYOSHI_KIND)
 #endif

@@ -10,7 +10,7 @@ from common import ROOT, BUILD
 from prepare_fighter_probe import Scripts, Reference
 from prepare_reference_audio import Bank, package, repack_sequence_bank, verify_bank
 from test_asset_loader import compiler_path
-from native_fighter_catalog import load_catalog, render_header, render_generic_data, validate_reference, HEADER
+from native_fighter_catalog import load_catalog, render_header, render_ui, render_generic_data, validate_reference, HEADER, UI
 
 
 class WordReference:
@@ -25,15 +25,17 @@ class MotionTests(unittest.TestCase):
     def test_fighter_catalog_generates_roster_and_rejects_unvalidated_ids(self):
         catalog = load_catalog()
         self.assertEqual(HEADER.read_text(), render_header(catalog))
+        self.assertEqual(UI.read_text(), render_ui(catalog))
         generic = [row for row in catalog['fighters'] if row['registration'] == 'generic']
         generated = render_generic_data(catalog)
         self.assertEqual(generated.count('_data.inc"'), len(generic))
         self.assertEqual(generated.count('_relocate_scripts}'), len(generic))
         augmented = json.loads(json.dumps(catalog))
         augmented['fighters'].append({'name': 'TEST', 'fkind': 199, 'parent': 'FOX',
-                                      'registration': 'generic'})
+                                      'label': 'TEST', 'registration': 'generic'})
         self.assertIn('#define NATIVE_REMIX_TEST_KIND 199u', render_header(augmented))
         self.assertIn('#include "test_data.inc"', render_generic_data(augmented))
+        self.assertIn('{199u, 1u, "TEST"}', render_ui(augmented))
         with tempfile.TemporaryDirectory() as dirname:
             path = Path(dirname) / 'catalog.json'
             invalid = json.loads(json.dumps(catalog))
@@ -77,6 +79,10 @@ int main(void) {
     assert(nativeRemixNextKind(NATIVE_REMIX_JYOSHI_KIND, NATIVE_REMIX_JYOSHI_KIND) == 0);
     assert(nativeRemixNextKind(NATIVE_REMIX_NESS_KIND, 0) == NATIVE_REMIX_JNESS_KIND);
     assert(nativeRemixNextKind(NATIVE_REMIX_JNESS_KIND, NATIVE_REMIX_JNESS_KIND) == 0);
+    assert(nativeRemixNextKind(NATIVE_REMIX_JIGGLYPUFF_KIND, 0) == NATIVE_REMIX_JPUFF_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_JPUFF_KIND, NATIVE_REMIX_JPUFF_KIND) == NATIVE_REMIX_EPUFF_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_EPUFF_KIND, NATIVE_REMIX_EPUFF_KIND) == 0);
+    assert(nativeRemixParentKind(NATIVE_REMIX_EPUFF_KIND) == NATIVE_REMIX_JIGGLYPUFF_KIND);
     assert(nativeRemixResolveKind(NATIVE_REMIX_NESS_KIND, NATIVE_REMIX_JNESS_KIND) == NATIVE_REMIX_JNESS_KIND);
     assert(nativeRemixParentKind(NATIVE_REMIX_JNESS_KIND) == NATIVE_REMIX_NESS_KIND);
     assert(nativeRemixNextKind(NATIVE_REMIX_FOX_KIND, NATIVE_REMIX_FALCO_KIND) == 0);

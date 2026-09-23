@@ -8,6 +8,7 @@ from common import ROOT
 
 CATALOG = ROOT / 'remix/native_fighters.json'
 HEADER = ROOT / '3ds/include/native_remix_roster.h'
+UI = ROOT / '3ds/include/native_remix_ui.inc'
 
 
 def load_catalog(path=CATALOG):
@@ -29,6 +30,8 @@ def load_catalog(path=CATALOG):
             raise ValueError(f'Invalid or duplicate fighter ID: {kind}')
         if fighter['parent'] not in parents or fighter['registration'] not in ('generic', 'custom'):
             raise ValueError(f'Invalid parent or registration for {name}')
+        if not re.fullmatch(r'[A-Z0-9 ]{1,16}', fighter['label']):
+            raise ValueError(f'Invalid bottom-screen label for {name}')
         names.add(name)
         ids.add(kind)
     return catalog
@@ -76,9 +79,13 @@ def render_header(catalog):
         '};',
         '',
         'static inline unsigned nativeRemixParentKind(unsigned fkind) {',
-        '    for (unsigned i = 0; i < sizeof(native_remix_variants) / sizeof(native_remix_variants[0]); i++)',
-        '        if (native_remix_variants[i].fkind == fkind) return native_remix_variants[i].parent;',
-        '    return fkind;',
+        '    switch (fkind) {',
+    ]
+    for fighter in catalog['fighters']:
+        lines.append(f"    case NATIVE_REMIX_{fighter['name']}_KIND: return NATIVE_REMIX_{fighter['parent']}_KIND;")
+    lines += [
+        '    default: return fkind;',
+        '    }',
         '}',
         '',
         'static inline unsigned nativeRemixIsVariant(unsigned fkind) {',
@@ -124,17 +131,28 @@ def render_generic_data(catalog):
     return '\n'.join(lines)
 
 
+def render_ui(catalog):
+    lines = ['/* Generated from remix/native_fighters.json. */',
+             'static const struct { unsigned kind, art; const char *label; } native_remix_ui[] = {']
+    for fighter in catalog['fighters']:
+        lines.append(f"    {{{fighter['fkind']}u, {catalog['parents'][fighter['parent']]}u, \"{fighter['label']}\"}},")
+    lines += ['};', '']
+    return '\n'.join(lines)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--check', action='store_true')
     args = ap.parse_args()
     catalog = load_catalog()
     output = render_header(catalog)
+    ui_output = render_ui(catalog)
     if args.check:
-        if HEADER.read_text() != output:
-            raise SystemExit('native_remix_roster.h is stale; run native_fighter_catalog.py')
+        if HEADER.read_text() != output or UI.read_text() != ui_output:
+            raise SystemExit('Generated native fighter tables are stale; run native_fighter_catalog.py')
     else:
         HEADER.write_text(output)
+        UI.write_text(ui_output)
 
 
 if __name__ == '__main__':

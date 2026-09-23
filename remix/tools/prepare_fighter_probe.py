@@ -12,7 +12,7 @@ import struct
 from collections import Counter
 from pathlib import Path
 from common import BUILD, ROOT, checked_sources, sha256, write_json
-from native_fighter_catalog import load_catalog, render_generic_data, render_header, validate_reference, HEADER
+from native_fighter_catalog import load_catalog, render_generic_data, render_header, render_ui, validate_reference, HEADER, UI
 
 
 class Reference:
@@ -180,8 +180,8 @@ def main():
     ref = Reference()
     catalog = load_catalog()
     validate_reference(catalog, BUILD / 'fighter-audit.json', sha256(ref.path))
-    if HEADER.read_text() != render_header(catalog):
-        raise ValueError('Native roster header is stale; run native_fighter_catalog.py')
+    if HEADER.read_text() != render_header(catalog) or UI.read_text() != render_ui(catalog):
+        raise ValueError('Native fighter tables are stale; run native_fighter_catalog.py')
     data = ref.words(ref.symbols['Character.FALCO_character_struct'], 30)
     motion = [ref.words(data[25] + i * 12, 3) for i in range(data[27])]
     menus = [ref.words(data[26] + i * 12, 3) for i in range(ref.words(data[28], 1)[0])]
