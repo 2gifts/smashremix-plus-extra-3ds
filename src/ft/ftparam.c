@@ -2321,7 +2321,11 @@ void* ftParamMakeEffect(GObj *fighter_gobj, s32 effect_id, s32 joint_id, Vec3f *
         break;
 
     case nEFKindYoshiEggEscape:
-        if (fp->fkind == nFTKindYoshi)
+        if (fp->fkind == nFTKindYoshi
+#ifdef SSB_REMIX_PROBE
+            || fp->fkind == NATIVE_REMIX_JYOSHI_KIND
+#endif
+        )
         {
             efManagerYoshiEggEscapeMakeEffect(fighter_gobj);
         }

@@ -88,7 +88,11 @@ void ftCommonCatchWaitSetStatus(GObj *fighter_gobj)
         ftParamSetModelPartID(fighter_gobj, 21, 0);
         ftParamSetModelPartID(fighter_gobj, 19, -1);
     }
-    else if ((fp->fkind == nFTKindYoshi) || (fp->fkind == nFTKindNYoshi))
+    else if ((fp->fkind == nFTKindYoshi) || (fp->fkind == nFTKindNYoshi)
+#ifdef SSB_REMIX_PROBE
+        || (fp->fkind == NATIVE_REMIX_JYOSHI_KIND)
+#endif
+    )
     {
         ftParamSetModelPartID(fighter_gobj, 7, 1);
     }

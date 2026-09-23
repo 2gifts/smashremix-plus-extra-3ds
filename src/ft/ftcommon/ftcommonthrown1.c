@@ -1,4 +1,7 @@
 #include <ft/fighter.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -69,7 +72,11 @@ void ftCommonThrownSetStatusQueue(GObj *fighter_gobj, s32 status_id_new, s32 sta
     ftMainSetStatus(fighter_gobj, status_id_new, 0.0F, 1.0F, FTSTATUS_PRESERVE_NONE);
     ftMainPlayAnimEventsAll(fighter_gobj);
 
-    if ((capture_fp->fkind == nFTKindYoshi) || (capture_fp->fkind == nFTKindNYoshi))
+    if ((capture_fp->fkind == nFTKindYoshi) || (capture_fp->fkind == nFTKindNYoshi)
+#ifdef SSB_REMIX_PROBE
+        || (capture_fp->fkind == NATIVE_REMIX_JYOSHI_KIND)
+#endif
+    )
     {
         this_fp->is_invisible = TRUE;
 
@@ -92,7 +99,11 @@ void ftCommonThrownSetStatusImmediate(GObj *fighter_gobj, s32 status_id)
     ftMainSetStatus(fighter_gobj, status_id, 0.0F, 1.0F, FTSTATUS_PRESERVE_NONE);
     ftMainPlayAnimEventsAll(fighter_gobj);
 
-    if ((capture_fp->fkind == nFTKindYoshi) || (capture_fp->fkind == nFTKindNYoshi))
+    if ((capture_fp->fkind == nFTKindYoshi) || (capture_fp->fkind == nFTKindNYoshi)
+#ifdef SSB_REMIX_PROBE
+        || (capture_fp->fkind == NATIVE_REMIX_JYOSHI_KIND)
+#endif
+    )
     {
         this_fp->is_invisible = TRUE;
 

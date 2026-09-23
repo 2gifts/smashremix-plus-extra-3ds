@@ -1,6 +1,9 @@
 #include <wp/weapon.h>
 #include <ft/fighter.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -176,7 +179,14 @@ sb32 wpYoshiStarProcReflector(GObj *weapon_gobj)
     }
     else offset.x -= WPYOSHISTAR_OFF_X;
     
+#ifdef SSB_REMIX_PROBE
+    WPDesc desc = dWPYoshiStarWeaponDesc;
+    if (ftGetStruct(fighter_gobj)->fkind == NATIVE_REMIX_JYOSHI_KIND)
+        desc.p_weapon = ftGetStruct(fighter_gobj)->data->p_file_main;
+    weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &desc, &offset, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_FIGHTER));
+#else
     weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &dWPYoshiStarWeaponDesc, &offset, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_FIGHTER));
+#endif
 
     if (weapon_gobj == NULL)
     {

@@ -1,4 +1,7 @@
 #include <ft/fighter.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -50,7 +53,11 @@ void ftCommonCaptureWaitSetStatus(GObj *fighter_gobj)
 
     ftMainSetStatus(fighter_gobj, nFTCommonStatusCaptureWait, 0.0F, 1.0F, (FTSTATUS_PRESERVE_TEXTUREPART | FTSTATUS_PRESERVE_MODELPART));
 
-    if ((capture_fp->fkind == nFTKindYoshi) || (capture_fp->fkind == nFTKindNYoshi))
+    if ((capture_fp->fkind == nFTKindYoshi) || (capture_fp->fkind == nFTKindNYoshi)
+#ifdef SSB_REMIX_PROBE
+        || (capture_fp->fkind == NATIVE_REMIX_JYOSHI_KIND)
+#endif
+    )
     {
         this_fp->is_invisible = TRUE;
 

@@ -1,4 +1,7 @@
 #include <ft/fighter.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -21,7 +24,11 @@ void ftCommonEscapeProcUpdate(GObj *fighter_gobj)
         fp->physics.vel_air.x = fp->physics.vel_air.y = fp->physics.vel_air.z = 0.0F;
         fp->physics.vel_ground.x = fp->physics.vel_ground.y = fp->physics.vel_ground.z = 0.0F;
 
-        if ((fp->fkind != nFTKindYoshi) && (fp->fkind != nFTKindNYoshi) || (ftCommonGuardCheckInterruptEscape(fighter_gobj) == FALSE))
+        if (((fp->fkind != nFTKindYoshi) && (fp->fkind != nFTKindNYoshi)
+#ifdef SSB_REMIX_PROBE
+            && (fp->fkind != NATIVE_REMIX_JYOSHI_KIND)
+#endif
+            ) || (ftCommonGuardCheckInterruptEscape(fighter_gobj) == FALSE))
         {
             ftCommonWaitSetStatus(fighter_gobj);
         }

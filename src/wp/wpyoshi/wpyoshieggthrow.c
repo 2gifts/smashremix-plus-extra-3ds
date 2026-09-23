@@ -1,6 +1,9 @@
 #include <wp/weapon.h>
 #include <ft/fighter.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 #ifdef PORT
 extern void *func_800269C0_275C0(u16 id);
 #endif
@@ -262,7 +265,13 @@ void wpYoshiEggThrowProcDisplay(GObj *weapon_gobj)
 GObj* wpYoshiEggThrowMakeWeapon(GObj *fighter_gobj, Vec3f *pos)
 {
     FTStruct *fp = ftGetStruct(fighter_gobj);
+#ifdef SSB_REMIX_PROBE
+    WPDesc desc = dWPYoshiEggThrowWeaponDesc;
+    if (fp->fkind == NATIVE_REMIX_JYOSHI_KIND) desc.p_weapon = fp->data->p_file_main;
+    GObj *weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &desc, pos, WEAPON_FLAG_PARENT_FIGHTER);
+#else
     GObj *weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &dWPYoshiEggThrowWeaponDesc, pos, WEAPON_FLAG_PARENT_FIGHTER);
+#endif
     WPStruct *wp;
 
     if (weapon_gobj == NULL)

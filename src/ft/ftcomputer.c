@@ -4129,6 +4129,9 @@ sb32 ftComputerCheckDetectTarget(FTStruct *this_fp, f32 detect_range_base)
                 }
                 /* fallthrough */
             case nFTKindYoshi:
+#ifdef SSB_REMIX_PROBE
+            case NATIVE_REMIX_JYOSHI_KIND:
+#endif
             case nFTKindCaptain:
             case nFTKindNYoshi:
             case nFTKindNCaptain:
@@ -5189,7 +5192,11 @@ void ftComputerFollowObjectiveWalk(FTStruct *fp)
                     }
                     if ((com->objective == nFTComputerObjectiveRecover) && !(com->is_attempt_specialhi_recovery))
                     {
-                        if ((fp->fkind != nFTKindYoshi) && (fp->fkind != nFTKindPurin))
+                        if ((fp->fkind != nFTKindYoshi) && (fp->fkind != nFTKindPurin)
+#ifdef SSB_REMIX_PROBE
+                            && (fp->fkind != NATIVE_REMIX_JYOSHI_KIND)
+#endif
+                        )
                         {
                             if
                             (

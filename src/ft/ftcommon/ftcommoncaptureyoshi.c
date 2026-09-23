@@ -1,5 +1,8 @@
 #include <ft/fighter.h>
 #include <it/item.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 #ifdef PORT
 extern void *func_800269C0_275C0(u16 id);
 #include "fighter_registry.h"
@@ -347,7 +350,13 @@ void ftCommonYoshiEggProcStatus(GObj *fighter_gobj)
 {
     FTStruct *fp = ftGetStruct(fighter_gobj);
 
+#ifdef SSB_REMIX_PROBE
+    FTStruct *captor = (fp->capture_gobj != NULL) ? ftGetStruct(fp->capture_gobj) : NULL;
+    fp->status_vars.common.captureyoshi.breakout_wait =
+        (captor != NULL && captor->fkind == NATIVE_REMIX_JYOSHI_KIND) ? 210 : FTCOMMON_YOSHIEGG_ESCAPE_WAIT_MAX;
+#else
     fp->status_vars.common.captureyoshi.breakout_wait = FTCOMMON_YOSHIEGG_ESCAPE_WAIT_MAX;
+#endif
 
     fp->motion_vars.flags.flag0 = 0;
 }
@@ -371,11 +380,15 @@ void ftCommonYoshiEggSetStatus(GObj *fighter_gobj)
     this_fp->is_invisible = TRUE;
 
     ftCommonYoshiEggSetDamageCollCollisions(fighter_gobj);
+    capture_fp = ftGetStruct(this_fp->capture_gobj);
+#ifdef SSB_REMIX_PROBE
+    ftCommonCaptureTrappedInitBreakoutVars(this_fp,
+        capture_fp->fkind == NATIVE_REMIX_JYOSHI_KIND ? 630 : FTCOMMON_YOSHIEGG_BREAKOUT_INPUTS_MIN);
+#else
     ftCommonCaptureTrappedInitBreakoutVars(this_fp, FTCOMMON_YOSHIEGG_BREAKOUT_INPUTS_MIN);
+#endif
     ftKirbySpecialNApplyCaptureDamage(this_fp->capture_gobj, fighter_gobj, 5); // Br0h why
     ftParamSetPlayerTagWait(fighter_gobj, 1);
-
-    capture_fp = ftGetStruct(this_fp->capture_gobj);
 
     DObjGetStruct(fighter_gobj)->translate.vec.f = DObjGetStruct(this_fp->capture_gobj)->translate.vec.f;
 

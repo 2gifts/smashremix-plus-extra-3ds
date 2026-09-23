@@ -125,6 +125,9 @@ void ftPortVanillaEntryMakeEffect(FTStruct *fp)
         break;
 
     case nFTKindYoshi:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JYOSHI_KIND:
+#endif
         efManagerYoshiEntryEggMakeEffect(&fp->entry_pos);
         break;
 

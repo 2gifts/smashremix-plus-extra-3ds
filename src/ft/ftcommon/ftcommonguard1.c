@@ -1,6 +1,12 @@
 #include <ft/fighter.h>
 #include <ef/efmanager.h>
 #include <ft/ftcommon/ftcommonfunctions.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#define FT_GUARD_IS_YOSHI(fp) ((fp)->fkind == nFTKindYoshi || (fp)->fkind == NATIVE_REMIX_JYOSHI_KIND)
+#else
+#define FT_GUARD_IS_YOSHI(fp) ((fp)->fkind == nFTKindYoshi)
+#endif
 extern void *func_800269C0_275C0(u16 id);
 
 // // // // // // // // // // // //
@@ -103,7 +109,7 @@ void ftCommonGuardUpdateShieldVars(GObj *fighter_gobj)
         if ((fp->status_vars.common.guard.release_lag == 0) && (fp->status_vars.common.guard.is_release != FALSE))
         {
         lag_end:
-            if (fp->fkind == nFTKindYoshi)
+            if (FT_GUARD_IS_YOSHI(fp))
             {
                 ftParamResetModelPartAll(fighter_gobj);
                 ftCommonGuardOffSetHitStatusYoshi(fighter_gobj);
@@ -131,7 +137,7 @@ void ftCommonGuardUpdateShieldCollision(FTStruct *fp)
     f32 scale_final;
     f32 scale_mul;
 
-    if (fp->fkind == nFTKindYoshi)
+    if (FT_GUARD_IS_YOSHI(fp))
     {
         scale_mul = 1.0F;
     }
@@ -412,7 +418,7 @@ void ftCommonGuardOnProcUpdate(GObj *fighter_gobj)
         {
             if (fp->status_vars.common.guard.is_release != FALSE)
             {
-                if (fp->fkind == nFTKindYoshi)
+                if (FT_GUARD_IS_YOSHI(fp))
                 {
                     ftCommonGuardOffSetHitStatusYoshi(fighter_gobj);
                 }
@@ -420,7 +426,7 @@ void ftCommonGuardOnProcUpdate(GObj *fighter_gobj)
             }
             else
             {
-                if (fp->fkind == nFTKindYoshi)
+                if (FT_GUARD_IS_YOSHI(fp))
                 {
                     fp->status_vars.common.guard.effect_gobj = efManagerYoshiShieldMakeEffect(fighter_gobj);
 
@@ -457,7 +463,7 @@ void ftCommonGuardOnSetStatus(GObj *fighter_gobj, s32 slide_tics)
 
     if (fp->shield_health != 0)
     {
-        if (fp->fkind == nFTKindYoshi)
+        if (FT_GUARD_IS_YOSHI(fp))
         {
             ftCommonGuardOnSetHitStatusYoshi(fighter_gobj);
         }

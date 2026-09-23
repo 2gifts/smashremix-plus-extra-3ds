@@ -33,6 +33,8 @@ int main(void) {
     assert(nativeRemixNextKind(NATIVE_REMIX_ESAMUS_KIND, NATIVE_REMIX_ESAMUS_KIND) == 0);
     assert(nativeRemixNextKind(NATIVE_REMIX_LINK_KIND, 0) == NATIVE_REMIX_ELINK_KIND);
     assert(nativeRemixNextKind(NATIVE_REMIX_ELINK_KIND, NATIVE_REMIX_ELINK_KIND) == 0);
+    assert(nativeRemixNextKind(NATIVE_REMIX_YOSHI_KIND, 0) == NATIVE_REMIX_JYOSHI_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_JYOSHI_KIND, NATIVE_REMIX_JYOSHI_KIND) == 0);
     assert(nativeRemixNextKind(NATIVE_REMIX_FOX_KIND, NATIVE_REMIX_FALCO_KIND) == 0);
     assert(nativeRemixNextKind(999, 0) == 0);
     assert(nativeRemixResolveKind(NATIVE_REMIX_DONKEY_KIND, NATIVE_REMIX_JDK_KIND) == NATIVE_REMIX_JDK_KIND);
@@ -42,6 +44,7 @@ int main(void) {
     assert(nativeRemixParentKind(NATIVE_REMIX_JMARIO_KIND) == NATIVE_REMIX_MARIO_KIND);
     assert(nativeRemixParentKind(NATIVE_REMIX_ESAMUS_KIND) == NATIVE_REMIX_SAMUS_KIND);
     assert(nativeRemixParentKind(NATIVE_REMIX_ELINK_KIND) == NATIVE_REMIX_LINK_KIND);
+    assert(nativeRemixParentKind(NATIVE_REMIX_JYOSHI_KIND) == NATIVE_REMIX_YOSHI_KIND);
     assert(nativeRemixIsVariant(NATIVE_REMIX_EPIKA_KIND));
     assert(!nativeRemixIsVariant(NATIVE_REMIX_PIKACHU_KIND));
     return 0;
@@ -150,6 +153,7 @@ int main(void) {
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_EPIKA_KIND) == nFTKindPikachu);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_ESAMUS_KIND) == nFTKindSamus);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_ELINK_KIND) == nFTKindLink);
+    assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JYOSHI_KIND) == nFTKindYoshi);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JMARIO_KIND) == nFTKindMario);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JFALCON_KIND) == nFTKindCaptain);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JLUIGI_KIND) == nFTKindLuigi);
@@ -189,6 +193,9 @@ int main(void) {
         link_source = (ROOT / '3ds/src/remix_elink_probe.c').read_text()
         link_start = link_source.index('int nativeRemixELinkIsAnimation(')
         link_function = link_source[link_start:link_source.index('\n}', link_start) + 2]
+        yoshi_source = (ROOT / '3ds/src/remix_jyoshi_probe.c').read_text()
+        yoshi_start = yoshi_source.index('int nativeRemixJYoshiIsAnimation(')
+        yoshi_function = yoshi_source[yoshi_start:yoshi_source.index('\n}', yoshi_start) + 2]
         mario_source = (ROOT / '3ds/src/remix_jmario_probe.c').read_text()
         mario_start = mario_source.index('int nativeRemixJMarioIsAnimation(')
         mario_function = mario_source[mario_start:mario_source.index('\n}', mario_start) + 2]
@@ -217,6 +224,8 @@ static Motion remix_esamus_main_motions[]={{0,{0}},{31,{0}},{32,{8}}};
 static Motion remix_esamus_menu_motions[]={{0,{0}},{33,{0}}};
 static Motion remix_elink_main_motions[]={{0,{0}},{34,{0}},{35,{8}}};
 static Motion remix_elink_menu_motions[]={{0,{0}},{36,{0}}};
+static Motion remix_jyoshi_main_motions[]={{0,{0}},{37,{0}},{38,{8}}};
+static Motion remix_jyoshi_menu_motions[]={{0,{0}},{39,{0}}};
 static Motion remix_jmario_main_motions[]={{0,{0}},{16,{0}},{17,{8}}};
 static Motion remix_jmario_menu_motions[]={{0,{0}},{18,{0}}};
 static Motion remix_jfalcon_main_motions[]={{0,{0}},{19,{0}},{20,{8}}};
@@ -229,7 +238,7 @@ static Motion remix_jdk_menu_motions[]={{0,{0}},{27,{0}}};
         for line in (ROOT / 'src/ft/ftdef.h').read_text().splitlines():
             if line.startswith('#define FTANIM_FLAG_ANIMJOINT ') or line.startswith('#define FTANIM_FLAG_SHIELDPOSE '):
                 fixture += line + '\n'
-        fixture += dk_function + '\n' + jp_function + '\n' + ep_function + '\n' + es_function + '\n' + link_function + '\n' + mario_function + '\n' + falcon_function + '\n' + luigi_function + '\n' + jdk_function + '\n' + function + '''
+        fixture += dk_function + '\n' + jp_function + '\n' + ep_function + '\n' + es_function + '\n' + link_function + '\n' + yoshi_function + '\n' + mario_function + '\n' + falcon_function + '\n' + luigi_function + '\n' + jdk_function + '\n' + function + '''
 int main(){
     assert(!nativeRelocIsFighterAnimation(0));
     assert(nativeRelocIsFighterAnimation(4));
@@ -265,11 +274,15 @@ int main(){
     assert(nativeRelocIsFighterAnimation(34));
     assert(!nativeRelocIsFighterAnimation(35));
     assert(nativeRelocIsFighterAnimation(36));
+    assert(nativeRelocIsFighterAnimation(37));
+    assert(!nativeRelocIsFighterAnimation(38));
+    assert(nativeRelocIsFighterAnimation(39));
     assert(!nativeRemixDKUltIsAnimation(0));
     assert(!nativeRemixJPikaIsAnimation(0));
     assert(!nativeRemixEPikaIsAnimation(0));
     assert(!nativeRemixESamusIsAnimation(0));
     assert(!nativeRemixELinkIsAnimation(0));
+    assert(!nativeRemixJYoshiIsAnimation(0));
     assert(!nativeRemixJMarioIsAnimation(0));
     assert(!nativeRemixJFalconIsAnimation(0));
     assert(!nativeRemixJLuigiIsAnimation(0));

@@ -1,4 +1,7 @@
 #include <ft/fighter.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 #include <sc/scene.h>
 #ifdef PORT
 extern void *func_800269C0_275C0(u16 id);
@@ -51,7 +54,11 @@ void ftCommonShieldBreakFlyCommonSetStatus(GObj *fighter_gobj)
 
     gmCollisionGetFighterPartsWorldPosition(fp->joints[nFTPartsJointYRotN], &offset);
 
-    if (fp->fkind == nFTKindYoshi)
+    if (fp->fkind == nFTKindYoshi
+#ifdef SSB_REMIX_PROBE
+        || fp->fkind == NATIVE_REMIX_JYOSHI_KIND
+#endif
+    )
     {
         efManagerYoshiEggExplodeMakeEffect(&DObjGetStruct(fighter_gobj)->translate.vec.f);
         efManagerEggBreakMakeEffect(&DObjGetStruct(fighter_gobj)->translate.vec.f);

@@ -1,4 +1,7 @@
 #include <ft/fighter.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 #ifdef PORT
 #include <ef/efmanager.h>
 extern void *func_800269C0_275C0(u16 id);
@@ -20,7 +23,11 @@ void ftCommonGuardSetStatusFromEscape(GObj *fighter_gobj)
 
     if (fp->shield_health != 0)
     {
-        if (fp->fkind == nFTKindYoshi)
+        if (fp->fkind == nFTKindYoshi
+#ifdef SSB_REMIX_PROBE
+            || fp->fkind == NATIVE_REMIX_JYOSHI_KIND
+#endif
+        )
         {
             fp->status_vars.common.guard.effect_gobj = efManagerYoshiShieldMakeEffect(fighter_gobj);
 

@@ -1,4 +1,7 @@
 #include <ft/fighter.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 #ifdef PORT
 #include <enhancements/enhancements.h>
@@ -138,10 +141,18 @@ void ftCommonJumpAerialSetStatus(GObj *fighter_gobj, s32 input_source)
 
     ftMainSetStatus(fighter_gobj, status_id, 0.0F, 1.0F, FTSTATUS_PRESERVE_PLAYERTAG);
 
-    if ((fp->fkind == nFTKindYoshi) || (fp->fkind == nFTKindNYoshi))
+    if ((fp->fkind == nFTKindYoshi) || (fp->fkind == nFTKindNYoshi)
+#ifdef SSB_REMIX_PROBE
+        || (fp->fkind == NATIVE_REMIX_JYOSHI_KIND)
+#endif
+    )
     {
         fp->proc_physics = ftYoshiJumpAerialProcPhysics;
+#ifdef SSB_REMIX_PROBE
+        fp->knockback_resist_status = (fp->fkind == NATIVE_REMIX_JYOSHI_KIND) ? 110.0F : FTYOSHI_JUMPAERIAL_KNOCKBACK_RESIST;
+#else
         fp->knockback_resist_status = FTYOSHI_JUMPAERIAL_KNOCKBACK_RESIST;
+#endif
     }
     else if ((fp->fkind == nFTKindNess) || (fp->fkind == nFTKindNNess))
     {
@@ -173,7 +184,11 @@ void ftCommonJumpAerialSetStatus(GObj *fighter_gobj, s32 input_source)
 
     fp->is_special_interrupt = TRUE;
 
-    if (((fp->fkind == nFTKindYoshi) || (fp->fkind == nFTKindNYoshi)) && ((fp->input.pl.stick_range.x * fp->lr) < FTCOMMON_JUMPAERIAL_TURN_STICK_RANGE_MIN))
+    if (((fp->fkind == nFTKindYoshi) || (fp->fkind == nFTKindNYoshi)
+#ifdef SSB_REMIX_PROBE
+        || (fp->fkind == NATIVE_REMIX_JYOSHI_KIND)
+#endif
+        ) && ((fp->input.pl.stick_range.x * fp->lr) < FTCOMMON_JUMPAERIAL_TURN_STICK_RANGE_MIN))
     {
         fp->status_vars.common.jumpaerial.turn_tics = FTCOMMON_JUMPAERIAL_TURN_FRAMES;
     }
