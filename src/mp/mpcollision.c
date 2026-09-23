@@ -5,6 +5,11 @@
 #include <sys/audio.h>
 #include <sys/debug.h>
 
+#ifdef SSB_REMIX_PROBE
+#include <native_remix_stages.h>
+#include <stdlib.h>
+#endif
+
 #ifdef PORT
 extern void portFixupStructU16(void *base, unsigned int byte_offset, unsigned int num_words);
 extern void portFixupStructU32(void *base, unsigned int byte_offset, unsigned int num_words);
@@ -4109,27 +4114,47 @@ void mpCollisionFixGroundDataLayout(MPGroundData *ground_data)
 void mpCollisionInitGroundData(void)
 {
     MPGeometryData *gdata;
+    GRFileInfo stage_file;
+
+#ifdef SSB_REMIX_PROBE
+    if ((unsigned)gSCManagerBattleState->gkind >=
+        sizeof(dMPCollisionGroundFileInfos) / sizeof(dMPCollisionGroundFileInfos[0]))
+    {
+        const NativeRemixStageRecord *stage = nativeRemixStageGet(gSCManagerBattleState->gkind);
+        if (stage == NULL)
+        {
+            port_log("[ground] unsupported stage ID %d\n", gSCManagerBattleState->gkind);
+            abort();
+        }
+        stage_file.file_id = stage->header_file_id;
+        stage_file.offset = stage->header_offset;
+    }
+    else
+#endif
+    {
+        stage_file = dMPCollisionGroundFileInfos[gSCManagerBattleState->gkind];
+    }
 
     gMPCollisionGroundData = lbRelocGetFileData
     (
         MPGroundData*,
         lbRelocGetExternHeapFile
         (
-            dMPCollisionGroundFileInfos[gSCManagerBattleState->gkind].file_id,
+            stage_file.file_id,
             syTaskmanMalloc
             (
-                lbRelocGetFileSize(dMPCollisionGroundFileInfos[gSCManagerBattleState->gkind].file_id),
+                lbRelocGetFileSize(stage_file.file_id),
                 0x10
             )
         ),
-        dMPCollisionGroundFileInfos[gSCManagerBattleState->gkind].offset
+        stage_file.offset
     );
 #ifdef PORT
     port_log("[ground] InitGroundData scene=%d gkind=%d file_id=%d offset=0x%x gd=%p",
         gSCManagerSceneData.scene_curr,
         gSCManagerBattleState->gkind,
-        dMPCollisionGroundFileInfos[gSCManagerBattleState->gkind].file_id,
-        (unsigned)dMPCollisionGroundFileInfos[gSCManagerBattleState->gkind].offset,
+        (int)stage_file.file_id,
+        (unsigned)stage_file.offset,
         (void*)gMPCollisionGroundData);
 #endif
 
@@ -4274,10 +4299,27 @@ void mpCollisionInitGroundData(void)
     mpCollisionFixGroundDataLayout(gMPCollisionGroundData);
 }
 
+#ifdef SSB_REMIX_PROBE
+static u32 mpCollisionGetCompiledStageBGM(void)
+{
+    const NativeRemixStageRecord *stage = nativeRemixStageGet(gSCManagerBattleState->gkind);
+
+    if (stage != NULL && stage->default_music_plus_one != 0)
+    {
+        return stage->default_music_plus_one - 1;
+    }
+    return gMPCollisionGroundData->bgm_id;
+}
+#endif
+
 // 0x800FC3E8
 void mpCollisionSetPlayBGM(void)
 {
+#ifdef SSB_REMIX_PROBE
+    gMPCollisionBGMDefault = mpCollisionGetCompiledStageBGM();
+#else
     gMPCollisionBGMDefault = gMPCollisionGroundData->bgm_id;
+#endif
 
     syAudioPlayBGM(0, gMPCollisionBGMDefault);
 
@@ -4287,7 +4329,11 @@ void mpCollisionSetPlayBGM(void)
 // 0x800FC42C
 void mpCollisionSetBGM(void)
 {
+#ifdef SSB_REMIX_PROBE
+    gMPCollisionBGMCurrent = gMPCollisionBGMDefault = mpCollisionGetCompiledStageBGM();
+#else
     gMPCollisionBGMCurrent = gMPCollisionBGMDefault = gMPCollisionGroundData->bgm_id;
+#endif
 }
 
 // 0x800FC450

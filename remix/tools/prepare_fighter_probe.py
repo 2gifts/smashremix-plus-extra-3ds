@@ -27,6 +27,7 @@ from classify_action_callbacks import classify as classify_action_callbacks
 from native_transition_templates import write_native_transitions
 from native_variant_metadata import write_variant_metadata
 from native_anim_end_templates import write_native_anim_ends
+from native_stage_tables import write_stage_tables
 
 
 class Reference:
@@ -272,6 +273,8 @@ def main():
         vanilla = battleship.parents[1] / 'assets'
     base = (vanilla / 'reloc.pak').read_bytes()
     expansion = (BUILD / 'assets/reloc.reference.pak').read_bytes()
+    from prepare_reference_audio import main as prepare_audio
+    prepare_audio()
     manifest = json.loads((BUILD / 'assets/manifest.json').read_text())
     if sha256(BUILD / 'assets/reloc.reference.pak') != manifest['summary']['pack_sha256']:
         raise ValueError('Reference pack hash mismatch')
@@ -289,6 +292,9 @@ def main():
     rows += [(record[0], record[1], record[2]) for record in generic.values()]
     for fid in [fid for fighter_data, fighter_motion, fighter_menus in rows
                 for fid in fighter_data[:9] + [row[0] for row in fighter_motion + fighter_menus]]:
+        add(fid)
+    stage_report = write_stage_tables(ref, manifest, out)
+    for fid in stage_report['required_stage_files']:
         add(fid)
     # The mod extends the shared results announcer file with the ampersand
     # glyph used by Banjo's compiled winner string.
@@ -317,8 +323,6 @@ def main():
     (assets / 'reloc.pak').write_bytes(pack)
     for name in ('audio', 'particles'):
         shutil.copytree(vanilla / name, assets / name, dirs_exist_ok=True)
-    from prepare_reference_audio import main as prepare_audio
-    prepare_audio()
     if json.loads((BUILD / 'audio/manifest.json').read_text())['fgm_microcode_count'] != winner_voices['fgm_microcode_count']:
         raise ValueError('Winner voice IDs and native audio package disagree')
     if crowd_chants['fgm_microcode_count'] != winner_voices['fgm_microcode_count']:
@@ -346,6 +350,8 @@ def main():
         'jpika_script_pointers': len(jp_scripts.pointers),
         **metrics,
         'required_files': sorted(required), 'unresolved_relocations': bad,
+        'compiled_stage_rows': stage_report['stage_count'],
+        'required_stage_files': len(stage_report['required_stage_files']),
         'pack_sha256': sha256(assets / 'reloc.pak'),
     })
     print(f"{len(catalog['fighters'])} fighters: {sum(len(row[1]) for row in rows)} actions, {len(required)} validated assets")

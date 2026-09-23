@@ -2,6 +2,10 @@
 #include <sc/scene.h>
 #include <sc/sc1pmode/sc1pgameboss.h>
 
+#ifdef SSB_REMIX_PROBE
+#include <native_remix_stages.h>
+#endif
+
 #ifdef PORT
 #include <stdbool.h>
 #include <stdint.h>
@@ -365,6 +369,14 @@ void grWallpaperMakeDecideKind(void)
         sc1PTrainingModeLoadWallpaper();
         grWallpaperMakeStatic();
     }
+#ifdef SSB_REMIX_PROBE
+    else if (gSCManagerBattleState->gkind > nGRKindBonus2End &&
+             nativeRemixStageGet(gSCManagerBattleState->gkind) != NULL &&
+             nativeRemixStageGet(gSCManagerBattleState->gkind)->stage_class == 0)
+    {
+        grWallpaperMakeCommon();
+    }
+#endif
     else if (gSCManagerBattleState->gkind >= nGRKindBonusStageStart)
     {
         grWallpaperMakeStatic();

@@ -80,6 +80,8 @@ The projectile importer also recognizes the pinned `Fireball.add_to_character` m
 
 `remix/build/native-patch-worklist.json` groups every changed table across the roster, marks exactly which fighters have a native importer for that table, and lists the remaining table families to review per fighter. Use it with `action-callback-worklist.json` to choose the next shared native subsystem by impact. The worklist is a coverage report, not a claim that a fighter is playable.
 
+`remix/tools/native_stage_tables.py` takes the same compiled-ROM approach for stages. It derives the 233-row count from three independent table boundaries, cross-checks original stage headers and setup pointers against the unmodified ROM, and imports every stage header, setup classification, class, default music override, and alternate track list in one pass. The development asset pack adds each stage header's transitive file dependencies after rejecting unresolved relocations. The native runtime accepts only no-hazard clones and original setup functions; an expansion-owned setup function fails closed until its behavior is translated. A private `--stage-id` Azahar option can exercise a compiled stage without claiming that the original stage-select menu exposes it. Default music overrides use the compiled track ID; alternate track selection still needs porting.
+
 For the pinned reference, the table manifest covers 70 per-fighter tables. `sound_type_J` is a separate hit-sound table, so it is excluded from the per-fighter extractor. The original-address resolver finds 119 of 123 distinct non-null vanilla callback targets used by modified or added actions; it skips conflicting decomp address comments and functions whose C signature is incompatible with a status callback.
 
 For a validated fighter, add one record to [`remix/native_fighters.json`](../remix/native_fighters.json), with its reference fighter ID, vanilla parent, and `registration` set to `generic` when its compiled action callbacks all have native bindings. The shared importer generates its action-table delta, including added statuses; a separate fighter-specific registrar is unnecessary. This catalog is a release gate after shared patch families and move behavior are implemented and emulator-tested. Keep `custom` for fighters with native behavior outside the shared registrar. Run:
@@ -87,6 +89,7 @@ For a validated fighter, add one record to [`remix/native_fighters.json`](../rem
 ```powershell
 remix/.venv/Scripts/python.exe remix/tools/native_fighter_catalog.py
 remix/.venv/Scripts/python.exe remix/tools/test_fighter_import.py
+remix/.venv/Scripts/python.exe -m unittest discover -s remix/tools -p test_native_stage_tables.py
 remix/.venv/Scripts/python.exe remix/tools/build_fighter_probe.py
 ```
 

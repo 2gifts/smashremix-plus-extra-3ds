@@ -855,6 +855,29 @@
     "azahar_stereo_drl_regression_frame": 5146,
     "scope": "The offline MIPS decoder accepts status-only animation-end transitions when their arguments, optional animation playback, and return path are fully modeled. It generated two Dedede and one Meta Knight callback without fighter-specific bindings. Their fighters remain outside the development roster, so the stereo Dr. Luigi match is a regression check, not gameplay validation for these moves."
   },
+  "compiled_stage_table_import": {
+    "reference_stage_rows": 233,
+    "extra_stage_rows": 17,
+    "validated_stage_asset_files": 618,
+    "added_rows_with_native_compatible_setup": 125,
+    "added_rows_with_unported_setup": 66,
+    "added_rows_without_header": 1,
+    "host_stage_import_tests_passed": 2,
+    "development_cia_sha256": "2cad04682f5a5813cfb964d2a15a175fa805aae367ff0128178697655c23dd64",
+    "development_cxi_sha256": "c052afc89587756155d58051f315a18b45a2b28812fefa3118acd70cee48ad4f",
+    "development_elf_sha256": "453ceb45a100e027080c7bf2357a4b552506f026a8b09344130b856ed9a9708e",
+    "azahar_stereo_stage_41": {
+      "active_match_frame": 2041,
+      "compiled_default_bgm_id": 49,
+      "results_scene_frame": 6319,
+      "results_scene_cxi_sha256": "3fb5b7912f871b1d6d93c269bfbd8c17d23ba8b7e6ac386beae054971bacec1a"
+    },
+    "azahar_stereo_extra_stage_219": {
+      "active_match_frame": 2007,
+      "compiled_default_bgm_id": 183
+    },
+    "scope": "Three independent assembled-table spans agree on 233 stages. Original file and setup rows match the base ROM, and every packaged stage dependency has a resolved relocation. The private Azahar hook loaded one Remix and one +EXTRA stage in stereo, selected their compiled default tracks, and the Remix stage reached results. The original stage selector, alternate music, custom hazard routines, and the other imported stages remain unverified or unported. This is a development CIA, not a complete mod release."
+  },
   "compiled_extra_autolink_hook": {
     "host_math_and_branch_cases_passed": true,
     "n64_to_arm_field_offsets_checked": true,

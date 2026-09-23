@@ -54,6 +54,8 @@ def main():
     parser.add_argument('--through-results', action='store_true')
     parser.add_argument('--expect-j-hit', action='store_true',
                         help='Require a Japanese hit sound selected during combat')
+    parser.add_argument('--stage-id', type=int,
+                        help='Test a compiled Remix stage through the private VS override')
     args = parser.parse_args()
     name = args.name.upper()
     catalog = {row['name']: row for row in load_catalog()['fighters']}
@@ -61,6 +63,14 @@ def main():
         parser.error(f'{name} is not in the development fighter catalog')
     row = next(row for row in json.loads((BUILD / 'fighter-audit.json').read_text())['fighters']
                if row['name'] == name)
+    stage = None
+    if args.stage_id is not None:
+        stages = json.loads((BUILD / 'native-stage-tables.json').read_text())['compiled_rows']
+        if not 41 <= args.stage_id < len(stages):
+            parser.error('Stage ID is outside the added-stage range')
+        stage = stages[args.stage_id]
+        if not stage['header_file_id'] or stage['setup_kind'] == 255:
+            parser.error('This stage has no native header or has an unported setup routine')
     expected_kind, expected_file = row['fkind'], row['files'][0]
     (players, stride, kind, gobj_off, user_off, fighter_kind, status_off,
      data_off, main_off, action_stride, *callback_offsets) = offsets()
@@ -103,13 +113,16 @@ def main():
         f'{a} {b} {keys:x} {x} {y}\n' for a, b, keys, x, y in actions))
     seen_match = False
     actions_verified = False
+    stage_capture_armed = False
     j_hits_observed = set()
     statuses = set()
     result = None
+    stage_bgm_id = None
     try:
         emulator.stop()
+        capture_started = time.time()
         emulator.launch('falco-test', stereo=1, frames=0, binary_override=BINARY,
-                        no_captures=True)
+                        no_captures=True, single_stage=args.stage_id)
         deadline = time.monotonic() + (300 if args.through_results else 180)
         while time.monotonic() < deadline:
             time.sleep(1.5)
@@ -143,6 +156,7 @@ def main():
                                                       hex(actual), hex(expected)))
                         actions_verified = True
                     battle = struct.unpack('<I', read(symbols['gSCManagerBattleState'], 4))[0]
+                    actual_stage = read(battle + 1, 1)[0]
                     player = battle + players
                     selected = read(player + kind, 1)[0]
                     gobj = struct.unpack('<I', read(player + gobj_off, 4))[0]
@@ -154,11 +168,26 @@ def main():
                         main_file = struct.unpack('<I', read(data + main_off, 4))[0] if data else None
                     else:
                         live_kind = status = main_file = None
-                    if selected == live_kind == expected_kind and main_file == expected_file:
+                    if (selected == live_kind == expected_kind and
+                            main_file == expected_file and
+                            (stage is None or actual_stage == args.stage_id)):
                         seen_match = True
                         statuses.add(status)
+                        if stage is not None and stage['default_music_plus_one']:
+                            stage_bgm_id = struct.unpack('<I', read(
+                                symbols['gMPCollisionBGMDefault'], 4))[0]
+                            if stage_bgm_id != stage['default_music_plus_one'] - 1:
+                                raise AssertionError(('Compiled stage BGM', stage_bgm_id,
+                                                      stage['default_music_plus_one'] - 1))
+                    if (stage is not None and seen_match and not stage_capture_armed):
+                        capture_address = symbols['native_capture_requested']
+                        assert emulator.command(connection,
+                            f'M{capture_address:x},4:01000000') == 'OK'
+                        stage_capture_armed = True
                     result = {'name': name, 'frame': frame, 'scene': scene,
                               'selected_fkind': selected, 'fighter_fkind': live_kind,
+                              'stage_id': actual_stage,
+                              'stage_bgm_id': stage_bgm_id,
                               'main_file_id': main_file,
                               'compiled_action_callbacks_verified':
                               len(callback_checks) if actions_verified else None}
@@ -167,6 +196,8 @@ def main():
                 if args.through_results and scene == 24 and seen_match:
                     result = {'name': name, 'frame': frame, 'scene': scene,
                               'fighter_fkind': expected_kind,
+                              'stage_id': args.stage_id,
+                              'stage_bgm_id': stage_bgm_id,
                               'main_file_id': expected_file,
                               'compiled_action_callbacks_verified':
                               len(callback_checks) if actions_verified else None,
@@ -184,9 +215,25 @@ def main():
         result['observed_statuses'] = sorted(statuses)
         assert not any(message in (DATA / 'game.log').read_text(errors='replace')
                        for message in ('ABORT', 'invalid/stale token', 'unported command'))
+        if stage is not None:
+            game_log = (DATA / 'game.log').read_text(errors='replace')
+            if (f'gkind={args.stage_id} file_id={stage["header_file_id"]}'
+                    not in game_log):
+                raise AssertionError('Compiled stage header was not loaded in guest')
+            captures = sorted((path for path in DATA.glob('frame-*-0.ppm')
+                               if path.stat().st_mtime >= capture_started
+                               and path.stat().st_size >= 400 * 240 * 3),
+                              key=lambda path: path.stat().st_mtime)
+            if not stage_capture_armed or not captures:
+                raise AssertionError('Stereo stage capture was not produced')
+            from PIL import Image
+            capture = OUT / f'stage-{args.stage_id}-top-left.png'
+            Image.open(captures[-1]).save(capture)
+            result['stage_capture'] = str(capture)
         log = (emulator.EMU / 'user/log/azahar_log.txt').read_text(errors='replace')
         assert 'unmapped Read' not in log and 'unmapped Write' not in log
-        suffix = '-results' if args.through_results else '-match'
+        suffix = ('-stage' + str(args.stage_id) if stage is not None else '')
+        suffix += '-results' if args.through_results else '-match'
         (OUT / f'{name.lower()}-generic{suffix}.json').write_text(json.dumps(result, indent=2))
         print(json.dumps(result, indent=2))
     finally:

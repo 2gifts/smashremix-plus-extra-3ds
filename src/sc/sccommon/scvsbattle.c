@@ -14,6 +14,11 @@ extern void port_coroutine_yield(void);
 #include <it/itmanager.h>
 #include <sys/audio.h>
 #include <wp/wpmanager.h>
+#ifdef SSB_REMIX_PROBE
+#include <native_remix_stages.h>
+#include <stdint.h>
+extern volatile int32_t ssb_test_single_stage;
+#endif
 extern void *func_800269C0_275C0(u16 id);
 extern void func_800266A0_272A0(void);
 
@@ -653,6 +658,14 @@ void scVSBattleFuncLights(Gfx **dls)
 // 0x8018E190
 void scVSBattleStartScene(void)
 {
+#ifdef SSB_REMIX_PROBE
+    /* Private Azahar test hook: choose a compiled stage after vanilla CSS. */
+    if (ssb_test_single_stage > nGRKindBonus2End &&
+        (unsigned)ssb_test_single_stage < native_remix_stage_count)
+    {
+        gSCManagerSceneData.gkind = (u8)ssb_test_single_stage;
+    }
+#endif
 	gSCManagerBattleState = &gSCManagerTransferBattleState;
 	gSCManagerBattleState->game_type = nSCBattleGameTypeRoyal;
 	gSCManagerBattleState->gkind = gSCManagerSceneData.gkind;
