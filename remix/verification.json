@@ -427,7 +427,7 @@
     "3ds/src/native_assets.cpp": "de9e583f538f3ee07bb0eae00c65e71c04bc30383180e4d492700bb0a4b649a4",
     "remix/tests/asset_probe.cpp": "62fdc6cffc842e32890f24172e068c69987585495ec72902fbb0d907fc12249c"
   },
-  "scope": "Pinned reference and asset audits, native Falco and DK Ult development integrations, and generated fighter motion-data candidates. Full Remix and +EXTRA roster, stages, menus, saves, AI, and hardware performance remain unverified.",
+  "scope": "Pinned reference and asset audits, native Falco, DK Ult, and Japanese Pikachu development integrations, and generated fighter motion-data candidates. Full Remix and +EXTRA roster, stages, menus, saves, AI, and hardware performance remain unverified.",
   "fighter_data_import": {
     "reference_table_records": 88,
     "plus_extra_records": 19,
@@ -439,8 +439,8 @@
     "extra_hit_multiplier_state_host_verified": true,
     "kirby_copy_table_bounds_host_verified": true,
     "extra_hit_multiplier_script_dispatch_gameplay_verified": false,
-    "native_roster_fighters_added": 2,
-    "selectable_fighter_ids": [29, 81],
+    "native_roster_fighters_added": 3,
+    "selectable_fighter_ids": [29, 50, 81],
     "separate_top_screen_portrait_added": false,
     "bottom_screen_touch_selection_match_to_results_verified": true,
     "bottom_screen_touch_selection_action_states_observed": 34,
@@ -450,19 +450,22 @@
     "untouched_donkey_selection_remains_fkind_2_verified": true,
     "untouched_donkey_original_main_file_id_verified": 213,
     "bottom_touch_dkult_main_file_id_verified": 5836,
+    "untouched_pikachu_selection_remains_fkind_9_verified": true,
+    "untouched_pikachu_original_main_file_id_verified": 243,
+    "bottom_touch_jpika_main_file_id_verified": 2439,
     "fighter_size_prepass_capacity": 128,
-    "scope": "Falco (fkind 29) and DK Ult (fkind 81) are independently registered and selectable in VS mode from the Fox and Donkey Kong bottom cards. Timed four-fighter stereo matches reached results through both selectors. Their original parents remain available with original main files 0xD1 and 0xD5; the imported main files are 0x8AB and 0x16CC. The other imported records are motion-data candidates only; the expanded selection grid is not available."
+    "scope": "Falco (fkind 29), Japanese Pikachu (fkind 50), and DK Ult (fkind 81) are independently registered and selectable in VS mode from the Fox, Pikachu, and Donkey Kong bottom cards. Timed four-fighter stereo matches reached results through all three selectors. Their original parents remain available with original main files 0xD1, 0xF3, and 0xD5; the imported main files are 0x8AB, 0x987, and 0x16CC. The other imported records are motion-data candidates only; the expanded selection grid is not available."
   },
   "fighter_development_fixture": {
-    "scope": "Falco and DK Ult are selectable as fkinds 29 and 81 from the VS bottom-screen Fox and Donkey Kong cards. The top-screen portraits and other menus remain vanilla; the full Remix/+EXTRA roster is absent.",
+    "scope": "Falco, Japanese Pikachu, and DK Ult are selectable as fkinds 29, 50, and 81 from the VS bottom-screen Fox, Pikachu, and Donkey Kong cards. The top-screen portraits and other menus remain vanilla; the full Remix/+EXTRA roster is absent.",
     "complete_character_parity": false,
     "cia_available_locally": true,
     "published_binary": false,
     "title_id": "000400000ff64200",
     "sd_directory": "/3ds/ssb64-remix-falco-test/",
-    "elf_sha256": "ef9bb942d402b6e653d02df34ff7800a5f6363c60d94eaa7a278d9008c67a6b0",
-    "cia_sha256": "5c6c4d4a16f145445d51757ac86552d35d0a45b03a3fa36d3ae9cbdda9c3b745",
-    "cia_bytes": 35943360,
+    "elf_sha256": "7c35bbcdaf153790a20e54ce259c5bad9da802eda78246ad4939768b7a4f34d1",
+    "cia_sha256": "e3d86fca5c86d70f72730e709c8399acdab989770d5a4851395223f31440483f",
+    "cia_bytes": 35951552,
     "main_motions": 219,
     "menu_motions": 15,
     "motion_words": 813,
@@ -471,8 +474,12 @@
     "dkult_menu_motions": 15,
     "dkult_motion_words": 942,
     "dkult_motion_pointer_tokens": 1,
-    "validated_asset_closure": 349,
-    "asset_pack_sha256": "22237c4724813e3eb4ae6475ea19b11907305505faff90fd28fa45014e2dcc7e",
+    "jpika_main_motions": 211,
+    "jpika_menu_motions": 15,
+    "jpika_motion_words": 169,
+    "jpika_motion_pointer_tokens": 1,
+    "validated_asset_closure": 508,
+    "asset_pack_sha256": "b07c632ce23d6f84898ddbc1a4b613a4a6906bb5d9a2c4532d41834e4b474b89",
     "unresolved_relocations_in_fixture": [],
     "emulator_move_checks": [
       {
@@ -530,7 +537,12 @@
         "passed": true
       }
     ],
-    "emulator_test_elf_sha256": "ef9bb942d402b6e653d02df34ff7800a5f6363c60d94eaa7a278d9008c67a6b0",
+    "jpika_emulator_move_checks": [
+      {"case": "jab action and imported motion", "passed": true},
+      {"case": "ground Thunder Jolt projectile path", "passed": true},
+      {"case": "Quick Attack status and Japanese map callback", "passed": true}
+    ],
+    "emulator_test_elf_sha256": "7c35bbcdaf153790a20e54ce259c5bad9da802eda78246ad4939768b7a4f34d1",
     "sd_errors_during_move_checks": 0,
     "package_integrity_verified": true,
     "normal_startup_defaults_verified": {
@@ -573,6 +585,12 @@
     "untouched_donkey_main_file_id_verified": 213,
     "bottom_touch_fighter_81_top_css_proxy_kind": 2,
     "bottom_touch_fighter_81_bottom_card_kind": 81,
+    "bottom_touch_fighter_50_results_to_css_verified": true,
+    "bottom_touch_fighter_50_css_return_frame_observed": 6300,
+    "bottom_touch_fighter_50_main_file_id_verified": 2439,
+    "untouched_pikachu_main_file_id_verified": 243,
+    "bottom_touch_fighter_50_top_css_proxy_kind": 9,
+    "bottom_touch_fighter_50_bottom_card_kind": 50,
     "bottom_touch_fighter_29_top_css_proxy_kind": 1,
     "bottom_touch_fighter_29_bottom_card_kind": 29,
     "registered_results_fighter_files_loaded": true,

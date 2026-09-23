@@ -88,8 +88,8 @@ static void plate(int x,int y,int w,int h,uint16_t c){
     rect(x,y,w,h,c);rect(x,y,w,1,RGB(127,122,108));rect(x,y,1,h,RGB(98,94,85));
     rect(x+w-1,y+1,1,h-1,RGB(12,12,12));rect(x+1,y+h-1,w-1,1,RGB(8,8,8));
 }
-static unsigned fighterArt(unsigned c){return c==29?1:c==81?2:c==13?0:c==26?2:c>=14&&c<26?c-14:c;}
-static const char* fighterName(unsigned c){return c==29?"FALCO":c==81?"DK ULT":c==12?"MASTER HAND":c==13?"METAL MARIO":c==26?"GIANT DK":c>=14&&c<26?"POLYGON":c<12?names[c]:"SELECT";}
+static unsigned fighterArt(unsigned c){return c==29?1:c==81?2:c==50?9:c==13?0:c==26?2:c>=14&&c<26?c-14:c;}
+static const char* fighterName(unsigned c){return c==29?"FALCO":c==81?"DK ULT":c==50?"J PIKA":c==12?"MASTER HAND":c==13?"METAL MARIO":c==26?"GIANT DK":c>=14&&c<26?"POLYGON":c<12?names[c]:"SELECT";}
 static void background(void){
     if(backdropReady){memcpy(canvas,backdrop,sizeof(backdrop));return;}
     rect(0,0,320,240,RGB(29,29,27));
@@ -221,7 +221,7 @@ void nativeBottomDraw(uint16_t* target,const NativeBottomState* s,unsigned fps,u
         if(s->page==BOTTOM_BATTLE&&s->stage<9)center(160,201,stages[s->stage],7,muted);
         else if(s->page==BOTTOM_SELECT){
 #ifdef SSB_REMIX_PROBE
-            if(s->scene==16)center(160,201,"TAP FOX OR DK CARD TO SWITCH FIGHTERS",7,muted);
+            if(s->scene==16)center(160,201,"TAP FOX, DK OR PIKA CARD TO SWITCH",7,muted);
             else
 #endif
             center(160,201,"A SELECT  /  B BACK  /  START READY",7,muted);
@@ -232,7 +232,7 @@ void nativeBottomDraw(uint16_t* target,const NativeBottomState* s,unsigned fps,u
         image(BART_LOGO,111,44,98,98,gold,28);
         center(160,154,s->status==~0u?"LOADING GAME":s->scene==1||s->scene>=27&&s->scene<=45?"PRESS START":"A SELECT   /   B BACK",12,paper);
 #ifdef SSB_REMIX_PROBE
-        center(160,179,"REMIX FIGHTER TEST / TAP FOX OR DK",8,gold);
+        center(160,179,"REMIX FIGHTER TEST / TAP FOX, DK OR PIKA",8,gold);
         center(160,194,"FULL REMIX PORT IN DEVELOPMENT",7,muted);
 #else
         center(160,181,"3D SLIDER ADJUSTS DEPTH",8,muted);

@@ -42,8 +42,10 @@ void ssb_game_init(void) {
 #ifdef SSB_REMIX_PROBE
     extern void nativeRemixProbeInit(void);
     extern void nativeRemixDKUltInit(void);
+    extern void nativeRemixJPikaInit(void);
     nativeRemixProbeInit();
     nativeRemixDKUltInit();
+    nativeRemixJPikaInit();
 #endif
     port_coroutine_init_main();
     PortCoroutine* co=port_coroutine_create(boot,0,1024*1024);

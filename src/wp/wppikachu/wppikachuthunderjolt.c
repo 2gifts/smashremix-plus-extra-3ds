@@ -1,6 +1,17 @@
 #include <wp/weapon.h>
 #include <ft/fighter.h>
 #include <reloc_data.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+/* JPika.asm extends Thunder Jolt from the US 100-frame lifetime to the
+ * Japanese 120 frames. Keep vanilla Pikachu's projectile timing intact. */
+static s32 wpPikachuThunderJoltLifetime(GObj *fighter_gobj)
+{
+    return ftGetStruct(fighter_gobj)->fkind == NATIVE_REMIX_JPIKA_KIND ? 120 : WPPIKACHUJOLT_LIFETIME;
+}
+#else
+#define wpPikachuThunderJoltLifetime(fighter_gobj) WPPIKACHUJOLT_LIFETIME
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -158,7 +169,7 @@ sb32 wpPikachuThunderJoltAirProcReflector(GObj *weapon_gobj)
     WPStruct *wp = wpGetStruct(weapon_gobj);
     FTStruct *fp = ftGetStruct(wp->owner_gobj);
 
-    wp->lifetime = WPPIKACHUJOLT_LIFETIME;
+    wp->lifetime = wpPikachuThunderJoltLifetime(wp->owner_gobj);
 
     wpMainReflectorSetLR(wp, fp);
 
@@ -168,7 +179,13 @@ sb32 wpPikachuThunderJoltAirProcReflector(GObj *weapon_gobj)
 // 0x801695E4
 GObj* wpPikachuThunderJoltAirMakeWeapon(GObj *fighter_gobj, Vec3f *pos, Vec3f *vel)
 {
+#ifdef SSB_REMIX_PROBE
+    WPDesc desc = dWPPikachuThunderJoltAirWeaponDesc;
+    desc.p_weapon = ftGetStruct(fighter_gobj)->data->p_file_special1;
+    GObj *weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &desc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_FIGHTER));
+#else
     GObj *weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &dWPPikachuThunderJoltAirWeaponDesc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_FIGHTER));
+#endif
     WPStruct *wp;
 
     if (weapon_gobj == NULL)
@@ -177,7 +194,7 @@ GObj* wpPikachuThunderJoltAirMakeWeapon(GObj *fighter_gobj, Vec3f *pos, Vec3f *v
     }
     wp = wpGetStruct(weapon_gobj);
 
-    wp->lifetime = WPPIKACHUJOLT_LIFETIME;
+    wp->lifetime = wpPikachuThunderJoltLifetime(fighter_gobj);
 
     wp->physics.vel_air = *vel;
 
@@ -187,11 +204,16 @@ GObj* wpPikachuThunderJoltAirMakeWeapon(GObj *fighter_gobj, Vec3f *pos, Vec3f *v
 // 0x80169654
 void wpPikachuThunderJoltGroundAddAnim(GObj *weapon_gobj)
 {
+#ifdef SSB_REMIX_PROBE
+    void *special3 = *ftGetStruct(wpGetStruct(weapon_gobj)->owner_gobj)->data->p_file_special3;
+#else
+    void *special3 = gFTDataPikachuSpecial3;
+#endif
     gcAddAnimAll
     (
         weapon_gobj, 
-        lbRelocGetFileData(AObjEvent32**, gFTDataPikachuSpecial3, llPikachuSpecial3ThunderJoltBAnimJoint), 
-        lbRelocGetFileData(AObjEvent32***, gFTDataPikachuSpecial3, llPikachuSpecial3ThunderJoltBMatAnimJoint), 
+        lbRelocGetFileData(AObjEvent32**, special3, llPikachuSpecial3ThunderJoltBAnimJoint),
+        lbRelocGetFileData(AObjEvent32***, special3, llPikachuSpecial3ThunderJoltBMatAnimJoint),
         0.0F
     );
     gcPlayAnimAll(weapon_gobj);
@@ -686,7 +708,7 @@ sb32 wpPikachuThunderJoltGroundProcReflector(GObj *weapon_gobj)
     WPStruct *wp = wpGetStruct(weapon_gobj);
     FTStruct *fp = ftGetStruct(wp->owner_gobj);
 
-    wp->lifetime = WPPIKACHUJOLT_LIFETIME;
+    wp->lifetime = wpPikachuThunderJoltLifetime(wp->owner_gobj);
 
     wpMainReflectorSetLR(wp, fp);
 
@@ -703,7 +725,13 @@ GObj* wpPikachuThunderJoltGroundMakeWeapon(GObj *prev_gobj, Vec3f *pos, s32 coll
     s32 unused[2];
     WPStruct *prev_wp = wpGetStruct(prev_gobj);
     WPStruct *new_wp;
+#ifdef SSB_REMIX_PROBE
+    WPDesc desc = dWPPikachuThunderJoltGroundWeaponDesc;
+    desc.p_weapon = ftGetStruct(prev_wp->owner_gobj)->data->p_file_special1;
+    GObj *new_gobj = wpManagerMakeWeapon(prev_gobj, &desc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_WEAPON));
+#else
     GObj *new_gobj = wpManagerMakeWeapon(prev_gobj, &dWPPikachuThunderJoltGroundWeaponDesc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_WEAPON));
+#endif
 
     if (new_gobj == NULL)
     {

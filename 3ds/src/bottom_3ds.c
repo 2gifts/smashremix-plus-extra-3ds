@@ -47,7 +47,8 @@ void nativeBottomTouch(unsigned x,unsigned y){
         unsigned character=native_bottom_observed.players[slot].character;
         unsigned alternate=(character==NATIVE_REMIX_FOX_KIND||character==NATIVE_REMIX_FALCO_KIND)?
             NATIVE_REMIX_FALCO_KIND:
-            (character==NATIVE_REMIX_DONKEY_KIND||character==NATIVE_REMIX_DKULT_KIND)?NATIVE_REMIX_DKULT_KIND:0;
+            (character==NATIVE_REMIX_DONKEY_KIND||character==NATIVE_REMIX_DKULT_KIND)?NATIVE_REMIX_DKULT_KIND:
+            (character==NATIVE_REMIX_PIKACHU_KIND||character==NATIVE_REMIX_JPIKA_KIND)?NATIVE_REMIX_JPIKA_KIND:0;
         if(px<148&&py<73&&slot<4&&native_bottom_observed.players[slot].kind<2&&alternate){
             native_remix_selected_fkind[slot]=native_remix_selected_fkind[slot]==alternate?0:alternate;
             dirty=1;return;

@@ -18,6 +18,75 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_jpika_quick_attack_collision_follows_japanese_flow(self):
+        source = (ROOT / '3ds/src/remix_jpika_probe.c').read_text()
+        start = source.index('static void jpikaQuickAttackMap(')
+        function = source[start:source.index('\n}', start) + 2]
+        fixture = '''#include <assert.h>
+typedef struct { unsigned mask_curr; } Coll;
+typedef struct { Coll coll_data; } FTStruct;
+typedef struct { FTStruct fighter; } GObj;
+#define FALSE 0
+#define MAP_FLAG_RWALL 1
+#define MAP_FLAG_LWALL 2
+static int on_floor, calls[4], count;
+static FTStruct *ftGetStruct(GObj *g) { return &g->fighter; }
+static int mpCommonCheckFighterOnFloor(GObj *g) { (void)g; return on_floor; }
+static void mpCommonSetFighterAir(FTStruct *f) { (void)f; calls[count++] = 1; }
+static void ftPikachuSpecialAirHiEndSetStatus(GObj *g) { (void)g; calls[count++] = 2; }
+static void ftPikachuSpecialHiSwitchStatusAir(GObj *g) { (void)g; calls[count++] = 3; }
+static void ftPikachuSpecialHiEndSetStatus(GObj *g) { (void)g; calls[count++] = 4; }
+''' + function + '''
+int main(void) {
+    GObj g = {0};
+    on_floor = 1; count = 0; jpikaQuickAttackMap(&g); assert(count == 0);
+    g.fighter.coll_data.mask_curr = MAP_FLAG_RWALL;
+    on_floor = 1; count = 0; jpikaQuickAttackMap(&g); assert(count == 1 && calls[0] == 4);
+    g.fighter.coll_data.mask_curr = 0;
+    on_floor = 0; count = 0; jpikaQuickAttackMap(&g); assert(count == 1 && calls[0] == 3);
+    g.fighter.coll_data.mask_curr = MAP_FLAG_LWALL;
+    on_floor = 0; count = 0; jpikaQuickAttackMap(&g);
+    assert(count == 3 && calls[0] == 1 && calls[1] == 2 && calls[2] == 4);
+    return 0;
+}
+'''
+        out = BUILD / 'fighter-import-test'
+        out.mkdir(parents=True, exist_ok=True)
+        path, exe = out / 'jpika_collision.c', out / 'jpika-collision-test.exe'
+        path.write_text(fixture)
+        cc = compiler_path(None).replace('clang++', 'clang')
+        subprocess.run([cc, '-std=gnu11', str(path), '-o', str(exe)], check=True)
+        subprocess.run([str(exe)], check=True)
+
+    def test_jpika_thunder_jolt_lifetime_preserves_vanilla(self):
+        source = (ROOT / 'src/wp/wppikachu/wppikachuthunderjolt.c').read_text()
+        start = source.index('static s32 wpPikachuThunderJoltLifetime(')
+        function = source[start:source.index('\n}', start) + 2]
+        fixture = '''#include <assert.h>
+#include "native_remix_roster.h"
+typedef int s32;
+typedef struct { unsigned fkind; } FTStruct;
+typedef struct { FTStruct *fighter; } GObj;
+static FTStruct *ftGetStruct(GObj *g) { return g->fighter; }
+#define WPPIKACHUJOLT_LIFETIME 100
+''' + function + '''
+int main(void) {
+    FTStruct f = {NATIVE_REMIX_PIKACHU_KIND}; GObj g = {&f};
+    assert(wpPikachuThunderJoltLifetime(&g) == 100);
+    f.fkind = NATIVE_REMIX_JPIKA_KIND;
+    assert(wpPikachuThunderJoltLifetime(&g) == 120);
+    return 0;
+}
+'''
+        out = BUILD / 'fighter-import-test'
+        out.mkdir(parents=True, exist_ok=True)
+        path, exe = out / 'jpika_jolt.c', out / 'jpika-jolt-test.exe'
+        path.write_text(fixture)
+        cc = compiler_path(None).replace('clang++', 'clang')
+        subprocess.run([cc, '-std=gnu11', '-I' + str(ROOT / '3ds/include'),
+                        str(path), '-o', str(exe)], check=True)
+        subprocess.run([str(exe)], check=True)
+
     def test_kirby_copy_table_bounds_and_parent_fallback(self):
         source = (ROOT / 'src/ft/ftchar/ftkirby/ftkirbyspecialn.c').read_text()
         start = source.index('static s32 ftKirbySpecialNGetCopyTableKind(')
@@ -29,7 +98,7 @@ typedef int32_t s32;
 typedef uint32_t u32;
 enum { nFTKindMario, nFTKindFox, nFTKindDonkey, nFTKindSamus,
        nFTKindLuigi, nFTKindLink, nFTKindYoshi, nFTKindCaptain,
-       nFTKindKirby, nFTKindGDonkey = 27 };
+       nFTKindKirby, nFTKindPikachu, nFTKindGDonkey = 27 };
 #define FTKIRBY_COPY_TABLE_COUNT 27
 ''' + function + '''
 int main(void) {
@@ -38,6 +107,7 @@ int main(void) {
     assert(ftKirbySpecialNGetCopyTableKind(nFTKindGDonkey) == nFTKindDonkey);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_FALCO_KIND) == nFTKindFox);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_DKULT_KIND) == nFTKindDonkey);
+    assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JPIKA_KIND) == nFTKindPikachu);
     assert(ftKirbySpecialNGetCopyTableKind(28) == nFTKindKirby);
     assert(ftKirbySpecialNGetCopyTableKind(999) == nFTKindKirby);
     assert(ftKirbySpecialNGetCopyTableKind(-1) == nFTKindKirby);
@@ -61,6 +131,9 @@ int main(void) {
         dk_source = (ROOT / '3ds/src/remix_dkult_probe.c').read_text()
         dk_start = dk_source.index('int nativeRemixDKUltIsAnimation(')
         dk_function = dk_source[dk_start:dk_source.index('\n}', dk_start) + 2]
+        jp_source = (ROOT / '3ds/src/remix_jpika_probe.c').read_text()
+        jp_start = jp_source.index('int nativeRemixJPikaIsAnimation(')
+        jp_function = jp_source[jp_start:jp_source.index('\n}', jp_start) + 2]
         # Compile the actual native predicate against a small motion catalogue.
         fixture = '''#include <cassert>
 #define ARRAY_COUNT(a) (sizeof(a)/sizeof((a)[0]))
@@ -69,11 +142,13 @@ static Motion remix_main_motions[]={{0,{0}},{4,{0}},{5,{8}},{6,{2}},{7,{10}}};
 static Motion remix_menu_motions[]={{0,{0}},{8,{0}}};
 static Motion remix_dkult_main_motions[]={{0,{0}},{10,{0}},{11,{8}}};
 static Motion remix_dkult_menu_motions[]={{0,{0}},{12,{0}}};
+static Motion remix_jpika_main_motions[]={{0,{0}},{13,{0}},{14,{8}}};
+static Motion remix_jpika_menu_motions[]={{0,{0}},{15,{0}}};
 '''
         for line in (ROOT / 'src/ft/ftdef.h').read_text().splitlines():
             if line.startswith('#define FTANIM_FLAG_ANIMJOINT ') or line.startswith('#define FTANIM_FLAG_SHIELDPOSE '):
                 fixture += line + '\n'
-        fixture += dk_function + '\n' + function + '''
+        fixture += dk_function + '\n' + jp_function + '\n' + function + '''
 int main(){
     assert(!nativeRelocIsFighterAnimation(0));
     assert(nativeRelocIsFighterAnimation(4));
@@ -85,7 +160,11 @@ int main(){
     assert(nativeRelocIsFighterAnimation(10));
     assert(!nativeRelocIsFighterAnimation(11));
     assert(nativeRelocIsFighterAnimation(12));
+    assert(nativeRelocIsFighterAnimation(13));
+    assert(!nativeRelocIsFighterAnimation(14));
+    assert(nativeRelocIsFighterAnimation(15));
     assert(!nativeRemixDKUltIsAnimation(0));
+    assert(!nativeRemixJPikaIsAnimation(0));
 }
 '''
         out = BUILD / 'fighter-import-test'

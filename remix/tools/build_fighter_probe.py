@@ -34,12 +34,12 @@ def main():
                             anchor='mm', align='center', spacing=5)
         image.save(path)
     art((48, 48), 'REMIX\nTEST', 11, dst / 'icon.png')
-    art((256, 128), 'REMIX FIGHTER TEST\nFalco / DK Ult\nFull mod in development', 15, dst / 'banner.png')
+    art((256, 128), 'REMIX FIGHTER TEST\nFalco / DK Ult / J Pika\nFull mod in development', 15, dst / 'banner.png')
     with wave.open(str(dst / 'silent.wav'), 'wb') as sound:
         sound.setparams((2, 2, 32000, 0, 'NONE', 'not compressed'))
         sound.writeframes(bytes(32000 * 4))
     run(tool('bannertool'), 'makesmdh', '-s', 'Remix fighter test', '-l',
-        'Falco and DK Ult via VS bottom screen - full port unfinished', '-p', 'Remix / decomp / port contributors',
+        'Falco, DK Ult and J Pika via VS bottom screen - full port unfinished', '-p', 'Remix / decomp / port contributors',
         '-i', dst / 'icon.png', '-o', dst / 'icon.smdh', '-r', 'regionfree',
         '-f', 'visible,allow3d,new3ds,recordusage')
     run(tool('bannertool'), 'makebanner', '-i', dst / 'banner.png', '-a', dst / 'silent.wav', '-o', dst / 'banner.bin')
@@ -53,7 +53,7 @@ def main():
         run(tool('makerom'), '-f', fmt, *flags, *(['-ver', '1'] if fmt == 'cia' else []),
             '-o', dst / ('smash64-development.' + suffix))
     report = {'development_only': True, 'build_variant': 'fighter-test', 'fully_playable': False,
-              'scope': 'Falco and DK Ult selectable from the Fox and Donkey Kong VS bottom cards; full Remix roster and menus unfinished',
+              'scope': 'Falco, DK Ult and J Pikachu selectable from the Fox, Donkey Kong and Pikachu VS bottom cards; full Remix roster and menus unfinished',
               'elf_sha256': sha256(elf), 'title_id': '000400000ff64200', 'files': {}}
     for suffix in ('cia', 'cxi'):
         path = dst / ('smash64-development.' + suffix)
