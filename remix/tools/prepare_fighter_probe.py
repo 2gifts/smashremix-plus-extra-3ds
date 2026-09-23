@@ -81,6 +81,13 @@ class Scripts:
             if (op > 51 and not known_custom) or op == 13:
                 raise ValueError(f'Unported command byte {byte:#x} at {address:08x}')
             count = self.CUSTOM_LENGTHS[byte] if op > 51 else self.LENGTHS.get(op, 1)
+            if byte in (0xdd, 0xde) and known_custom:
+                flags = (word >> 16) & 0xff
+                half = word & 0xffff
+                if (flags >> 4) == 0 and (flags & 0xf) >= 4:
+                    raise ValueError(f'Invalid hitbox slot in command {word:08x} at {address:08x}')
+                if (half & 0x8000) == 0 and (half & 0x7f80) == 0x7f80:
+                    raise ValueError(f'Nonfinite hit multiplier in command {word:08x} at {address:08x}')
             self.copy(address, count)
             if op > 51:
                 self.custom_commands[byte] += 1

@@ -16,7 +16,7 @@ from prepare_fighter_probe import Reference, Scripts
 
 STRUCT_TABLE_ROM = 0x92610
 FIRST_NEW_FKIND = 27  # Random occupies 27; 28 is unused; roster resumes at 29.
-NATIVE_CUSTOM_COMMANDS = set(range(0xd0, 0xdd))
+NATIVE_CUSTOM_COMMANDS = set(range(0xd0, 0xdf))
 
 
 def dependency_closure(entries, roots):

@@ -8,6 +8,8 @@ void nativeRemixProbeReset(FTStruct *);
 float nativeRemixProbeTranslation(FTStruct *);
 void nativeRemixProbeHitboxReset(unsigned player, unsigned slot);
 void nativeRemixProbeDamageDirection(FTStruct *, FTStruct *, FTAttackColl *);
+void nativeRemixProbeApplyHitMultipliers(FTStruct *, FTStruct *, FTAttackColl *);
+float nativeRemixProbeDiMultiplier(FTStruct *);
 unsigned nativeRemixProbeHitFgm(FTStruct *, FTAttackColl *);
 unsigned nativeRemixProbeEnvColor(FTStruct *);
 #endif

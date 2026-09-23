@@ -3,6 +3,9 @@
 #ifdef PORT
 #include <if/ifscreenflash.h>
 #endif
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_probe.h"
+#endif
 
 extern alSoundEffect* func_800269C0_275C0(u16);
 
@@ -251,8 +254,12 @@ void ftCommonDamageCommonProcLagUpdate(GObj *fighter_gobj)
             {
                 Vec3f *translate = &DObjGetStruct(fighter_gobj)->translate.vec.f;
 
-                translate->x += fp->input.pl.stick_range.x * FTCOMMON_DAMAGE_SMASH_DI_RANGE_MUL;
-                translate->y += fp->input.pl.stick_range.y * FTCOMMON_DAMAGE_SMASH_DI_RANGE_MUL;
+                f32 di_mul = FTCOMMON_DAMAGE_SMASH_DI_RANGE_MUL;
+#ifdef SSB_REMIX_PROBE
+                di_mul *= nativeRemixProbeDiMultiplier(fp);
+#endif
+                translate->x += fp->input.pl.stick_range.x * di_mul;
+                translate->y += fp->input.pl.stick_range.y * di_mul;
 
                 fp->tap_stick_x = fp->tap_stick_y = FTINPUT_STICKBUFFER_TICS_MAX;
             }

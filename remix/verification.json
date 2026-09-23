@@ -435,7 +435,9 @@
     "arm11_syntax_checked": 69,
     "fighters_with_relocation_issues": 16,
     "fighters_with_script_target_issues": 4,
-    "fighters_requiring_unported_custom_commands": 5,
+    "fighters_requiring_unported_custom_commands": 0,
+    "extra_hit_multiplier_state_host_verified": true,
+    "extra_hit_multiplier_script_dispatch_gameplay_verified": false,
     "native_roster_fighters_added": 0,
     "scope": "Motion data only; no new roster entry, native special-move callback, or gameplay validation."
   },
@@ -447,8 +449,8 @@
     "published_binary": false,
     "title_id": "000400000ff64200",
     "sd_directory": "/3ds/ssb64-remix-falco-test/",
-    "elf_sha256": "4f491eb67b4e59c18845ef0dbff53d367cbb7760130e3d9820ea941d9e1d7b64",
-    "cia_sha256": "2a606ffee7641be89412d3419b45b1ffec0794c8457a5b959d675a47a30c71f1",
+    "elf_sha256": "7da826371894c5d264ae04a2e6c6f86ca44361caf1fdb7e864eb94ea0aa82607",
+    "cia_sha256": "6993dfde2ac75a8961c53c39a0177f5bcf0c198b325fae5205ba96a0ef415afb",
     "cia_bytes": 35529664,
     "main_motions": 219,
     "menu_motions": 15,
@@ -495,7 +497,7 @@
         "passed": true
       }
     ],
-    "emulator_test_elf_sha256": "4f491eb67b4e59c18845ef0dbff53d367cbb7760130e3d9820ea941d9e1d7b64",
+    "emulator_test_elf_sha256": "7da826371894c5d264ae04a2e6c6f86ca44361caf1fdb7e864eb94ea0aa82607",
     "sd_errors_during_move_checks": 0,
     "package_integrity_verified": true,
     "normal_startup_defaults_verified": {
@@ -527,7 +529,7 @@
     "pristine_emulator_startup_verified": true,
     "four_fighter_stereo_match_to_results_verified": true,
     "results_scene_observed": 24,
-    "results_frame_observed": 5300,
+    "results_frame_observed": 5175,
     "sd_errors_after_results": 0,
     "emulator_invalid_memory_accesses_detected": false,
     "stereo_capture_eyes_differ": true
@@ -564,8 +566,8 @@
   },
   "fighter_import_host_tests": {
     "passed": true,
-    "tests": 9,
-    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, unsupported commands, empty animation ID, split audio bank, malformed ranges and sample preservation"
+    "tests": 11,
+    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges and sample preservation"
   },
   "save_writer_host_tests": {
     "passed": true,

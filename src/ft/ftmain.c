@@ -3184,6 +3184,11 @@ void ftMainProcessHitCollisionStatsMain(GObj *fighter_gobj)
     {
         this_fp->hitlag_mul = 1.5F;
     }
+#ifdef SSB_REMIX_PROBE
+    nativeRemixProbeApplyHitMultipliers(this_fp,
+        hitlog->attacker_object_class == nFTHitLogObjectFighter ? attacker_fp : NULL,
+        hitlog->attacker_object_class == nFTHitLogObjectFighter ? ft_attack_coll : NULL);
+#endif
 }
 
 // 0x800E4870 - My brain hurts

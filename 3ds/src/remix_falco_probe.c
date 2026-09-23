@@ -16,6 +16,9 @@ extern alSoundEffect *func_800269C0_275C0(u16);
 static float translation[4] = {1, 1, 1, 1};
 static unsigned char direction[4][4];
 static unsigned short hit_fgm[4][4];
+static unsigned short hitlag_mul[4][4];
+static unsigned short hit_di_mul[4][4];
+static float victim_di_mul[4] = {1, 1, 1, 1};
 static unsigned env_color[4];
 static unsigned short pressed[4];
 static FTStatusDesc falco_status[26];
@@ -55,6 +58,8 @@ void nativeRemixProbeHitboxReset(unsigned player, unsigned slot) {
     if (player < 4 && slot < 4) {
         direction[player][slot] = 0;
         hit_fgm[player][slot] = 0xffffu;
+        hitlag_mul[player][slot] = 0xffffu;
+        hit_di_mul[player][slot] = 0xffffu;
     }
 }
 unsigned nativeRemixProbeHitFgm(FTStruct *attacker, FTAttackColl *hit) {
@@ -68,6 +73,44 @@ void nativeRemixProbeDamageDirection(FTStruct *victim, FTStruct *attacker, FTAtt
     unsigned dir = direction[attacker->player][slot];
     if (dir == 1) victim->damage_lr = -attacker->lr;
     if (dir == 2) victim->damage_lr = attacker->lr;
+}
+
+static float upperHalfFloat(unsigned short half) {
+    union { u32 u; float f; } value = {.u = (u32)half << 16};
+    return value.f;
+}
+
+static void setHitMultiplier(unsigned short table[4][4], unsigned player,
+                             unsigned flags, unsigned short value) {
+    if (player >= 4) abort();
+    if (flags >> 4) {
+        for (unsigned i = 0; i < 4; i++) table[player][i] = value;
+    } else {
+        unsigned slot = flags & 0x0fu;
+        if (slot >= 4) abort();
+        table[player][slot] = value;
+    }
+}
+
+void nativeRemixProbeApplyHitMultipliers(FTStruct *victim, FTStruct *attacker, FTAttackColl *hit) {
+    if (victim->player < 4) victim_di_mul[victim->player] = 1.0f;
+    if (!attacker || !hit || attacker->player >= 4) return;
+    ptrdiff_t slot = hit - attacker->attack_colls;
+    if (slot < 0 || slot >= 4) return;
+    unsigned short lag = hitlag_mul[attacker->player][slot];
+    unsigned short di = hit_di_mul[attacker->player][slot];
+    /* The reference treats a negative upper-half float as "no override". */
+    if (!(lag & 0x8000u)) {
+        float multiplier = upperHalfFloat(lag);
+        attacker->hitlag_mul = multiplier;
+        victim->hitlag_mul = multiplier;
+    }
+    if (!(di & 0x8000u) && victim->player < 4)
+        victim_di_mul[victim->player] = upperHalfFloat(di);
+}
+
+float nativeRemixProbeDiMultiplier(FTStruct *fp) {
+    return fp->player < 4 ? victim_di_mul[fp->player] : 1.0f;
 }
 
 void nativeRemixProbeCommand(GObj *gobj, FTStruct *fp, FTMotionScript *ms) {
@@ -158,6 +201,13 @@ void nativeRemixProbeCommand(GObj *gobj, FTStruct *fp, FTMotionScript *ms) {
                        ((u32 *)ms->p_script)[1] & 0xffffu : cmd & 0xffffu;
         if (fgm != 0xffffu) ftParamPlayVoice(fp, fgm);
         advance_words = 2;
+        break;
+    }
+    case 0xdd:
+    case 0xde: {
+        unsigned flags = (cmd >> 16) & 0xffu;
+        unsigned short (*table)[4] = (cmd >> 24) == 0xdd ? hitlag_mul : hit_di_mul;
+        setHitMultiplier(table, fp->player, flags, cmd & 0xffffu);
         break;
     }
     default:
@@ -261,6 +311,8 @@ static void groundNeutral(GObj *gobj) { neutral(gobj, 0); }
 static void airNeutral(GObj *gobj) { neutral(gobj, 1); }
 
 void nativeRemixProbeInit(void) {
+    for (unsigned player = 0; player < 4; player++)
+        for (unsigned slot = 0; slot < 4; slot++) nativeRemixProbeHitboxReset(player, slot);
     FighterDescriptor desc = *port_fighter_descriptor(nFTKindFox);
     FTData *data = desc.ft_data;
     memcpy(&data->file_main_id, remix_probe_files, sizeof(remix_probe_files));

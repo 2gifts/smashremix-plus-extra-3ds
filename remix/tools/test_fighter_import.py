@@ -68,6 +68,72 @@ int main(){
         with self.assertRaisesRegex(ValueError, 'Unported command'):
             Scripts(WordReference({0x100: 0xd4000000})).script(0x100)
 
+    def test_extra_hit_multipliers_decode_and_validate(self):
+        valid = {0x100: 0xdd003f80, 0x104: 0xde103f00, 0x108: 0}
+        scripts = Scripts(WordReference(valid), allow_custom=True)
+        scripts.script(0x100)
+        self.assertEqual(scripts.custom_commands[0xdd], 1)
+        self.assertEqual(scripts.custom_commands[0xde], 1)
+        for word, reason in ((0xdd043f80, 'Invalid hitbox slot'),
+                             (0xde007f80, 'Nonfinite hit multiplier')):
+            with self.subTest(word=word), self.assertRaisesRegex(ValueError, reason):
+                Scripts(WordReference({0x100: word}), allow_custom=True).script(0x100)
+
+    def test_native_extra_hit_multipliers_apply_to_hit_and_di(self):
+        source = (ROOT / '3ds/src/remix_falco_probe.c').read_text()
+        def function(name):
+            start = source.index(name + '(')
+            start = source.rfind('\n', 0, start) + 1
+            return source[start:source.index('\n}', start) + 2]
+        fixture = '''#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+typedef uint32_t u32;
+typedef struct FTAttackColl { int unused; } FTAttackColl;
+typedef struct FTStruct {
+    unsigned player;
+    FTAttackColl attack_colls[4];
+    float hitlag_mul;
+} FTStruct;
+static unsigned short hitlag_mul[4][4];
+static unsigned short hit_di_mul[4][4];
+static float victim_di_mul[4] = {1, 1, 1, 1};
+'''
+        for name in ('upperHalfFloat', 'setHitMultiplier',
+                     'nativeRemixProbeApplyHitMultipliers', 'nativeRemixProbeDiMultiplier'):
+            fixture += function(name) + '\n'
+        fixture += '''int main(void) {
+    FTStruct attacker = {.player = 0, .hitlag_mul = 1.5f};
+    FTStruct victim = {.player = 1, .hitlag_mul = 1.5f};
+    for (unsigned p = 0; p < 4; p++) for (unsigned s = 0; s < 4; s++) {
+        hitlag_mul[p][s] = 0xffffu;
+        hit_di_mul[p][s] = 0xffffu;
+    }
+    setHitMultiplier(hitlag_mul, 0, 0x10, 0x3f00u); /* all slots: 0.5 */
+    setHitMultiplier(hit_di_mul, 0, 0x02, 0x4000u); /* slot 2: 2.0 */
+    nativeRemixProbeApplyHitMultipliers(&victim, &attacker, &attacker.attack_colls[2]);
+    assert(attacker.hitlag_mul == 0.5f && victim.hitlag_mul == 0.5f);
+    assert(nativeRemixProbeDiMultiplier(&victim) == 2.0f);
+    nativeRemixProbeApplyHitMultipliers(&victim, &attacker, &attacker.attack_colls[1]);
+    assert(nativeRemixProbeDiMultiplier(&victim) == 1.0f);
+    setHitMultiplier(hitlag_mul, 0, 0x10, 0xffffu);
+    attacker.hitlag_mul = victim.hitlag_mul = 1.5f;
+    nativeRemixProbeApplyHitMultipliers(&victim, &attacker, &attacker.attack_colls[1]);
+    assert(attacker.hitlag_mul == 1.5f && victim.hitlag_mul == 1.5f);
+    nativeRemixProbeApplyHitMultipliers(&victim, 0, 0);
+    assert(nativeRemixProbeDiMultiplier(&victim) == 1.0f);
+    return 0;
+}
+'''
+        out = BUILD / 'fighter-import-test'
+        out.mkdir(parents=True, exist_ok=True)
+        path, exe = out / 'multipliers.c', out / 'multipliers-test.exe'
+        path.write_text(fixture)
+        cc = compiler_path(None).replace('clang++', 'clang')
+        subprocess.run([cc, '-std=gnu11', str(path), '-o', str(exe)], check=True)
+        subprocess.run([str(exe)], check=True)
+
     def test_reference_import_retains_random_sound_array_and_native_menu_script(self):
         words = {0x100: 0xd6ff0003, 0x104: 0x400,
                  0x108: 34 << 26, 0x10c: 0x300, 0x110: 0,
@@ -112,7 +178,7 @@ int main() {
         nativeRemixProbeSeekCommand(&g,&f,&ms);
         assert(ms.p_script==words+2 && dispatched==0);
     }
-    for (unsigned byte : {0xd0u,0xd1u,0xd2u,0xd3u,0xd7u,0xd8u,0xdbu}) {
+    for (unsigned byte : {0xd0u,0xd1u,0xd2u,0xd3u,0xd7u,0xd8u,0xdbu,0xddu,0xdeu}) {
         words[0]=byte<<24; ms.p_script=words; dispatched=0;
         nativeRemixProbeSeekCommand(&g,&f,&ms);
         assert(ms.p_script==words+1 && dispatched==1);
