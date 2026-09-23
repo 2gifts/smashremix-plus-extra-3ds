@@ -5,7 +5,7 @@
 #endif
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_roster.h"
-#define FT_ATTACKAIR_IS_LINK(fp) ((fp)->fkind == nFTKindLink || (fp)->fkind == nFTKindNLink || (fp)->fkind == NATIVE_REMIX_ELINK_KIND)
+#define FT_ATTACKAIR_IS_LINK(fp) ((fp)->fkind == nFTKindLink || (fp)->fkind == nFTKindNLink || (fp)->fkind == NATIVE_REMIX_ELINK_KIND || (fp)->fkind == NATIVE_REMIX_JLINK_KIND)
 #else
 #define FT_ATTACKAIR_IS_LINK(fp) ((fp)->fkind == nFTKindLink || (fp)->fkind == nFTKindNLink)
 #endif

@@ -4239,6 +4239,7 @@ void ftMainProcParams(GObj *fighter_gobj)
             if (((fp->fkind == nFTKindLink)
 #ifdef SSB_REMIX_PROBE
                 || (fp->fkind == NATIVE_REMIX_ELINK_KIND)
+                || (fp->fkind == NATIVE_REMIX_JLINK_KIND)
 #endif
                 ) && (fp->modelpart_status[11 - nFTPartsJointCommonStart].modelpart_id_curr == 0))
             {

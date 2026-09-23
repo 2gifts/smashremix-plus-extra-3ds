@@ -119,6 +119,7 @@ void ftPortVanillaEntryMakeEffect(FTStruct *fp)
     case nFTKindLink:
 #ifdef SSB_REMIX_PROBE
     case NATIVE_REMIX_ELINK_KIND:
+    case NATIVE_REMIX_JLINK_KIND:
 #endif
         efManagerLinkEntryWaveMakeEffect(&fp->entry_pos);
         efManagerLinkEntryBeamMakeEffect(&fp->entry_pos);

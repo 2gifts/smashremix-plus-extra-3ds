@@ -82,6 +82,7 @@ void ftCommonCatchWaitSetStatus(GObj *fighter_gobj)
     if ((fp->fkind == nFTKindLink) || (fp->fkind == nFTKindNLink)
 #ifdef SSB_REMIX_PROBE
         || (fp->fkind == NATIVE_REMIX_ELINK_KIND)
+        || (fp->fkind == NATIVE_REMIX_JLINK_KIND)
 #endif
     )
     {

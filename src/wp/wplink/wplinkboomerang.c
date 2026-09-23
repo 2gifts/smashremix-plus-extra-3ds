@@ -568,7 +568,7 @@ GObj* wpLinkBoomerangMakeWeapon(GObj *fighter_gobj, Vec3f *pos)
 
 #ifdef SSB_REMIX_PROBE
     WPDesc desc = dWPLinkBoomerangWeaponDesc;
-    if (fp->fkind == NATIVE_REMIX_ELINK_KIND) desc.p_weapon = fp->data->p_file_special1;
+    if (fp->fkind == NATIVE_REMIX_ELINK_KIND || fp->fkind == NATIVE_REMIX_JLINK_KIND) desc.p_weapon = fp->data->p_file_special1;
     weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &desc, &offset, WEAPON_FLAG_PARENT_FIGHTER);
 #else
     weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &dWPLinkBoomerangWeaponDesc, &offset, WEAPON_FLAG_PARENT_FIGHTER);

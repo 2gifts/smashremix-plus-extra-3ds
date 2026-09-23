@@ -627,7 +627,7 @@ GObj *itLinkBombMakeItem(GObj *fighter_gobj, Vec3f *pos, Vec3f *vel)
 #ifdef SSB_REMIX_PROBE
 	ITDesc desc = dItLinkBombItemDesc;
 	FTStruct *fp = ftGetStruct(fighter_gobj);
-	if (fp->fkind == NATIVE_REMIX_ELINK_KIND) desc.p_file = fp->data->p_file_main;
+	if (fp->fkind == NATIVE_REMIX_ELINK_KIND || fp->fkind == NATIVE_REMIX_JLINK_KIND) desc.p_file = fp->data->p_file_main;
 	GObj *item_gobj = itManagerMakeItem(fighter_gobj, &desc, pos, vel, ITEM_FLAG_PARENT_FIGHTER);
 #else
 	GObj *item_gobj = itManagerMakeItem(fighter_gobj, &dItLinkBombItemDesc, pos, vel, ITEM_FLAG_PARENT_FIGHTER);

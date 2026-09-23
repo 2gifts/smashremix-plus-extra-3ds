@@ -9,7 +9,7 @@
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_roster.h"
 #define FT_COMPUTER_IS_SAMUS(kind) ((kind) == nFTKindSamus || (kind) == NATIVE_REMIX_ESAMUS_KIND)
-#define FT_COMPUTER_IS_LINK(kind) ((kind) == nFTKindLink || (kind) == NATIVE_REMIX_ELINK_KIND)
+#define FT_COMPUTER_IS_LINK(kind) ((kind) == nFTKindLink || (kind) == NATIVE_REMIX_ELINK_KIND || (kind) == NATIVE_REMIX_JLINK_KIND)
 #else
 #define FT_COMPUTER_IS_SAMUS(kind) ((kind) == nFTKindSamus)
 #define FT_COMPUTER_IS_LINK(kind) ((kind) == nFTKindLink)
@@ -4281,6 +4281,7 @@ sb32 ftComputerCheckDetectTarget(FTStruct *this_fp, f32 detect_range_base)
                                     case nFTKindLink:
 #ifdef SSB_REMIX_PROBE
                                     case NATIVE_REMIX_ELINK_KIND:
+                                    case NATIVE_REMIX_JLINK_KIND:
 #endif
                                     case nFTKindPikachu:
                                     case nFTKindMMario:
@@ -6935,6 +6936,7 @@ void func_ovl3_8013877C(FTStruct *this_fp)
             case nFTKindLink:
 #ifdef SSB_REMIX_PROBE
             case NATIVE_REMIX_ELINK_KIND:
+            case NATIVE_REMIX_JLINK_KIND:
 #endif
                 if (ftComputerCheckFindTarget(this_fp) != FALSE)
                 {
@@ -7005,6 +7007,7 @@ sb32 func_ovl3_80138AA8(FTStruct *this_fp, sb32 is_delay)
         case nFTKindLink:
 #ifdef SSB_REMIX_PROBE
         case NATIVE_REMIX_ELINK_KIND:
+        case NATIVE_REMIX_JLINK_KIND:
 #endif
             if (com->target_dist < 1500.0F)
             {
