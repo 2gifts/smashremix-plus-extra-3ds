@@ -10,6 +10,7 @@
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_roster.h"
 extern s32 nativeRemixVictoryBGM(unsigned fkind);
+extern s32 nativeRemixWinnerFGM(unsigned fkind);
 #endif
 extern void func_800266A0_272A0(void);
 
@@ -356,9 +357,14 @@ void mnVSResultsAnnounceWinner(void)
 #ifdef PORT
 		{
 			s32 wk = mnVSResultsGetFighterKind(mnVSResultsGetWinPlayer());
-			func_800269C0_275C0((wk >= (s32)nFTKindEnumCount)
-			                    ? (u32)port_fighter_results_announce_fgm(wk)
-			                    : announce_names[wk]);
+			u32 fgm = (wk >= (s32)nFTKindEnumCount)
+			        ? (u32)port_fighter_results_announce_fgm(wk)
+			        : announce_names[wk];
+#ifdef SSB_REMIX_PROBE
+			s32 remix_fgm = nativeRemixWinnerFGM(wk);
+			if (remix_fgm >= 0) fgm = (u32)remix_fgm;
+#endif
+			func_800269C0_275C0(fgm);
 		}
 #else
 			func_800269C0_275C0(announce_names[mnVSResultsGetFighterKind(mnVSResultsGetWinPlayer())]);

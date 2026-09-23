@@ -921,19 +921,26 @@
       "pcm_second_8_rms": 2252.8
     }
   },
-  "compiled_results_bgm": {
+  "compiled_results_audio": {
     "decoded_added_fighters": 87,
-    "inherited_results_path": ["RANDOM"],
+    "decoded_winner_voice_fighters": 88,
+    "fgm_microcode_count": 1924,
+    "highest_winner_voice_id": 1905,
+    "inherited_victory_music_path": ["RANDOM"],
     "azahar_falco_match": {
       "passed": true,
-      "development_cia_sha256": "55d7e92a3ab028835bd40e946d871daaa5c4f88d77938a1f34e61c2c3051a643",
+      "tested_cxi_sha256": "af371a4a87abc48bdf0672c383a01cc60f187b46316d9afff343655e90a88a34",
+      "tested_elf_sha256": "e099bbc92dd966930fac33beb84813180d9dbff1f2128cf1facdbc7b9460e41d",
+      "package_verified_cia_sha256": "b2fda5db5138ab0f81c20795b3f8c3089bd5b84a55f54c5d39a107f71d8e9fed",
       "winner_fkind": 29,
       "compiled_victory_sequence_id": 69,
-      "observed_sequence_id_at_results_tic_133": 69,
+      "observed_sequence_id_at_results_tic_127": 69,
+      "compiled_winner_voice_id": 726,
+      "observed_winner_voice_id_at_results_tic_221": 726,
       "stereo_enabled": true,
       "game_abort_or_unmapped_access_detected": false
     },
-    "scope": "Compiled victory BGM table import and one Falco results transition; not the expanded stage-music selector."
+    "scope": "Compiled victory BGM and winner voice table imports and one Falco results transition; not the expanded stage-music selector."
   },
   "fighter_import_host_tests": {
     "passed": true,

@@ -20,7 +20,9 @@ from native_action_patches import (load_bindings, render_action_assignments, ren
 from native_fireball_patches import FIREBALL_BASE, extract_fireballs, render_rows, render_lookup
 from native_patch_worklist import build_worklist
 from native_kirby_patches import extract_kirby_rows, render_native_rows
-from native_results_patches import extract_victory_bgm, render_native_rows as render_victory_bgm
+from native_results_patches import (extract_victory_bgm, extract_winner_fgm,
+                                    render_native_rows as render_victory_bgm,
+                                    render_winner_fgm_rows)
 
 
 class WordReference:
@@ -40,6 +42,7 @@ class MotionTests(unittest.TestCase):
             (root / 'src/resultsscreen.asm').write_text('''
                 macro add_victory_bgm(bgm) {}
                 Character.table_patch_start(winner_bgm, {id}, 0x4)
+                Character.table_patch_start(winner_fgm, {id}, 0x4)
             ''')
             base = 0x80400000
             code = [0x00002025, 0x0c0082ad, 0x34050045, 0x0804e209, 0x8fbf0014]
@@ -48,13 +51,16 @@ class MotionTests(unittest.TestCase):
                           enumerate([*code[:2], 0x3405ffff, *code[3:]])})
             ref = WordReference(words)
             ref.path, ref.ram_base = root / 'reference.z64', base
-            table = {'layouts': {'winner_bgm': 4}, 'fighters': [
+            table = {'layouts': {'winner_bgm': 4, 'winner_fgm': 4}, 'fighters': [
                 {'name': 'FALCO', 'fkind': 29,
-                 'tables': {'winner_bgm': list((base + 0x100).to_bytes(4, 'big'))}},
+                 'tables': {'winner_bgm': list((base + 0x100).to_bytes(4, 'big')),
+                            'winner_fgm': list((726).to_bytes(4, 'big'))}},
                 {'name': 'PIANO', 'fkind': 116,
-                 'tables': {'winner_bgm': list((base + 0x200).to_bytes(4, 'big'))}},
+                 'tables': {'winner_bgm': list((base + 0x200).to_bytes(4, 'big')),
+                            'winner_fgm': list((1905).to_bytes(4, 'big'))}},
                 {'name': 'RANDOM', 'fkind': 27,
-                 'tables': {'winner_bgm': list((0x801387c8).to_bytes(4, 'big'))}}]}
+                 'tables': {'winner_bgm': list((0x801387c8).to_bytes(4, 'big')),
+                            'winner_fgm': list((483).to_bytes(4, 'big'))}}]}
             audit = {'fighters': [{'name': row['name'], 'fkind': row['fkind']}
                                   for row in table['fighters']]}
             manifest = extract_victory_bgm(ref, table, audit)
@@ -63,6 +69,13 @@ class MotionTests(unittest.TestCase):
             self.assertEqual(manifest['inherited_victory_bgm'], ['RANDOM'])
             self.assertIn('{29, 69}', render_victory_bgm(manifest))
             self.assertIn('{116, -1}', render_victory_bgm(manifest))
+            voices = extract_winner_fgm(ref, table, audit, 1924)
+            self.assertEqual([(row['name'], row['fgm_id']) for row in voices['fighters']],
+                             [('FALCO', 726), ('PIANO', 1905), ('RANDOM', 483)])
+            self.assertIn('{116, 1905}', render_winner_fgm_rows(voices))
+            table['fighters'][1]['tables']['winner_fgm'] = list((1924).to_bytes(4, 'big'))
+            with self.assertRaisesRegex(ValueError, 'exceeds FGM microcode'):
+                extract_winner_fgm(ref, table, audit, 1924)
             words[base + 0x100 + 4] = 0
             with self.assertRaisesRegex(ValueError, 'unknown victory BGM thunk'):
                 extract_victory_bgm(ref, table, audit)

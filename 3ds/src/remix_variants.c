@@ -38,9 +38,16 @@ typedef struct NativeRemixVictoryBGM {
     s16 bgm_id;
 } NativeRemixVictoryBGM;
 
+typedef struct NativeRemixWinnerFGM {
+    u16 fkind;
+    u16 fgm_id;
+} NativeRemixWinnerFGM;
+
 #include "generic_variants_data.inc"
 #include "native_kirby_inhale_rows.inc"
 #include "native_victory_bgm_rows.inc"
+#include "native_winner_fgm_rows.inc"
+volatile s32 native_remix_last_winner_fgm = -1;
 typedef char NativeRemixTablePatchCountCheck[
     ARRAY_COUNT(native_remix_table_patches) == ARRAY_COUNT(native_remix_generic_defs) ? 1 : -1];
 
@@ -60,6 +67,15 @@ s32 nativeRemixVictoryBGM(unsigned fkind) {
         if (native_remix_victory_bgm[i].fkind == fkind)
             return native_remix_victory_bgm[i].bgm_id;
     return -2; /* No compiled Remix override: use the original results path. */
+}
+
+s32 nativeRemixWinnerFGM(unsigned fkind) {
+    for (unsigned i = 0; i < ARRAY_COUNT(native_remix_winner_fgm); i++)
+        if (native_remix_winner_fgm[i].fkind == fkind) {
+            native_remix_last_winner_fgm = native_remix_winner_fgm[i].fgm_id;
+            return native_remix_last_winner_fgm;
+        }
+    return -1;
 }
 
 static int has_animation(const FTMotionDesc *motions, unsigned count, unsigned fid) {

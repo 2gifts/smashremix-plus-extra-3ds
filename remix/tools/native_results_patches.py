@@ -4,6 +4,7 @@ The N64 mod stores MIPS routine pointers in Character.winner_bgm rather than
 plain track IDs. Recognize the exact add_victory_bgm macro output and carry
 only its immediate BGM ID into the ARM build.
 """
+import struct
 from pathlib import Path
 
 from common import BUILD, sha256, write_json
@@ -55,10 +56,59 @@ def render_native_rows(manifest):
     return '\n'.join(lines)
 
 
-def write_victory_bgm(ref, tables, audit, out):
+def extract_winner_fgm(ref, tables, audit, microcode_count):
+    if tables['layouts'].get('winner_fgm') != 4:
+        raise ValueError('Winner voice table is not four bytes per fighter')
+    source = ref.path.with_name('src') / 'resultsscreen.asm'
+    if 'Character.table_patch_start(winner_fgm, {id}, 0x4)' not in source.read_text():
+        raise ValueError('Pinned winner voice macro layout changed')
+    if not 0 < microcode_count <= 8192:
+        raise ValueError('Invalid FGM microcode count')
+    audited = {row['name']: row['fkind'] for row in audit['fighters']}
+    rows = []
+    for fighter in tables['fighters']:
+        name, fkind = fighter['name'], fighter['fkind']
+        if audited.get(name) != fkind:
+            raise ValueError(f'{name}: winner voice fighter does not match audit')
+        payload = bytes(fighter['tables']['winner_fgm'])
+        if len(payload) != 4:
+            raise ValueError(f'{name}: truncated winner voice ID')
+        fgm = int.from_bytes(payload, 'big')
+        if fgm >= microcode_count:
+            raise ValueError(f'{name}: winner voice {fgm} exceeds FGM microcode')
+        rows.append({'name': name, 'fkind': fkind, 'fgm_id': fgm})
+    return {'schema': 1, 'reference_rom_sha256': sha256(ref.path),
+            'source_macro': 'resultsscreen.add_to_results_screen',
+            'fgm_microcode_count': microcode_count, 'fighters': rows}
+
+
+def render_winner_fgm_rows(manifest):
+    lines = ['/* Compiled Character.winner_fgm rows, bounded by FGM microcode. */',
+             'static const NativeRemixWinnerFGM native_remix_winner_fgm[] = {']
+    for row in sorted(manifest['fighters'], key=lambda item: item['fkind']):
+        lines.append(f'    {{{row["fkind"]}, {row["fgm_id"]}}}, /* {row["name"]} */')
+    lines += ['};', '']
+    return '\n'.join(lines)
+
+
+def microcode_count(ref):
+    if len(ref.rom) < 0x3d79c:
+        raise ValueError('Reference ROM lacks the FGM microcode pointer')
+    offset = struct.unpack_from('>I', ref.rom, 0x3d798)[0]
+    if offset < 0 or offset + 4 > len(ref.rom):
+        raise ValueError('FGM microcode header outside reference ROM')
+    return struct.unpack_from('>I', ref.rom, offset)[0]
+
+
+def write_results_audio(ref, tables, audit, out):
     manifest = extract_victory_bgm(ref, tables, audit)
     if manifest['reference_rom_sha256'] != tables['reference_rom_sha256']:
         raise ValueError('Victory BGM and table patches use different ROMs')
     write_json(BUILD / 'fighter-victory-bgm-patches.json', manifest)
     (Path(out) / 'native_victory_bgm_rows.inc').write_text(render_native_rows(manifest))
-    return manifest
+    voices = extract_winner_fgm(ref, tables, audit, microcode_count(ref))
+    if voices['reference_rom_sha256'] != tables['reference_rom_sha256']:
+        raise ValueError('Winner voice and table patches use different ROMs')
+    write_json(BUILD / 'fighter-winner-fgm-patches.json', voices)
+    (Path(out) / 'native_winner_fgm_rows.inc').write_text(render_winner_fgm_rows(voices))
+    return manifest, voices

@@ -16,7 +16,7 @@ from native_fighter_catalog import load_catalog, render_generic_data, render_hea
 from reference_table_patches import write_reference_tables
 from native_fireball_patches import write_fireballs
 from native_kirby_patches import write_kirby_rows
-from native_results_patches import write_victory_bgm
+from native_results_patches import write_results_audio
 from native_patch_worklist import write_worklist
 from native_action_patches import write_action_patches
 
@@ -269,7 +269,7 @@ def main():
     table_manifest = write_reference_tables(ref, audit, catalog, out)
     fireball_manifest = write_fireballs(ref, table_manifest, audit, catalog, out)
     write_kirby_rows(ref, table_manifest, audit, out)
-    write_victory_bgm(ref, table_manifest, audit, out)
+    _, winner_voices = write_results_audio(ref, table_manifest, audit, out)
     write_worklist(audit, table_manifest, fireball_manifest, catalog)
     (out / 'generic_variants_data.inc').write_text(render_generic_data(catalog))
 
@@ -325,6 +325,8 @@ def main():
         shutil.copytree(vanilla / name, assets / name, dirs_exist_ok=True)
     from prepare_reference_audio import main as prepare_audio
     prepare_audio()
+    if json.loads((BUILD / 'audio/manifest.json').read_text())['fgm_microcode_count'] != winner_voices['fgm_microcode_count']:
+        raise ValueError('Winner voice IDs and native audio package disagree')
     for path in (BUILD / 'audio').glob('*.bin'):
         shutil.copy2(path, assets / 'audio' / path.name)
     for name in ('initial-save.bin', 'bottom-ui.bin'):
