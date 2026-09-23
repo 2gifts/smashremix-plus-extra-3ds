@@ -1,7 +1,7 @@
 """Extract a native fighter integration fixture from the pinned reference build.
 
-This is deliberately separate from release packaging. Falco occupies the Fox
-slot in this fixture, while menus and all other fighters remain vanilla. No ROM
+This is deliberately separate from release packaging. Falco is selectable via
+the bottom-screen Fox card in VS mode, while other menus remain vanilla. No ROM
 addresses are executed: motion bytecode is decoded and its pointers relocated,
 and special callbacks are supplied by native C implementations.
 """
@@ -220,7 +220,7 @@ def main():
     for name in ('initial-save.bin', 'bottom-ui.bin'):
         shutil.copy2(vanilla / name, assets / name)
     write_json(out / 'manifest.json', {
-        'fixture': 'Falco in Fox slot; not the complete Remix mod',
+        'fixture': 'Falco selectable beside Fox in VS mode; not the complete Remix mod',
         'motion_count': len(motion), 'menu_motion_count': len(menus),
         'script_words': len(scripts.words), 'script_pointers': len(scripts.pointers),
         'required_files': sorted(required), 'unresolved_relocations': bad,

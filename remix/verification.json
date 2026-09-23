@@ -441,13 +441,13 @@
     "native_roster_fighters_added": 1,
     "selectable_fighter_ids": [29],
     "separate_top_screen_portrait_added": false,
-    "forced_fighter_29_stereo_match_to_results_verified": true,
-    "forced_fighter_29_action_states_observed": 33,
     "bottom_screen_touch_selection_match_to_results_verified": true,
-    "bottom_screen_touch_selection_action_states_observed": 39,
+    "bottom_screen_touch_selection_action_states_observed": 46,
     "untouched_fox_selection_remains_fkind_1_verified": true,
+    "untouched_fox_original_main_file_id_verified": 209,
+    "bottom_touch_falco_main_file_id_verified": 2219,
     "fighter_size_prepass_capacity": 128,
-    "scope": "Falco is registered at fkind 29 and selectable in VS mode by tapping the Fox player's bottom-screen card. A timed four-fighter stereo match reached results through that selector. Fox remains available. The other imported records are motion-data candidates only; the expanded selection grid is not available."
+    "scope": "Falco is registered at fkind 29 and selectable in VS mode by tapping the Fox player's bottom-screen card. A timed four-fighter stereo match reached results through that selector. Fighter data is independently backed: Azahar observed Fox's original main file 0xD1 and Falco's imported main file 0x8AB. The other imported records are motion-data candidates only; the expanded selection grid is not available."
   },
   "falco_development_fixture": {
     "scope": "Falco is selectable as fkind 29 from the VS bottom-screen Fox card; untouched Fox remains fkind 1. The top-screen portrait and other menus remain vanilla; no +EXTRA roster.",
@@ -457,8 +457,8 @@
     "published_binary": false,
     "title_id": "000400000ff64200",
     "sd_directory": "/3ds/ssb64-remix-falco-test/",
-    "elf_sha256": "b4262e3e0faa0f5db4b967f9c1e43b6f95d884c7fadae475ad8d9292ab5fc885",
-    "cia_sha256": "a9d1f03ea2275501150d3769907a6dad9bd328bea5e510bb53b30f2522d01733",
+    "elf_sha256": "9ccf0f5d37b9f500f32408090f15b0369d52371827d521eddf3f4df9072d6486",
+    "cia_sha256": "8310ed1e3d15a862c860f0b9f1ccc9aa54bc4e1e1fb4b296283b220252627e53",
     "cia_bytes": 35533760,
     "main_motions": 219,
     "menu_motions": 15,
@@ -505,7 +505,7 @@
         "passed": true
       }
     ],
-    "emulator_test_elf_sha256": "b4262e3e0faa0f5db4b967f9c1e43b6f95d884c7fadae475ad8d9292ab5fc885",
+    "emulator_test_elf_sha256": "9ccf0f5d37b9f500f32408090f15b0369d52371827d521eddf3f4df9072d6486",
     "sd_errors_during_move_checks": 0,
     "package_integrity_verified": true,
     "normal_startup_defaults_verified": {
@@ -537,10 +537,11 @@
     "pristine_emulator_startup_verified": true,
     "four_fighter_stereo_match_to_results_verified": true,
     "results_scene_observed": 24,
-    "results_frame_observed": 5113,
-    "forced_fighter_29_results_frame_observed": 5136,
+    "results_frame_observed": 5134,
     "bottom_touch_fighter_29_results_to_css_verified": true,
     "bottom_touch_fighter_29_css_return_frame_observed": 5700,
+    "bottom_touch_fighter_29_main_file_id_verified": 2219,
+    "untouched_fox_main_file_id_verified": 209,
     "bottom_touch_fighter_29_top_css_proxy_kind": 1,
     "bottom_touch_fighter_29_bottom_card_kind": 29,
     "registered_results_fighter_files_loaded": true,

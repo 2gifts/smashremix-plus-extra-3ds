@@ -317,7 +317,10 @@ void nativeRemixProbeInit(void) {
     for (unsigned player = 0; player < 4; player++)
         for (unsigned slot = 0; slot < 4; slot++) nativeRemixProbeHitboxReset(player, slot);
     FighterDescriptor desc = *port_fighter_descriptor(nFTKindFox);
-    FTData *data = desc.ft_data;
+    /* Copy before changing any IDs or motion pointers. desc.ft_data points
+     * at the live vanilla Fox row, which must remain unchanged for Fox. */
+    falco_slot_data = *desc.ft_data;
+    FTData *data = &falco_slot_data;
     memcpy(&data->file_main_id, remix_probe_files, sizeof(remix_probe_files));
     data->o_attributes = REMIX_PROBE_ATTRIBUTE_OFFSET;
     data->mainmotion = (FTMotionDescArray *)remix_main_motions;
@@ -340,7 +343,6 @@ void nativeRemixProbeInit(void) {
     desc.scale = 1.2f;
     /* Register Falco at the assembled mod's real fkind. The bottom-screen
      * VS selector chooses this independently backed row; Fox stays vanilla. */
-    falco_slot_data = *data;
     falco_slot_data.p_file_main = &falco_slot_files[0];
     falco_slot_data.p_file_mainmotion = &falco_slot_files[1];
     falco_slot_data.p_file_submotion = &falco_slot_files[2];
