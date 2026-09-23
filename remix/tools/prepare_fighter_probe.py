@@ -25,6 +25,7 @@ from native_action_patches import (action_table_bindable, load_bindings,
                                    write_action_patches)
 from classify_action_callbacks import classify as classify_action_callbacks
 from native_transition_templates import write_native_transitions
+from native_variant_metadata import write_variant_metadata
 from native_anim_end_templates import write_native_anim_ends
 
 
@@ -241,6 +242,7 @@ def main():
     generic = {row['name']: emit_variant(ref, row['name'], native_scripts, out)
                for row in catalog['fighters'] if row['registration'] == 'generic'}
     table_manifest = write_reference_tables(ref, audit, catalog, out)
+    write_variant_metadata(ref, table_manifest, out)
     fireball_manifest = write_fireballs(ref, table_manifest, audit, catalog, out)
     write_kirby_rows(ref, table_manifest, audit, out)
     _, winner_voices, _ = write_results_patches(ref, table_manifest, audit, out)

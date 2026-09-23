@@ -39,6 +39,7 @@ from native_anim_end_templates import (STATUS_PLAY_CLEAR, DIVE_AIR_INITIAL,
                                        render_native_code as render_anim_end_code)
 from native_straightline_transitions import decode_straightline
 from native_fkind_branch_transitions import decode_fkind_branches
+from native_variant_metadata import extract_variant_metadata, render_variant_metadata
 
 
 class WordReference:
@@ -50,6 +51,47 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_compiled_variant_identity_imports_all_rows_and_rejects_stale_patches(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            path = Path(dirname) / 'reference.z64'
+            rom = bytearray(0x600)
+            for kind in range(30):
+                struct.pack_into('>I', rom, 0x100 + 4 * kind, kind)
+                rom[0x200 + kind] = 0
+                rom[0x300 + 4 * kind:0x304 + 4 * kind] = bytes([28] * 4)
+            struct.pack_into('>I', rom, 0x100 + 4 * 29, 1)
+            rom[0x200 + 29] = 2
+            rom[0x300 + 4 * 29:0x304 + 4 * 29] = bytes([1, 28, 28, 28])
+            path.write_bytes(rom)
+            ref = SimpleNamespace(path=path, rom=rom, rom_base=0, ram_base=0x80500000,
+                                  symbols={
+                                      'Character.variant_original.table': 0x80500100,
+                                      'Character.variant_type.table': 0x80500200,
+                                      'Character.variants_with_same_model.table': 0x80500300,
+                                  })
+            tables = {'schema': 1, 'reference_rom_sha256': sha256(path),
+                      'layouts': {'variant_original': 4, 'variant_type': 1,
+                                  'variants_with_same_model': 4},
+                      'fighters': [{'name': 'JFOX', 'fkind': 29, 'tables': {
+                          'variant_original': [0, 0, 0, 1], 'variant_type': [2],
+                          'variants_with_same_model': [1, 28, 28, 28]}}]}
+            report = extract_variant_metadata(ref, tables)
+            self.assertEqual(report['compiled_fighter_rows'], 30)
+            self.assertEqual(report['rows'][29]['original'], 1)
+            self.assertEqual(report['rows'][29]['variant_type'], 2)
+            self.assertIn('{1, 2, {1, 28, 28, 28}}', render_variant_metadata(report))
+            tables['fighters'][0]['tables']['variant_type'] = [3]
+            with self.assertRaisesRegex(ValueError, 'Stale compiled variant_type'):
+                extract_variant_metadata(ref, tables)
+            tables['fighters'][0]['tables']['variant_type'] = [2]
+            tables['fighters'].append(dict(tables['fighters'][0]))
+            with self.assertRaisesRegex(ValueError, 'nonempty and unique'):
+                extract_variant_metadata(ref, tables)
+            tables['fighters'].pop()
+            rom[0x200 + 29] = 0xfe
+            with self.assertRaisesRegex(ValueError, 'Invalid compiled variant metadata'):
+                extract_variant_metadata(ref, tables)
+
     def test_symbolic_branch_likely_annuls_not_taken_delay_slot(self):
         words = [int(value, 16) for value in (
             '27bdffe0 afbf001c afa40020 8c840084 0c037ba6 00000000 '

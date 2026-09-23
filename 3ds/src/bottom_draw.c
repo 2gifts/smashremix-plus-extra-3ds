@@ -14,6 +14,7 @@ static const uint16_t colors[4]={RGB(235,68,63),RGB(75,140,235),RGB(241,190,43),
 static const char* names[12]={"MARIO",FOX_SLOT_NAME,"DONKEY KONG","SAMUS","LUIGI","LINK","YOSHI","C. FALCON","KIRBY","PIKACHU","JIGGLYPUFF","NESS"};
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_ui.inc"
+#include "native_remix_variant_metadata.h"
 #endif
 static const char* stages[9]={"PEACH'S CASTLE","SECTOR Z","KONGO JUNGLE","PLANET ZEBES","HYRULE CASTLE","YOSHI'S ISLAND","DREAM LAND","SAFFRON CITY","MUSHROOM KINGDOM"};
 typedef struct {uint32_t w,h,offset;} Art;
@@ -93,6 +94,8 @@ static void plate(int x,int y,int w,int h,uint16_t c){
 }
 static unsigned fighterArt(unsigned c){
 #ifdef SSB_REMIX_PROBE
+    int original=nativeRemixVariantOriginal(c);
+    if(original>=0&&original<12)return (unsigned)original;
     for(unsigned i=0;i<sizeof(native_remix_ui)/sizeof(native_remix_ui[0]);i++)
         if(native_remix_ui[i].kind==c)return native_remix_ui[i].art;
 #endif

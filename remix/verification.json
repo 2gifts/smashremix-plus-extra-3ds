@@ -785,6 +785,17 @@
     "azahar_stereo_falco_match_to_results": true,
     "scope": "All generated entry-effect rows matched Azahar memory and a stereo Falco match reached results; six custom routines and visual effect fidelity remain unverified."
   },
+  "compiled_variant_metadata": {
+    "reference_rows": 116,
+    "fields": ["variant_original", "variant_type", "variants_with_same_model"],
+    "guest_bytes_verified": 696,
+    "azahar_stereo_table_check": true,
+    "azahar_stereo_drl_match_frame": 2057,
+    "development_elf_sha256": "17909e49e8388242608c7d04a17dc0a7f26762e4f2a9a5cf3ff2d560d82a4a07",
+    "development_cxi_sha256": "6de5ace9858dedcf292259c481f1d185dc8587f1e2d42fbc9cf85d02db1e8738",
+    "development_cia_sha256": "3d6ee1dff949977a9f7327b825d2f616a4255c019bb9453208924293904454eb",
+    "scope": "All compiled variant identity rows match Azahar guest memory. The bottom-screen vanilla portrait fallback consumes the original-ID table. Expanded CSS, new fighter portraits, and full variant gameplay remain unimplemented."
+  },
   "action_callback_family_audit": {
     "unique_compiled_expansion_targets": 852,
     "short_single_call_candidates": 241,

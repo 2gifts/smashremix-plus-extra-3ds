@@ -9,6 +9,7 @@
 #include <string.h>
 #include "fighter_registry.h"
 #include "native_remix_roster.h"
+#include "native_remix_variant_metadata.h"
 
 extern u32 portRelocRegisterPointer(void *);
 extern void port_log(const char *, ...);
@@ -59,7 +60,14 @@ typedef struct NativeRemixEntryEffect {
     s16 effect_kind;
 } NativeRemixEntryEffect;
 
+typedef struct NativeRemixVariantMeta {
+    u8 original;
+    u8 variant_type;
+    u8 same_model[4];
+} NativeRemixVariantMeta;
+
 #include "generic_variants_data.inc"
+#include "native_variant_metadata.inc"
 #include "native_kirby_inhale_rows.inc"
 #include "native_victory_bgm_rows.inc"
 #include "native_winner_fgm_rows.inc"
@@ -79,6 +87,21 @@ typedef char NativeRemixTablePatchCountCheck[
 static FTData native_remix_generic_data[ARRAY_COUNT(native_remix_generic_defs)];
 static void *native_remix_generic_files[ARRAY_COUNT(native_remix_generic_defs)][9];
 static s32 native_remix_generic_particles[ARRAY_COUNT(native_remix_generic_defs)];
+
+int nativeRemixVariantOriginal(unsigned fkind) {
+    if (fkind >= ARRAY_COUNT(native_remix_variant_metadata)) return -1;
+    return native_remix_variant_metadata[fkind].original;
+}
+
+int nativeRemixVariantType(unsigned fkind) {
+    if (fkind >= ARRAY_COUNT(native_remix_variant_metadata)) return -1;
+    return native_remix_variant_metadata[fkind].variant_type;
+}
+
+int nativeRemixSameModelPeer(unsigned fkind, unsigned index) {
+    if (fkind >= ARRAY_COUNT(native_remix_variant_metadata) || index >= 4) return -1;
+    return native_remix_variant_metadata[fkind].same_model[index];
+}
 
 s32 nativeRemixKirbyStarDamage(unsigned fkind) {
     if (fkind < ARRAY_COUNT(native_remix_kirby_inhale_rows) &&
