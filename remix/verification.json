@@ -474,9 +474,9 @@
     "published_binary": false,
     "title_id": "000400000ff64200",
     "sd_directory": "/3ds/ssb64-remix-falco-test/",
-    "elf_sha256": "f9cac257ca5ba40c4088185ff2924fa3e111170c1c29d99ff179e95a9f7beaa9",
-    "cia_sha256": "02b4ba641e6b5d5ce3272c7aac643ace98868300323738680f7c9e80e72d3e74",
-    "cia_bytes": 36033472,
+    "elf_sha256": "683a9107958e7ded5e6f755a8a6c80ce278e0430440f80d44117c041d82f5215",
+    "cia_sha256": "5e61da16d4b4cec1af8caa1dd37235cebef4c81585d3dfbdad0c4d02098e63d7",
+    "cia_bytes": 36037568,
     "main_motions": 219,
     "menu_motions": 15,
     "motion_words": 813,
@@ -605,12 +605,17 @@
     "jluigi_throws_gameplay_verified": false,
     "jdk_cargo_escape_gameplay_verified": false,
     "epika_forward_smash_up_tilt_thunder_connect_gameplay_verified": false,
-    "emulator_test_elf_sha256": "f9cac257ca5ba40c4088185ff2924fa3e111170c1c29d99ff179e95a9f7beaa9",
+    "emulator_test_elf_sha256": "683a9107958e7ded5e6f755a8a6c80ce278e0430440f80d44117c041d82f5215",
+    "emulator_direct_move_suite_elf_sha256": "f9cac257ca5ba40c4088185ff2924fa3e111170c1c29d99ff179e95a9f7beaa9",
+    "emulator_roster_regression_elf_sha256": "683a9107958e7ded5e6f755a8a6c80ce278e0430440f80d44117c041d82f5215",
+    "emulator_roster_short_match_cases_passed": ["Falco", "DK Ult", "J DK", "J Pika", "E Pika", "J Mario", "J Falcon", "J Luigi", "vanilla Fox", "vanilla DK", "vanilla Pikachu", "vanilla Mario"],
+    "emulator_roster_results_css_elf_sha256": "85ce0ec14e03a42023e828458c90a54c28066e3df12499f37f12121d3d8be38d",
+    "emulator_roster_results_css_fighter_ids": [44, 45],
     "sd_errors_during_move_checks": 0,
     "package_integrity_verified": true,
     "exact_packaged_cxi_pristine_startup_verified": true,
     "exact_packaged_cxi_four_fighter_stereo_match_to_results_verified": true,
-    "exact_packaged_cxi_results_frame_observed": 5121,
+    "exact_packaged_cxi_results_frame_observed": 5127,
     "normal_startup_defaults_verified": {
       "ssb_test_frame_limit": "0x0",
       "ssb_test_inputs": "0x0",
@@ -727,8 +732,8 @@
   },
   "fighter_import_host_tests": {
     "passed": true,
-    "tests": 11,
-    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges and sample preservation"
+    "tests": 15,
+    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, and shared fighter parent/cycle mapping"
   },
   "save_writer_host_tests": {
     "passed": true,

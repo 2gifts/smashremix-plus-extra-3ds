@@ -98,22 +98,7 @@ void nativeBottomSnapshot(NativeBottomState* s){
             MNPlayersSlotVS* q=&sMNPlayersVSSlots[i];NativeBottomPlayer* p=&s->players[i];
             p->kind=q->pkind;p->character=q->fkind;p->costume=q->costume;p->level=q->cpu_level;
 #ifdef SSB_REMIX_PROBE
-            if(q->fkind==nFTKindFox&&native_remix_selected_fkind[i]==NATIVE_REMIX_FALCO_KIND)
-                p->character=NATIVE_REMIX_FALCO_KIND;
-            if(q->fkind==nFTKindDonkey&&native_remix_selected_fkind[i]==NATIVE_REMIX_DKULT_KIND)
-                p->character=NATIVE_REMIX_DKULT_KIND;
-            if(q->fkind==nFTKindDonkey&&native_remix_selected_fkind[i]==NATIVE_REMIX_JDK_KIND)
-                p->character=NATIVE_REMIX_JDK_KIND;
-            if(q->fkind==nFTKindPikachu&&native_remix_selected_fkind[i]==NATIVE_REMIX_JPIKA_KIND)
-                p->character=NATIVE_REMIX_JPIKA_KIND;
-            if(q->fkind==nFTKindPikachu&&native_remix_selected_fkind[i]==NATIVE_REMIX_EPIKA_KIND)
-                p->character=NATIVE_REMIX_EPIKA_KIND;
-            if(q->fkind==nFTKindMario&&native_remix_selected_fkind[i]==NATIVE_REMIX_JMARIO_KIND)
-                p->character=NATIVE_REMIX_JMARIO_KIND;
-            if(q->fkind==nFTKindCaptain&&native_remix_selected_fkind[i]==NATIVE_REMIX_JFALCON_KIND)
-                p->character=NATIVE_REMIX_JFALCON_KIND;
-            if(q->fkind==nFTKindLuigi&&native_remix_selected_fkind[i]==NATIVE_REMIX_JLUIGI_KIND)
-                p->character=NATIVE_REMIX_JLUIGI_KIND;
+            p->character=nativeRemixResolveKind(q->fkind,native_remix_selected_fkind[i]);
 #endif
             p->color=s->teams?(q->team==2?3:q->team):i;p->ready=q->is_fighter_selected;
         }

@@ -4898,46 +4898,11 @@ void mnPlayersVSSetSceneData(void)
 		}
 		gSCManagerTransferBattleState.players[i].fkind = sMNPlayersVSSlots[i].fkind;
 #ifdef SSB_REMIX_PROBE
-		if ((gSCManagerTransferBattleState.players[i].fkind == nFTKindFox) &&
-		    (native_remix_selected_fkind[i] == NATIVE_REMIX_FALCO_KIND))
-		{
-			gSCManagerTransferBattleState.players[i].fkind = NATIVE_REMIX_FALCO_KIND;
-		}
-		else if ((gSCManagerTransferBattleState.players[i].fkind == nFTKindDonkey) &&
-		         (native_remix_selected_fkind[i] == NATIVE_REMIX_DKULT_KIND))
-		{
-			gSCManagerTransferBattleState.players[i].fkind = NATIVE_REMIX_DKULT_KIND;
-		}
-		else if ((gSCManagerTransferBattleState.players[i].fkind == nFTKindDonkey) &&
-		         (native_remix_selected_fkind[i] == NATIVE_REMIX_JDK_KIND))
-		{
-			gSCManagerTransferBattleState.players[i].fkind = NATIVE_REMIX_JDK_KIND;
-		}
-		else if ((gSCManagerTransferBattleState.players[i].fkind == nFTKindPikachu) &&
-		         (native_remix_selected_fkind[i] == NATIVE_REMIX_JPIKA_KIND))
-		{
-			gSCManagerTransferBattleState.players[i].fkind = NATIVE_REMIX_JPIKA_KIND;
-		}
-		else if ((gSCManagerTransferBattleState.players[i].fkind == nFTKindPikachu) &&
-		         (native_remix_selected_fkind[i] == NATIVE_REMIX_EPIKA_KIND))
-		{
-			gSCManagerTransferBattleState.players[i].fkind = NATIVE_REMIX_EPIKA_KIND;
-		}
-		else if ((gSCManagerTransferBattleState.players[i].fkind == nFTKindMario) &&
-		         (native_remix_selected_fkind[i] == NATIVE_REMIX_JMARIO_KIND))
-		{
-			gSCManagerTransferBattleState.players[i].fkind = NATIVE_REMIX_JMARIO_KIND;
-		}
-		else if ((gSCManagerTransferBattleState.players[i].fkind == nFTKindCaptain) &&
-		         (native_remix_selected_fkind[i] == NATIVE_REMIX_JFALCON_KIND))
-		{
-			gSCManagerTransferBattleState.players[i].fkind = NATIVE_REMIX_JFALCON_KIND;
-		}
-		else if ((gSCManagerTransferBattleState.players[i].fkind == nFTKindLuigi) &&
-		         (native_remix_selected_fkind[i] == NATIVE_REMIX_JLUIGI_KIND))
-		{
-			gSCManagerTransferBattleState.players[i].fkind = NATIVE_REMIX_JLUIGI_KIND;
-		}
+		gSCManagerTransferBattleState.players[i].fkind = nativeRemixResolveKind
+		(
+			gSCManagerTransferBattleState.players[i].fkind,
+			native_remix_selected_fkind[i]
+		);
 #endif
 		gSCManagerTransferBattleState.players[i].pkind = sMNPlayersVSSlots[i].pkind;
 		gSCManagerTransferBattleState.players[i].costume = sMNPlayersVSSlots[i].costume;
@@ -5304,45 +5269,10 @@ void mnPlayersVSInitPlayer(s32 player)
 	/* The original CSS has only twelve portrait IDs. Keep the corresponding
 	 * vanilla portrait as a temporary proxy while retaining the real fighter
 	 * choice on the bottom screen and in the next match. */
-	if (sMNPlayersVSSlots[player].fkind == NATIVE_REMIX_FALCO_KIND)
+	if (nativeRemixIsVariant(sMNPlayersVSSlots[player].fkind))
 	{
-		native_remix_selected_fkind[player] = NATIVE_REMIX_FALCO_KIND;
-		sMNPlayersVSSlots[player].fkind = nFTKindFox;
-	}
-	else if (sMNPlayersVSSlots[player].fkind == NATIVE_REMIX_DKULT_KIND)
-	{
-		native_remix_selected_fkind[player] = NATIVE_REMIX_DKULT_KIND;
-		sMNPlayersVSSlots[player].fkind = nFTKindDonkey;
-	}
-	else if (sMNPlayersVSSlots[player].fkind == NATIVE_REMIX_JDK_KIND)
-	{
-		native_remix_selected_fkind[player] = NATIVE_REMIX_JDK_KIND;
-		sMNPlayersVSSlots[player].fkind = nFTKindDonkey;
-	}
-	else if (sMNPlayersVSSlots[player].fkind == NATIVE_REMIX_JPIKA_KIND)
-	{
-		native_remix_selected_fkind[player] = NATIVE_REMIX_JPIKA_KIND;
-		sMNPlayersVSSlots[player].fkind = nFTKindPikachu;
-	}
-	else if (sMNPlayersVSSlots[player].fkind == NATIVE_REMIX_EPIKA_KIND)
-	{
-		native_remix_selected_fkind[player] = NATIVE_REMIX_EPIKA_KIND;
-		sMNPlayersVSSlots[player].fkind = nFTKindPikachu;
-	}
-	else if (sMNPlayersVSSlots[player].fkind == NATIVE_REMIX_JMARIO_KIND)
-	{
-		native_remix_selected_fkind[player] = NATIVE_REMIX_JMARIO_KIND;
-		sMNPlayersVSSlots[player].fkind = nFTKindMario;
-	}
-	else if (sMNPlayersVSSlots[player].fkind == NATIVE_REMIX_JFALCON_KIND)
-	{
-		native_remix_selected_fkind[player] = NATIVE_REMIX_JFALCON_KIND;
-		sMNPlayersVSSlots[player].fkind = nFTKindCaptain;
-	}
-	else if (sMNPlayersVSSlots[player].fkind == NATIVE_REMIX_JLUIGI_KIND)
-	{
-		native_remix_selected_fkind[player] = NATIVE_REMIX_JLUIGI_KIND;
-		sMNPlayersVSSlots[player].fkind = nFTKindLuigi;
+		native_remix_selected_fkind[player] = sMNPlayersVSSlots[player].fkind;
+		sMNPlayersVSSlots[player].fkind = nativeRemixParentKind(sMNPlayersVSSlots[player].fkind);
 	}
 	else native_remix_selected_fkind[player] = 0;
 #endif

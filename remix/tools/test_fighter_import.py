@@ -18,6 +18,37 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_roster_cycle_match_and_results_share_parent(self):
+        fixture = '''#include <assert.h>
+#include "native_remix_roster.h"
+int main(void) {
+    assert(nativeRemixNextKind(NATIVE_REMIX_DONKEY_KIND, 0) == NATIVE_REMIX_DKULT_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_DKULT_KIND, NATIVE_REMIX_DKULT_KIND) == NATIVE_REMIX_JDK_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_JDK_KIND, NATIVE_REMIX_JDK_KIND) == 0);
+    assert(nativeRemixNextKind(NATIVE_REMIX_PIKACHU_KIND, 0) == NATIVE_REMIX_JPIKA_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_JPIKA_KIND, NATIVE_REMIX_JPIKA_KIND) == NATIVE_REMIX_EPIKA_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_EPIKA_KIND, NATIVE_REMIX_EPIKA_KIND) == 0);
+    assert(nativeRemixNextKind(NATIVE_REMIX_MARIO_KIND, 0) == NATIVE_REMIX_JMARIO_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_FOX_KIND, NATIVE_REMIX_FALCO_KIND) == 0);
+    assert(nativeRemixNextKind(999, 0) == 0);
+    assert(nativeRemixResolveKind(NATIVE_REMIX_DONKEY_KIND, NATIVE_REMIX_JDK_KIND) == NATIVE_REMIX_JDK_KIND);
+    assert(nativeRemixResolveKind(NATIVE_REMIX_DONKEY_KIND, NATIVE_REMIX_EPIKA_KIND) == NATIVE_REMIX_DONKEY_KIND);
+    assert(nativeRemixResolveKind(NATIVE_REMIX_MARIO_KIND, NATIVE_REMIX_JMARIO_KIND) == NATIVE_REMIX_JMARIO_KIND);
+    assert(nativeRemixParentKind(NATIVE_REMIX_EPIKA_KIND) == NATIVE_REMIX_PIKACHU_KIND);
+    assert(nativeRemixParentKind(NATIVE_REMIX_JMARIO_KIND) == NATIVE_REMIX_MARIO_KIND);
+    assert(nativeRemixIsVariant(NATIVE_REMIX_EPIKA_KIND));
+    assert(!nativeRemixIsVariant(NATIVE_REMIX_PIKACHU_KIND));
+    return 0;
+}'''
+        out = BUILD / 'fighter-import-test'
+        out.mkdir(parents=True, exist_ok=True)
+        path, exe = out / 'roster_cycle.c', out / 'roster-cycle-test.exe'
+        path.write_text(fixture)
+        cc = compiler_path(None).replace('clang++', 'clang')
+        subprocess.run([cc, '-std=gnu11', '-I' + str(ROOT / '3ds/include'),
+                        str(path), '-o', str(exe)], check=True)
+        subprocess.run([str(exe)], check=True)
+
     def test_jpika_quick_attack_collision_follows_japanese_flow(self):
         source = (ROOT / '3ds/src/remix_jpika_probe.c').read_text()
         start = source.index('static void jpikaQuickAttackMap(')
