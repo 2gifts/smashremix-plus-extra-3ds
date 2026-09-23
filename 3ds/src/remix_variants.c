@@ -3,6 +3,7 @@
  * pinned, assembled Remix reference. Custom moves stay in dedicated code. */
 #include <ft/fighter.h>
 #include <ft/ftmain.h>
+#include <ft/ftanimend.h>
 #include <ft/ftphysics.h>
 #include <mp/mpcommon.h>
 #include <string.h>
@@ -67,6 +68,7 @@ typedef struct NativeRemixEntryEffect {
 #include "native_hit_sound_rows.inc"
 #include "native_entry_effect_rows.inc"
 #include "native_collision_templates.inc"
+#include "native_anim_end_templates.inc"
 #include "generic_action_tables.inc"
 volatile s32 native_remix_last_winner_fgm = -1;
 volatile s32 native_remix_last_results_text_fkind = -1;

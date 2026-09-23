@@ -25,6 +25,7 @@ from native_action_patches import (action_table_bindable, load_bindings,
                                    write_action_patches)
 from classify_action_callbacks import classify as classify_action_callbacks
 from native_transition_templates import write_native_transitions
+from native_anim_end_templates import write_native_anim_ends
 
 
 class Reference:
@@ -199,6 +200,12 @@ def main():
     native_transitions = write_native_transitions(ref, families, out)
     auto_bindings = {int(row['address'], 16): row['native']
                      for row in native_transitions['wrappers']}
+    native_anim_ends = write_native_anim_ends(ref, worklist, out)
+    for row in native_anim_ends['wrappers']:
+        address = int(row['address'], 16)
+        if address in auto_bindings:
+            raise ValueError(f'Duplicate generated action callback {address:08x}')
+        auto_bindings[address] = row['native']
     _, bindings = load_bindings(symbols=ref.symbols)
     bindings.update(auto_bindings)
     bindable = {row['name'] for row in audit['fighters']

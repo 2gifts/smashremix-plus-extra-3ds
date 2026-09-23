@@ -32,6 +32,8 @@ from classify_action_callbacks import classify as classify_action_callbacks
 from native_transition_templates import (TEMPLATES, SHARED_TEMPLATES,
                                          decode_transition, extract_native_transitions,
                                          render_native_code)
+from native_anim_end_templates import (STATUS_PLAY_CLEAR, extract_native_anim_ends,
+                                       render_native_code as render_anim_end_code)
 
 
 class WordReference:
@@ -43,6 +45,44 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_compiled_animation_end_pairs_bind_only_complete_transitions(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            path = Path(dirname) / 'reference.z64'
+            path.write_bytes(b'private fixture')
+            target = 0x80500100
+            first, second = 0x80500000, 0x80500040
+            transition = [0x340500e8 if word is None else word
+                          for word in STATUS_PLAY_CLEAR]
+            wrapper1 = [0x27bdffe8, 0xafbf0014, 0x8cd8014c,
+                        0x3c058050, 0x34a50100, 0x0c036520, 0,
+                        0x8fbf0014, 0x27bd0018, 0x03e00008, 0]
+            wrapper2 = [0x27bdffe8, 0xafbf0014, 0x3c058050,
+                        0x34a50100, 0x0c036520, 0x8cd8014c,
+                        0x8fbf0014, 0x03e00008, 0x27bd0018]
+            code = {first: wrapper1, second: wrapper2, target: transition}
+            ref = SimpleNamespace(path=path, ram_base=0x80400000,
+                                  words=lambda address, count:
+                                  (code[address] + [0] * count)[:count])
+            worklist = {'reference_rom_sha256': sha256(path),
+                        'targets': [{'address': f'{address:08x}', 'symbols': ['Fixture.main'],
+                                     'uses': [{'fighter': 'FIXTURE', 'status_id': 0xe8,
+                                               'role': 'update'}]}
+                                    for address in (first, second)]}
+            result = extract_native_anim_ends(ref, worklist)
+            self.assertEqual(result['recognized_transition_count'], 1)
+            self.assertEqual(result['recognized_action_callback_count'], 2)
+            generated = render_anim_end_code(result)
+            self.assertIn('ftAnimEndCheckSetStatus', generated)
+            self.assertIn('FTSTATUS_PRESERVE_HIT', generated)
+            self.assertIn('memset(&fp->status_vars, 0, 3 * sizeof(s32));', generated)
+            transition[15] = 0xac810184  # Temp-variable side effect changed.
+            self.assertEqual(extract_native_anim_ends(ref, worklist)
+                             ['recognized_action_callback_count'], 0)
+            transition[15] = STATUS_PLAY_CLEAR[15]
+            wrapper2[5] = 0xac80017c  # Wrapper has an extra side effect.
+            self.assertEqual(extract_native_anim_ends(ref, worklist)
+                             ['recognized_action_callback_count'], 1)
+
     def test_extra_autolink_angle_matches_ground_air_and_reverse_hit_rules(self):
         fixture = r'''
 #include <assert.h>
