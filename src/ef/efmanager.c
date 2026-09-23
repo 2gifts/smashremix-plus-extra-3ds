@@ -6,6 +6,9 @@
 #include <reloc_data.h>
 #ifdef PORT
 #include "fighter_registry.h"
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 #endif
 extern void *func_800269C0_275C0(u16 id);
 #ifdef PORT
@@ -4781,7 +4784,11 @@ GObj* efManagerCaptainFalconPunchMakeEffect(GObj *fighter_gobj)
 
     dobj = DObjGetStruct(effect_gobj);
 
-    joint = ((fp->fkind == nFTKindCaptain) || (fp->fkind == nFTKindNCaptain)) ? fp->joints[16] : fp->joints[30];
+    joint = ((fp->fkind == nFTKindCaptain) || (fp->fkind == nFTKindNCaptain)
+#ifdef SSB_REMIX_PROBE
+        || (fp->fkind == NATIVE_REMIX_JFALCON_KIND)
+#endif
+        ) ? fp->joints[16] : fp->joints[30];
 
     dobj->user_data.p = joint;
 

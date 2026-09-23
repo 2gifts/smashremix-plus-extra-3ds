@@ -64,6 +64,8 @@ These commands use the pinned local reference ROM. Generated `.inc` files stay u
 
 Complete the reference extraction above and configure the existing 3DS toolchain. Set `vanilla_assets` in the ignored `3ds/build-config.json` to the asset directory produced by the original 3DS port's local build. It needs `reloc.pak`, `audio/`, `particles/`, `initial-save.bin` and `bottom-ui.bin`. If omitted, the tool looks for `assets/` two directories above the configured BattleShip checkout, matching the original port's `3ds/vendor/BattleShip` layout.
 
+To start with your own unlocked original-game fighters, set `save` in the same ignored config to your `.srm` path. The builder validates its signature and checksum, converts it locally, and packages it as the initial save after preparing the fighter assets. If omitted, it packages the base asset directory's initial save. Existing `/3ds/ssb64-remix-falco-test/save.bin` and `save.bak` on the SD card take precedence over the packaged initial save.
+
 ```powershell
 remix/.venv/Scripts/python.exe remix/tools/test_fighter_import.py
 remix/.venv/Scripts/python.exe remix/tools/build_fighter_probe.py
@@ -71,7 +73,7 @@ remix/.venv/Scripts/python.exe remix/tools/build_fighter_probe.py
 
 Output: `3ds/build/falco-test/Remix-Fighter-Integration-Test.cia`. The accompanying `package/verified.json` verifies the CIA content against the linked executable and private RomFS, checks its title/capabilities, and checks that scripted controls, automatic screenshots, verbose logs and the debugger boot gate are disabled for ordinary use.
 
-To test on a homebrewed **New Nintendo 3DS / New 3DS XL**, copy this local CIA to the SD card and install it with FBI. Launch **Remix fighter test**, enter VS mode, select **Fox**, **Pikachu**, **Mario**, or **Donkey Kong** on the top screen, then tap that player's bottom-screen card to switch to **Falco**, **J Pikachu**, **J Mario**, or **DK Ult**. Tap again to return to the vanilla fighter. The bottom card names the imported fighter, while the original top-screen portrait and announcer still use the vanilla parent. Training and other modes do not have this selector. The existing 3D slider, display toggle and control options are available.
+To test on a homebrewed **New Nintendo 3DS / New 3DS XL**, copy this local CIA to the SD card and install it with FBI. Launch **Remix fighter test**, enter VS mode, select **Fox**, **Pikachu**, **Mario**, **Captain Falcon**, or **Donkey Kong** on the top screen, then tap that player's bottom-screen card to switch to **Falco**, **J Pikachu**, **J Mario**, **J Falcon**, or **DK Ult**. Tap again to return to the vanilla fighter. The bottom card names the imported fighter, while the original top-screen portrait and announcer still use the vanilla parent. Training and other modes do not have this selector. The existing 3D slider, display toggle and control options are available.
 
 The test uses title ID `000400000ff64200`, product code `CTR-P-SMFT`, and `/3ds/ssb64-remix-falco-test/`. It installs alongside the original game and replaces earlier fighter-development builds. It contains the original menus and stages, not the full Remix/+EXTRA roster or engine. CPU behavior and all modes have not been fully validated for the imported fighters. See [fixture limits](PORTING-STATUS.md#fighter-fixture-limits).
 

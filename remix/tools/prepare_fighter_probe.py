@@ -144,6 +144,36 @@ class Scripts:
         return lines, indices
 
 
+def emit_variant(ref, name, native_scripts, out):
+    """Generate one independently backed regional fighter from the pinned ROM."""
+    prefix = name.lower()
+    data = ref.words(ref.symbols[f'Character.{name}_character_struct'], 30)
+    motion = [ref.words(data[25] + i * 12, 3) for i in range(data[27])]
+    menu_count = ref.words(data[28], 1)[0]
+    menus = [ref.words(data[26] + i * 12, 3) for i in range(menu_count)]
+    scripts = Scripts(ref, allow_custom=True, external_scripts=native_scripts)
+    entrypoints = {row[1] for row in motion + menus if row[1] > 0x80000000}
+    for address in sorted(entrypoints):
+        scripts.script(address)
+    lines, indices = scripts.emit(f'remix_{prefix}', entrypoints)
+    def pointer(address):
+        if address in native_scripts:
+            return f'(intptr_t){native_scripts[address]}'
+        if address > 0x80000000:
+            return f'(intptr_t)&remix_{prefix}_script_words[{indices[address]}]'
+        return f'(intptr_t)0x{address:08x}u'
+    for label, rows in (('main', motion), ('menu', menus)):
+        lines.append(f'static FTMotionDesc remix_{prefix}_{label}_motions[] = {{')
+        for fid, ptr, flags in rows:
+            lines.append(f'    {{{fid}, {pointer(ptr)}, {{.word = 0x{flags:08x}u}}}},')
+        lines.append('};')
+    lines += [f'static const u32 remix_{prefix}_files[9] = {{{", ".join(map(str, data[:9]))}}};',
+              f'static s32 remix_{prefix}_menu_count = {menu_count};',
+              f'#define REMIX_{name}_ATTRIBUTE_OFFSET 0x{data[24]:x}']
+    (out / f'{prefix}_data.inc').write_text('\n'.join(lines) + '\n')
+    return data, motion, menus, scripts
+
+
 def main():
     from audit_reference_fighters import known_native_script_symbols
     ref = Reference()
@@ -221,30 +251,8 @@ def main():
                  f'#define REMIX_JPIKA_ATTRIBUTE_OFFSET 0x{jp_data[24]:x}']
     (out / 'jpika_data.inc').write_text('\n'.join(jp_lines) + '\n')
 
-    mario_data = ref.words(ref.symbols['Character.JMARIO_character_struct'], 30)
-    mario_motion = [ref.words(mario_data[25] + i * 12, 3) for i in range(mario_data[27])]
-    mario_menu_count = ref.words(mario_data[28], 1)[0]
-    mario_menus = [ref.words(mario_data[26] + i * 12, 3) for i in range(mario_menu_count)]
-    mario_scripts = Scripts(ref, allow_custom=True, external_scripts=dk_external)
-    mario_entrypoints = {row[1] for row in mario_motion + mario_menus if row[1] > 0x80000000}
-    for address in sorted(mario_entrypoints):
-        mario_scripts.script(address)
-    mario_lines, mario_indices = mario_scripts.emit('remix_jmario', mario_entrypoints)
-    def mario_pointer(address):
-        if address in dk_external:
-            return f'(intptr_t){dk_external[address]}'
-        if address > 0x80000000:
-            return f'(intptr_t)&remix_jmario_script_words[{mario_indices[address]}]'
-        return f'(intptr_t)0x{address:08x}u'
-    for label, rows in (('main', mario_motion), ('menu', mario_menus)):
-        mario_lines.append(f'static FTMotionDesc remix_jmario_{label}_motions[] = {{')
-        for fid, ptr, flags in rows:
-            mario_lines.append(f'    {{{fid}, {mario_pointer(ptr)}, {{.word = 0x{flags:08x}u}}}},')
-        mario_lines.append('};')
-    mario_lines += [f'static const u32 remix_jmario_files[9] = {{{", ".join(map(str, mario_data[:9]))}}};',
-                    f'static s32 remix_jmario_menu_count = {mario_menu_count};',
-                    f'#define REMIX_JMARIO_ATTRIBUTE_OFFSET 0x{mario_data[24]:x}']
-    (out / 'jmario_data.inc').write_text('\n'.join(mario_lines) + '\n')
+    mario_data, mario_motion, mario_menus, mario_scripts = emit_variant(ref, 'JMARIO', dk_external, out)
+    falcon_data, falcon_motion, falcon_menus, falcon_scripts = emit_variant(ref, 'JFALCON', dk_external, out)
 
     # Keep the proven vanilla UI assets. Add only the validated dependency
     # closure required by this fighter, never ship unresolved reference files.
@@ -269,7 +277,7 @@ def main():
         required.add(fid)
         for dep in entries[fid]['external_files']:
             add(dep)
-    for fid in data[:9] + dk_data[:9] + jp_data[:9] + mario_data[:9] + [r[0] for r in motion + menus + dk_motion + dk_menus + jp_motion + jp_menus + mario_motion + mario_menus]:
+    for fid in data[:9] + dk_data[:9] + jp_data[:9] + mario_data[:9] + falcon_data[:9] + [r[0] for r in motion + menus + dk_motion + dk_menus + jp_motion + jp_menus + mario_motion + mario_menus + falcon_motion + falcon_menus]:
         add(fid)
     bad = [issue for issue in manifest['relocation_issues'] if issue['file_id'] in required]
     if bad:
@@ -300,7 +308,7 @@ def main():
     for name in ('initial-save.bin', 'bottom-ui.bin'):
         shutil.copy2(vanilla / name, assets / name)
     write_json(out / 'manifest.json', {
-        'fixture': 'Falco, DK Ult, J Pikachu and J Mario selectable beside their vanilla parents in VS; not the complete mod',
+        'fixture': 'Falco, DK Ult, J Pikachu, J Mario and J Falcon selectable beside their vanilla parents in VS; not the complete mod',
         'motion_count': len(motion), 'menu_motion_count': len(menus),
         'script_words': len(scripts.words), 'script_pointers': len(scripts.pointers),
         'dkult_motion_count': len(dk_motion), 'dkult_menu_motion_count': len(dk_menus),
@@ -312,10 +320,13 @@ def main():
         'jmario_motion_count': len(mario_motion), 'jmario_menu_motion_count': len(mario_menus),
         'jmario_script_words': len(mario_scripts.words),
         'jmario_script_pointers': len(mario_scripts.pointers),
+        'jfalcon_motion_count': len(falcon_motion), 'jfalcon_menu_motion_count': len(falcon_menus),
+        'jfalcon_script_words': len(falcon_scripts.words),
+        'jfalcon_script_pointers': len(falcon_scripts.pointers),
         'required_files': sorted(required), 'unresolved_relocations': bad,
         'pack_sha256': sha256(assets / 'reloc.pak'),
     })
-    print(f'Falco, DK Ult, J Pikachu and J Mario: {len(motion)} + {len(dk_motion)} + {len(jp_motion)} + {len(mario_motion)} actions, {len(required)} validated assets')
+    print(f'Falco, DK Ult, J Pikachu, J Mario and J Falcon: {len(motion)} + {len(dk_motion)} + {len(jp_motion)} + {len(mario_motion)} + {len(falcon_motion)} actions, {len(required)} validated assets')
 
 
 if __name__ == '__main__':

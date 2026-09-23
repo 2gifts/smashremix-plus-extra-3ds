@@ -36,6 +36,7 @@ int nativeRelocIsFighterAnimation(unsigned int fid) {
     extern int nativeRemixDKUltIsAnimation(unsigned);
     extern int nativeRemixJPikaIsAnimation(unsigned);
     extern int nativeRemixJMarioIsAnimation(unsigned);
+    extern int nativeRemixJFalconIsAnimation(unsigned);
     /* Motion ID zero means no animation. Relocation file zero is the shared
      * menu artwork and must retain the normal sprite byte-order fixups. */
     if (!fid) return 0;
@@ -46,7 +47,7 @@ int nativeRelocIsFighterAnimation(unsigned int fid) {
         if (remix_menu_motions[i].anim_file_id == fid &&
             !(remix_menu_motions[i].anim_desc.word & (FTANIM_FLAG_ANIMJOINT | FTANIM_FLAG_SHIELDPOSE))) return 1;
     return nativeRemixDKUltIsAnimation(fid) || nativeRemixJPikaIsAnimation(fid) ||
-           nativeRemixJMarioIsAnimation(fid);
+           nativeRemixJMarioIsAnimation(fid) || nativeRemixJFalconIsAnimation(fid);
 }
 
 void nativeRemixProbeReset(FTStruct *fp) {

@@ -1,4 +1,7 @@
 #include <ft/fighter.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -60,14 +63,21 @@ void ftCaptainSpecialHiProcPhysics(GObj *fighter_gobj)
 {
     FTStruct *fp = ftGetStruct(fighter_gobj);
     FTAttributes *attr = fp->attr;
+#ifdef SSB_REMIX_PROBE
+    const f32 speed_mul = fp->fkind == NATIVE_REMIX_JFALCON_KIND ? 0.84F : FTCAPTAIN_FALCONDIVE_AIR_SPEED_MAX_MUL;
+    const f32 accel_mul = fp->fkind == NATIVE_REMIX_JFALCON_KIND ? 1.2F : FTCAPTAIN_FALCONDIVE_AIR_ACCEL_MUL;
+#else
+    const f32 speed_mul = FTCAPTAIN_FALCONDIVE_AIR_SPEED_MAX_MUL;
+    const f32 accel_mul = FTCAPTAIN_FALCONDIVE_AIR_ACCEL_MUL;
+#endif
 
     fp->physics.vel_air.x = fp->status_vars.captain.specialhi.vel.x;
     fp->physics.vel_air.y = fp->status_vars.captain.specialhi.vel.y;
     fp->physics.vel_air.z = 0.0F;
 
-    if (ftPhysicsCheckClampAirVelXDec(fp, attr->air_speed_max_x * FTCAPTAIN_FALCONDIVE_AIR_SPEED_MAX_MUL) == FALSE)
+    if (ftPhysicsCheckClampAirVelXDec(fp, attr->air_speed_max_x * speed_mul) == FALSE)
     {
-        ftPhysicsClampAirVelXStickRange(fp, FTPHYSICS_AIRDRIFT_CLAMP_RANGE_MIN, attr->air_accel * FTCAPTAIN_FALCONDIVE_AIR_ACCEL_MUL, attr->air_speed_max_x * FTCAPTAIN_FALCONDIVE_AIR_SPEED_MAX_MUL);
+        ftPhysicsClampAirVelXStickRange(fp, FTPHYSICS_AIRDRIFT_CLAMP_RANGE_MIN, attr->air_accel * accel_mul, attr->air_speed_max_x * speed_mul);
         ftPhysicsApplyAirVelXFriction(fp, attr);
     }
     fp->status_vars.captain.specialhi.vel.x = fp->physics.vel_air.x;

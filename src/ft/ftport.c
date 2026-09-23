@@ -124,6 +124,9 @@ void ftPortVanillaEntryMakeEffect(FTStruct *fp)
         break;
 
     case nFTKindCaptain:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JFALCON_KIND:
+#endif
         if (fp->status_vars.common.entry.lr == -1)
         {
             fp->status_vars.common.entry.is_rotate = TRUE;

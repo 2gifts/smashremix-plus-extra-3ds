@@ -2,6 +2,9 @@
 #include <gr/ground.h>
 #ifdef PORT
 #include "fighter_registry.h"
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 #endif
 
 // // // // // // // // // // // //
@@ -287,7 +290,11 @@ void ftCommonAppearSetStatus(GObj *fighter_gobj)
     fp->motion_vars.flags.flag2 = 0;
     fp->motion_vars.flags.flag0 = 0;
 
-    if ((fp->fkind == nFTKindCaptain) && (fp->status_vars.common.entry.lr == -1))
+    if ((fp->fkind == nFTKindCaptain
+#ifdef SSB_REMIX_PROBE
+        || fp->fkind == NATIVE_REMIX_JFALCON_KIND
+#endif
+        ) && (fp->status_vars.common.entry.lr == -1))
     {
         ftParamMoveDLLink(fighter_gobj, 1);
     }

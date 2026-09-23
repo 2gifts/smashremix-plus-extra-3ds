@@ -427,7 +427,7 @@
     "3ds/src/native_assets.cpp": "de9e583f538f3ee07bb0eae00c65e71c04bc30383180e4d492700bb0a4b649a4",
     "remix/tests/asset_probe.cpp": "62fdc6cffc842e32890f24172e068c69987585495ec72902fbb0d907fc12249c"
   },
-  "scope": "Pinned reference and asset audits, native Falco, DK Ult, Japanese Pikachu, and Japanese Mario development integrations, and generated fighter motion-data candidates. Full Remix and +EXTRA roster, stages, menus, saves, AI, and hardware performance remain unverified.",
+  "scope": "Pinned reference and asset audits, native Falco, DK Ult, Japanese Pikachu, Japanese Mario, and Japanese Captain Falcon development integrations, and generated fighter motion-data candidates. Full Remix and +EXTRA roster, stages, menus, saves, AI, and hardware performance remain unverified.",
   "fighter_data_import": {
     "reference_table_records": 88,
     "plus_extra_records": 19,
@@ -439,8 +439,8 @@
     "extra_hit_multiplier_state_host_verified": true,
     "kirby_copy_table_bounds_host_verified": true,
     "extra_hit_multiplier_script_dispatch_gameplay_verified": false,
-    "native_roster_fighters_added": 4,
-    "selectable_fighter_ids": [29, 42, 50, 81],
+    "native_roster_fighters_added": 5,
+    "selectable_fighter_ids": [29, 40, 42, 50, 81],
     "separate_top_screen_portrait_added": false,
     "bottom_screen_touch_selection_match_to_results_verified": true,
     "bottom_screen_touch_selection_action_states_observed": 34,
@@ -456,18 +456,21 @@
     "untouched_mario_selection_remains_fkind_0_verified": true,
     "untouched_mario_original_main_file_id_verified": 203,
     "bottom_touch_jmario_main_file_id_verified": 2419,
+    "untouched_captain_selection_remains_fkind_7_verified": true,
+    "untouched_captain_original_main_file_id_verified": 236,
+    "bottom_touch_jfalcon_main_file_id_verified": 2414,
     "fighter_size_prepass_capacity": 128,
-    "scope": "Falco (fkind 29), Japanese Mario (fkind 42), Japanese Pikachu (fkind 50), and DK Ult (fkind 81) are independently registered and selectable in VS mode from the Fox, Mario, Pikachu, and Donkey Kong bottom cards. Timed four-fighter stereo matches reached results through all four selectors. Their original parents remain available with original main files 0xD1, 0xCB, 0xF3, and 0xD5; the imported main files are 0x8AB, 0x973, 0x987, and 0x16CC. The other imported records are motion-data candidates only; the expanded selection grid is not available."
+    "scope": "Falco (fkind 29), Japanese Captain Falcon (fkind 40), Japanese Mario (fkind 42), Japanese Pikachu (fkind 50), and DK Ult (fkind 81) are independently registered and selectable in VS mode from the Fox, Captain Falcon, Mario, Pikachu, and Donkey Kong bottom cards. Timed four-fighter stereo matches reached results through all five selectors. Their original parents remain available with original main files 0xD1, 0xEC, 0xCB, 0xF3, and 0xD5; the imported main files are 0x8AB, 0x96E, 0x973, 0x987, and 0x16CC. The other imported records are motion-data candidates only; the expanded selection grid is not available."
   },
   "fighter_development_fixture": {
-    "scope": "Falco, Japanese Mario, Japanese Pikachu, and DK Ult are selectable as fkinds 29, 42, 50, and 81 from the VS bottom-screen Fox, Mario, Pikachu, and Donkey Kong cards. The top-screen portraits and other menus remain vanilla; the full Remix/+EXTRA roster is absent.",
+    "scope": "Falco, Japanese Captain Falcon, Japanese Mario, Japanese Pikachu, and DK Ult are selectable as fkinds 29, 40, 42, 50, and 81 from the VS bottom-screen Fox, Captain Falcon, Mario, Pikachu, and Donkey Kong cards. The top-screen portraits and other menus remain vanilla; the full Remix/+EXTRA roster is absent.",
     "complete_character_parity": false,
     "cia_available_locally": true,
     "published_binary": false,
     "title_id": "000400000ff64200",
     "sd_directory": "/3ds/ssb64-remix-falco-test/",
-    "elf_sha256": "04b98af7d8382471aea540825df9cc4c848b504d896e6a2136bbe458596f361c",
-    "cia_sha256": "03d12f08cb6299b8dc6af606240e0a9af9cdcb0a9c0e9333e817391f54dff6cd",
+    "elf_sha256": "adcb346d33231a426ee292b8fe78306192147218d3eee81333f9065992145c66",
+    "cia_sha256": "16fd50122e26053f579e62a7fcfd17e2576b66479b5126ded71bc7af6da3ebaa",
     "cia_bytes": 35988416,
     "main_motions": 219,
     "menu_motions": 15,
@@ -485,8 +488,12 @@
     "jmario_menu_motions": 15,
     "jmario_motion_words": 76,
     "jmario_motion_pointer_tokens": 1,
-    "validated_asset_closure": 670,
-    "asset_pack_sha256": "bc6a9a200ca8bbb113e564404f7fc71f1f37a7a470efaea941f3658761619037",
+    "jfalcon_main_motions": 214,
+    "jfalcon_menu_motions": 15,
+    "jfalcon_motion_words": 31,
+    "jfalcon_motion_pointer_tokens": 0,
+    "validated_asset_closure": 835,
+    "asset_pack_sha256": "fbc225a5d6d83e6aa5ee7ad75f5b8d374bb80232bc4fecc985886f6b8eacfc2d",
     "unresolved_relocations_in_fixture": [],
     "emulator_move_checks": [
       {
@@ -554,8 +561,13 @@
       {"case": "ground Fireball uses J Mario-owned projectile assets", "passed": true},
       {"case": "Super Jump Punch uses inherited Mario callbacks", "passed": true}
     ],
+    "jfalcon_emulator_move_checks": [
+      {"case": "jab follow-up enters imported Japanese Jab2 and Jab3 motions", "passed": true},
+      {"case": "Falcon Punch uses inherited Captain callbacks", "passed": true},
+      {"case": "Falcon Dive uses inherited Captain callbacks and regional drift", "passed": true}
+    ],
     "jmario_back_throw_gameplay_verified": false,
-    "emulator_test_elf_sha256": "04b98af7d8382471aea540825df9cc4c848b504d896e6a2136bbe458596f361c",
+    "emulator_test_elf_sha256": "adcb346d33231a426ee292b8fe78306192147218d3eee81333f9065992145c66",
     "sd_errors_during_move_checks": 0,
     "package_integrity_verified": true,
     "normal_startup_defaults_verified": {
@@ -610,6 +622,12 @@
     "untouched_mario_main_file_id_verified": 203,
     "bottom_touch_fighter_42_top_css_proxy_kind": 0,
     "bottom_touch_fighter_42_bottom_card_kind": 42,
+    "bottom_touch_fighter_40_results_to_css_verified": true,
+    "bottom_touch_fighter_40_css_return_frame_observed": 6706,
+    "bottom_touch_fighter_40_main_file_id_verified": 2414,
+    "untouched_captain_main_file_id_verified": 236,
+    "bottom_touch_fighter_40_top_css_proxy_kind": 7,
+    "bottom_touch_fighter_40_bottom_card_kind": 40,
     "bottom_touch_fighter_29_top_css_proxy_kind": 1,
     "bottom_touch_fighter_29_bottom_card_kind": 29,
     "registered_results_fighter_files_loaded": true,

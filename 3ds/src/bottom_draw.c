@@ -88,8 +88,8 @@ static void plate(int x,int y,int w,int h,uint16_t c){
     rect(x,y,w,h,c);rect(x,y,w,1,RGB(127,122,108));rect(x,y,1,h,RGB(98,94,85));
     rect(x+w-1,y+1,1,h-1,RGB(12,12,12));rect(x+1,y+h-1,w-1,1,RGB(8,8,8));
 }
-static unsigned fighterArt(unsigned c){return c==29?1:c==81?2:c==50?9:c==42?0:c==13?0:c==26?2:c>=14&&c<26?c-14:c;}
-static const char* fighterName(unsigned c){return c==29?"FALCO":c==81?"DK ULT":c==50?"J PIKA":c==42?"J MARIO":c==12?"MASTER HAND":c==13?"METAL MARIO":c==26?"GIANT DK":c>=14&&c<26?"POLYGON":c<12?names[c]:"SELECT";}
+static unsigned fighterArt(unsigned c){return c==29?1:c==81?2:c==50?9:c==42?0:c==40?7:c==13?0:c==26?2:c>=14&&c<26?c-14:c;}
+static const char* fighterName(unsigned c){return c==29?"FALCO":c==81?"DK ULT":c==50?"J PIKA":c==42?"J MARIO":c==40?"J FALCON":c==12?"MASTER HAND":c==13?"METAL MARIO":c==26?"GIANT DK":c>=14&&c<26?"POLYGON":c<12?names[c]:"SELECT";}
 static void background(void){
     if(backdropReady){memcpy(canvas,backdrop,sizeof(backdrop));return;}
     rect(0,0,320,240,RGB(29,29,27));

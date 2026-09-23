@@ -701,6 +701,9 @@ void ftManagerInitFighter(GObj *fighter_gobj, FTDesc *desc)
         break;
 
     case nFTKindCaptain:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_JFALCON_KIND:
+#endif
     case nFTKindNCaptain:
         fp->passive_vars.captain.falcon_punch_unk = 0;
         break;

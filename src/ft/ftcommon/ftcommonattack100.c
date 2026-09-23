@@ -9,9 +9,15 @@
  * FighterParentKindResolveEvent query (no-op for vanilla fighters / with no
  * listener — the payload comes back unchanged). */
 #include "hooks/Events.h"
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 static s32 ftCommonAttack100ResolveParentKind(s32 fkind)
 {
     CALL_EVENT(FighterParentKindResolveEvent, fkind, fkind);
+#ifdef SSB_REMIX_PROBE
+    if (fkind == NATIVE_REMIX_JFALCON_KIND) return nFTKindCaptain;
+#endif
     return FighterParentKindResolveEvent_.resolved_fkind;
 }
 #define FT_A100_KIND(fp) (ftCommonAttack100ResolveParentKind((fp)->fkind))

@@ -4918,6 +4918,11 @@ void mnPlayersVSSetSceneData(void)
 		{
 			gSCManagerTransferBattleState.players[i].fkind = NATIVE_REMIX_JMARIO_KIND;
 		}
+		else if ((gSCManagerTransferBattleState.players[i].fkind == nFTKindCaptain) &&
+		         (native_remix_selected_fkind[i] == NATIVE_REMIX_JFALCON_KIND))
+		{
+			gSCManagerTransferBattleState.players[i].fkind = NATIVE_REMIX_JFALCON_KIND;
+		}
 #endif
 		gSCManagerTransferBattleState.players[i].pkind = sMNPlayersVSSlots[i].pkind;
 		gSCManagerTransferBattleState.players[i].costume = sMNPlayersVSSlots[i].costume;
@@ -5303,6 +5308,11 @@ void mnPlayersVSInitPlayer(s32 player)
 	{
 		native_remix_selected_fkind[player] = NATIVE_REMIX_JMARIO_KIND;
 		sMNPlayersVSSlots[player].fkind = nFTKindMario;
+	}
+	else if (sMNPlayersVSSlots[player].fkind == NATIVE_REMIX_JFALCON_KIND)
+	{
+		native_remix_selected_fkind[player] = NATIVE_REMIX_JFALCON_KIND;
+		sMNPlayersVSSlots[player].fkind = nFTKindCaptain;
 	}
 	else native_remix_selected_fkind[player] = 0;
 #endif

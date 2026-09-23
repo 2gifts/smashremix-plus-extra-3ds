@@ -36,6 +36,7 @@ def main():
         sources.append(ROOT/'src/remix_dkult_probe.c')
         sources.append(ROOT/'src/remix_jpika_probe.c')
         sources.append(ROOT/'src/remix_jmario_probe.c')
+        sources.append(ROOT/'src/remix_jfalcon_probe.c')
     if args.render:
         from prepare_render import main as prepare
         prepare()
@@ -46,7 +47,7 @@ def main():
     else:sources.append(ROOT/'src/bringup_render.c')
     for src in sources:
         obj=out/(src.stem+'.o')
-        if src.stem in ['game_host','vanilla_policy','render_bridge','gfx_pc','save_layout_check','stereo_camera','bottom_game','wallpaper','control_game','remix_falco_probe','remix_dkult_probe','remix_jpika_probe','remix_jmario_probe']:
+        if src.stem in ['game_host','vanilla_policy','render_bridge','gfx_pc','save_layout_check','stereo_camera','bottom_game','wallpaper','control_game','remix_falco_probe','remix_dkult_probe','remix_jpika_probe','remix_jmario_probe','remix_jfalcon_probe']:
             flags=game_flags()
         else:
             flags=[*ARCH,'-std=gnu11','-O2','-g','-D__3DS__','-DSSB_BRINGUP',

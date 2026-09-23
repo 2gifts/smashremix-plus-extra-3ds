@@ -28,6 +28,7 @@ static s32 ftKirbySpecialNGetCopyTableKind(s32 fkind)
     if (fkind == NATIVE_REMIX_DKULT_KIND) fkind = NATIVE_REMIX_DONKEY_KIND;
     if (fkind == NATIVE_REMIX_JPIKA_KIND) fkind = NATIVE_REMIX_PIKACHU_KIND;
     if (fkind == NATIVE_REMIX_JMARIO_KIND) fkind = NATIVE_REMIX_MARIO_KIND;
+    if (fkind == NATIVE_REMIX_JFALCON_KIND) fkind = NATIVE_REMIX_CAPTAIN_KIND;
 #endif
     return ((u32)fkind < FTKIRBY_COPY_TABLE_COUNT) ? fkind : nFTKindKirby;
 }
