@@ -1,14 +1,13 @@
-"""Translate exact compiled collision-transition templates to native C.
+"""Translate checked compiled collision transitions to native C.
 
-Only the zero-preserve-flags templates below are accepted. Their MIPS
-instructions correspond to a ground/air change, ftMainSetStatus at the live
-animation frame and unit speed, and optionally clamping air speed. A changed
-instruction fails recognition; all other transition routines stay unbound.
+Exact templates and a restricted straight-line decoder accept only known
+engine calls and side effects. Unknown instructions remain unbound.
 """
 from pathlib import Path
 
 from common import BUILD, sha256, write_json
 from classify_action_callbacks import COLLISION_HELPERS, first_return_words, jal_target
+from native_straightline_transitions import decode_straightline
 
 
 # None marks the sole status-ID immediate. Every other instruction must match.
@@ -140,7 +139,7 @@ def decode_transition(ref, address):
                 'kinetics': 'ground' if name.startswith('ground') else 'air',
                 'clamp_air_speed': name.startswith('air'),
                 'preserve_flags': 1 if name == 'ground_fixed_preserve_hit' else 0x800}
-    return None
+    return decode_straightline(ref, address)
 
 
 def extract_native_transitions(ref, families):
@@ -157,6 +156,15 @@ def extract_native_transitions(ref, families):
         transition = transitions[address]
         if transition is None:
             continue
+        if transition['template'] != 'decoded_straightline':
+            # Keep the hand-checked examples as an independent semantic
+            # oracle for the more general instruction decoder.
+            decoded = decode_straightline(ref, address)
+            fields = ('status_id', 'status_delta', 'kinetics',
+                      'clamp_air_speed', 'preserve_flags')
+            if decoded is None or any(transition.get(key) != decoded.get(key)
+                                      for key in fields):
+                raise ValueError(f'Compiled transition decoder disagrees at {address:08x}')
         wrappers.append({'address': row['address'], 'symbols': row['symbols'],
                          'helper': row['helper'], 'transition_address': row['transition_address'],
                          'native': f'nativeRemixCollision_{row["address"]}'})
@@ -176,14 +184,20 @@ def render_native_code(manifest):
         status = (str(row['status_id']) if row['status_id'] is not None else
                   f'fp->status_id {"+" if row["status_delta"] > 0 else "-"} {abs(row["status_delta"])}')
         flags = {0: 'FTSTATUS_PRESERVE_NONE', 1: 'FTSTATUS_PRESERVE_HIT',
-                 0x800: 'FTSTATUS_PRESERVE_LOOPSFX'}[row['preserve_flags']]
+                 0x800: 'FTSTATUS_PRESERVE_LOOPSFX'}.get(
+                     row['preserve_flags'], f'0x{row["preserve_flags"]:x}u')
         lines += [f'static void nativeRemixTransition_{address}(GObj *fighter_gobj) {{',
-                  '    FTStruct *fp = ftGetStruct(fighter_gobj);',
-                  f'    mpCommonSetFighter{("Ground" if row["kinetics"] == "ground" else "Air")}(fp);',
-                  f'    ftMainSetStatus(fighter_gobj, {status}, fighter_gobj->anim_frame,',
-                  f'                    1.0F, {flags});']
-        if row['clamp_air_speed']:
-            lines.append('    ftPhysicsClampAirVelXMax(fp);')
+                  '    FTStruct *fp = ftGetStruct(fighter_gobj);']
+        for action in row.get('action_order',
+                              [row['kinetics'], 'status'] +
+                              (['clamp_air_speed'] if row['clamp_air_speed'] else [])):
+            if action == 'status':
+                lines += [f'    ftMainSetStatus(fighter_gobj, {status}, fighter_gobj->anim_frame,',
+                          f'                    1.0F, {flags});']
+            elif action == 'clamp_air_speed':
+                lines.append('    ftPhysicsClampAirVelXMax(fp);')
+            else:
+                lines.append(f'    mpCommonSetFighter{("Ground" if action == "ground" else "Air")}(fp);')
         lines += ['}', '']
     for row in manifest['wrappers']:
         lines += [f'void {row["native"]}(GObj *fighter_gobj) {{',

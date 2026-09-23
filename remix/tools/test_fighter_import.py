@@ -34,6 +34,7 @@ from native_transition_templates import (TEMPLATES, SHARED_TEMPLATES,
                                          render_native_code)
 from native_anim_end_templates import (STATUS_PLAY_CLEAR, extract_native_anim_ends,
                                        render_native_code as render_anim_end_code)
+from native_straightline_transitions import decode_straightline
 
 
 class WordReference:
@@ -45,6 +46,31 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_straightline_compiled_transition_decodes_only_known_effects(self):
+        # Source-independent MIPS fixture: set grounded, set status at the
+        # live animation frame with preservation bits 0x24, then return.
+        words = [0x27bdffe0, 0xafbf001c, 0xafa40020, 0x0c037ba6,
+                 0x8c840084, 0x8fa40020, 0x340500ed, 0x8c860078,
+                 0x340e0024, 0xafae0010, 0x0c039bc9, 0x3c073f80,
+                 0x8fbf001c, 0x27bd0020, 0x03e00008, 0]
+        ref = SimpleNamespace(words=lambda address, count:
+                              (words + [0] * count)[:count])
+        address = 0x80500000
+        row = decode_straightline(ref, address)
+        self.assertEqual(row['status_id'], 0xed)
+        self.assertEqual(row['preserve_flags'], 0x24)
+        self.assertEqual(row['action_order'], ['ground', 'status'])
+        self.assertIn('0x24u', render_native_code({'transitions': [row], 'wrappers': []}))
+        for index, replacement in ((2, 0xac840020),  # Non-stack write.
+                                   (3, 0x0c037ba7),  # Unknown engine call.
+                                   (7, 0x8c86007c),  # Not the animation frame.
+                                   (8, 0x10000001)):  # Conditional branch.
+            with self.subTest(instruction=index):
+                original = words[index]
+                words[index] = replacement
+                self.assertIsNone(decode_straightline(ref, address))
+                words[index] = original
+
     def test_compiled_animation_end_pairs_bind_only_complete_transitions(self):
         with tempfile.TemporaryDirectory() as dirname:
             path = Path(dirname) / 'reference.z64'
@@ -189,7 +215,7 @@ int main(void) {
             self.assertIn('mpCommonSetFighterAir(fp);', native)
             self.assertIn('ftPhysicsClampAirVelXMax(fp);', native)
             self.assertIn('mpCommonProcFighterOnEdge(fighter_gobj,', native)
-            transition[11] = 0xafa50010  # This template requires zero preserve flags.
+            transition[11] = 0xaca00010  # Non-stack write is not translatable.
             self.assertEqual(extract_native_transitions(ref, families)
                              ['recognized_collision_callback_count'], 0)
             transition[11] = TEMPLATES['air_and_clamp_a'][11]
@@ -216,7 +242,7 @@ int main(void) {
                 code = render_native_code({'transitions': [row], 'wrappers': []})
                 self.assertIn('FTSTATUS_PRESERVE_HIT' if row['preserve_flags'] == 1
                               else 'FTSTATUS_PRESERVE_LOOPSFX', code)
-                words[12] ^= 1  # Changed MIPS instruction must fail recognition.
+                words[12] = 0xac80017c  # Unmodeled fighter-state write.
                 self.assertIsNone(decode_transition(ref, 0x80500000))
 
     def test_callback_family_audit_links_compiled_collision_wrapper_to_transition(self):
