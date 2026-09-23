@@ -484,9 +484,9 @@
     "published_binary": false,
     "title_id": "000400000ff64200",
     "sd_directory": "/3ds/ssb64-remix-falco-test/",
-    "elf_sha256": "10de16eb6d21cf76a03566266da03d44e1377688e7f2a914e92d79a87ca8383f",
-    "cia_sha256": "e870d528cdced0d68013dac47f20d48e762f1653501187978dbcdec11d9e5302",
-    "cia_bytes": 36123584,
+    "elf_sha256": "f4348d47ec68ad2ef6cb7dc188eb3fc86634d9d70fb3d8097b928e96c30525c2",
+    "cia_sha256": "c1b0f34a68d8db5e893bb99ad59cb50ebbe6b16160f3d8e71e0a2dfdf38d9c38",
+    "cia_bytes": 42402752,
     "main_motions": 219,
     "menu_motions": 15,
     "motion_words": 813,
@@ -681,7 +681,7 @@
     "package_integrity_verified": true,
     "exact_packaged_cxi_pristine_startup_verified": true,
     "exact_packaged_cxi_four_fighter_stereo_match_to_results_verified": true,
-    "exact_packaged_cxi_results_frame_observed": 5786,
+    "exact_packaged_cxi_results_frame_observed": 5251,
     "normal_startup_defaults_verified": {
       "ssb_test_frame_limit": "0x0",
       "ssb_test_inputs": "0x0",
@@ -791,6 +791,15 @@
   },
   "expanded_audio_conversion": {
     "source_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
+    "music_sequence_count": 417,
+    "music_sequence_payloads_verified": 417,
+    "music_instrument_bank": {
+      "serialized_bank_verified": {
+        "sound_records": 326,
+        "wave_records": 324
+      },
+      "sample_payloads_verified": 324
+    },
     "sound_records": 1516,
     "samples": 1516,
     "fgm_table_count": 1667,
@@ -801,6 +810,18 @@
     },
     "sample_payloads_verified": 1516,
     "files": {
+      "B1_sounds1_ctl.bin": {
+        "bytes": 69456,
+        "sha256": "ba7a666f22b9c9f7aaa5c8d6778c3f6a2ec1bcc17dca0a8fe32e078ec0427fee"
+      },
+      "B1_sounds1_tbl.bin": {
+        "bytes": 3798080,
+        "sha256": "420e27cbfcf5b2985c38245922dffd2a3645879792c1dd2540f39b46573339be"
+      },
+      "S1_music_sbk.bin": {
+        "bytes": 3689488,
+        "sha256": "92f70cc7eb2a6c634eddc3cadabd7d24ba1a4b19d95ffdad87e96c94a5fbe8fe"
+      },
       "B1_sounds2_ctl.bin": {
         "bytes": 277576,
         "sha256": "25b6d5f173bc3a13de0558d7fa7f03afdaeff0aea2e6209af02e1668a0bd266e"
@@ -817,12 +838,19 @@
         "bytes": 53536,
         "sha256": "708c0babf67b97445f8fca3c9967233347e8804c2a86be1735349835b7dc7e52"
       }
+    },
+    "emulator_remix_song_test": {
+      "passed": true,
+      "test": "Sound-test track 6 temporarily points at Remix sequence 47 (Ganondorf Battle)",
+      "package_sha256": "a1b0028e256793df55e444f7fbb123754e3e9aec0b3433eb55db307e12e4d906",
+      "sequence_count": 417,
+      "pcm_second_8_rms": 2252.8
     }
   },
   "fighter_import_host_tests": {
     "passed": true,
-    "tests": 15,
-    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, and shared fighter parent/cycle mapping"
+    "tests": 16,
+    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking and malformed music table ranges, and shared fighter parent/cycle mapping"
   },
   "save_writer_host_tests": {
     "passed": true,

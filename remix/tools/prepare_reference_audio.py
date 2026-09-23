@@ -1,4 +1,4 @@
-"""Repack Remix's split ROM/RAM sound bank for the native audio synthesizer.
+"""Repack Remix's split ROM/RAM audio banks for the native synthesizer.
 
 The N64 mod extends pointer-based banks into its injected code segment. Those
 offsets cannot be used with the original contiguous native CTL blobs. Resolve
@@ -177,19 +177,54 @@ def verify_bank(ctl, tbl):
     return {'sound_records': len(sounds), 'wave_records': len(waves)}
 
 
+def repack_sequence_bank(rom, base):
+    """Copy each referenced MIDI stream into a bounded, contiguous SBK file."""
+    if base < 0 or base + 4 > len(rom):
+        raise ValueError('Music table outside reference ROM')
+    revision, count = struct.unpack_from('>HH', rom, base)
+    if revision != 0x5331 or not 0 < count <= 2048:
+        raise ValueError('Invalid music table header')
+    header_size = 4 + count * 8
+    if base + header_size > len(rom):
+        raise ValueError('Music table entries outside reference ROM')
+    output = bytearray(rom[base:base + 4])
+    output.extend(bytes(count * 8))
+    for i in range(count):
+        offset, length = struct.unpack_from('>II', rom, base + 4 + i * 8)
+        if (offset < header_size or offset % 4 or not 0 < length <= 1024 * 1024
+                or offset > len(rom) - base or length > len(rom) - base - offset):
+            raise ValueError(f'Music sequence {i} outside reference ROM')
+        output.extend(bytes((-len(output)) % 4))
+        start = len(output)
+        output.extend(rom[base + offset:base + offset + length])
+        struct.pack_into('>II', output, 4 + i * 8, start, length)
+    for i in range(count):
+        source_offset, source_length = struct.unpack_from('>II', rom, base + 4 + i * 8)
+        output_offset, output_length = struct.unpack_from('>II', output, 4 + i * 8)
+        if (output_length != source_length or
+                output[output_offset:output_offset + output_length] !=
+                rom[base + source_offset:base + source_offset + source_length]):
+            raise ValueError(f'Music sequence {i} changed during repacking')
+    return output, count
+
+
 def main():
     ref = Reference()
-    bank_base, sample_base = struct.unpack_from('>II', ref.rom, 0x3d750)
-    bank = Bank(ref, bank_base, 0x8004d9f0, sample_base - bank_base, sample_base)
-    if bank.record('file', 0) != 0:
-        raise ValueError('Serialized audio bank header is not at offset zero')
-    verified = verify_bank(bank.ctl, bank.tbl)
-    for (offset, length), converted in bank.samples.items():
-        if bank.tbl[converted:converted + length] != ref.rom[sample_base + offset:sample_base + offset + length]:
-            raise ValueError('Sample payload changed during repacking')
+    banks = {}
+    for name, pointer, ram_base in (('music', 0x3d75c, 0x800472d0),
+                                    ('sfx', 0x3d750, 0x8004d9f0)):
+        bank_base, sample_base = struct.unpack_from('>II', ref.rom, pointer)
+        bank = Bank(ref, bank_base, ram_base, sample_base - bank_base, sample_base)
+        if bank.record('file', 0) != 0:
+            raise ValueError(f'{name}: serialized audio bank header is not at offset zero')
+        verified = verify_bank(bank.ctl, bank.tbl)
+        for (offset, length), converted in bank.samples.items():
+            if bank.tbl[converted:converted + length] != ref.rom[sample_base + offset:sample_base + offset + length]:
+                raise ValueError(f'{name}: sample payload changed during repacking')
+        banks[name] = (bank, verified)
     # FGM's RAM placement depends on the expanded music-table header size.
     music_base = u32(ref.rom, 0x3d768)
-    music_count = struct.unpack_from('>H', ref.rom, music_base + 2)[0]
+    music_sbk, music_count = repack_sequence_bank(ref.rom, music_base)
     difference = (((music_count + 1) * 8 + 15) & ~15) - 0x35c0
     tbl = package(ref, u32(ref.rom, 0x3d790), 0x80073f80 + difference, 0x2dd0,
                   'FGM.sfx_fgm_table_extended', 'FGM.fgm_microcode_extended')
@@ -197,13 +232,23 @@ def main():
                   'FGM.fgm_microcode_extended', 'FGM.extended_voice_map_table')
     out = BUILD / 'audio'
     out.mkdir(exist_ok=True)
-    files = {'B1_sounds2_ctl.bin': bank.ctl, 'B1_sounds2_tbl.bin': bank.tbl,
+    files = {'B1_sounds1_ctl.bin': banks['music'][0].ctl,
+             'B1_sounds1_tbl.bin': banks['music'][0].tbl,
+             'S1_music_sbk.bin': music_sbk,
+             'B1_sounds2_ctl.bin': banks['sfx'][0].ctl,
+             'B1_sounds2_tbl.bin': banks['sfx'][0].tbl,
              'fgm_tbl.bin': tbl, 'fgm_ucd.bin': ucd}
     for name, data in files.items():
         (out / name).write_bytes(data)
-    report = {'source_rom_sha256': sha256(ref.path), 'sound_records': sum(k[0] == 'sound' for k in bank.cache),
-              'samples': len(bank.samples), 'fgm_table_count': u32(tbl), 'fgm_microcode_count': u32(ucd),
-              'serialized_bank_verified': verified, 'sample_payloads_verified': len(bank.samples),
+    sfx = banks['sfx'][0]
+    report = {'source_rom_sha256': sha256(ref.path),
+              'music_sequence_count': music_count,
+              'music_sequence_payloads_verified': music_count,
+              'music_instrument_bank': {'serialized_bank_verified': banks['music'][1],
+                                        'sample_payloads_verified': len(banks['music'][0].samples)},
+              'sound_records': sum(k[0] == 'sound' for k in sfx.cache),
+              'samples': len(sfx.samples), 'fgm_table_count': u32(tbl), 'fgm_microcode_count': u32(ucd),
+              'serialized_bank_verified': banks['sfx'][1], 'sample_payloads_verified': len(sfx.samples),
               'files': {n: {'bytes': len(v), 'sha256': sha256(out/n)} for n, v in files.items()}}
     write_json(out / 'manifest.json', report)
     print(report)

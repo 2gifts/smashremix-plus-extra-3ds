@@ -5,7 +5,7 @@ import unittest
 from types import SimpleNamespace
 from common import ROOT, BUILD
 from prepare_fighter_probe import Scripts, Reference
-from prepare_reference_audio import Bank, package, verify_bank
+from prepare_reference_audio import Bank, package, repack_sequence_bank, verify_bank
 from test_asset_loader import compiler_path
 
 
@@ -475,6 +475,25 @@ def bank_fixture():
 
 
 class AudioTests(unittest.TestCase):
+    def test_repacked_music_preserves_sparse_sequences_and_rejects_bad_ranges(self):
+        rom = bytearray(160)
+        struct.pack_into('>HHIIII', rom, 16, 0x5331, 2, 80, 5, 48, 7)
+        rom[96:101] = b'first'
+        rom[64:71] = b'second!'
+        output, count = repack_sequence_bank(rom, 16)
+        self.assertEqual(count, 2)
+        self.assertEqual(struct.unpack_from('>HH', output), (0x5331, 2))
+        for i, expected in enumerate((b'first', b'second!')):
+            offset, length = struct.unpack_from('>II', output, 4 + i * 8)
+            self.assertEqual(output[offset:offset + length], expected)
+        struct.pack_into('>I', rom, 20, 4)
+        with self.assertRaisesRegex(ValueError, 'outside reference ROM'):
+            repack_sequence_bank(rom, 16)
+        struct.pack_into('>I', rom, 20, 80)
+        struct.pack_into('>I', rom, 24, 1000)
+        with self.assertRaisesRegex(ValueError, 'outside reference ROM'):
+            repack_sequence_bank(rom, 16)
+
     def test_split_bank_relocates_and_preserves_samples(self):
         bank = Bank(bank_fixture(), 0x100, 0x1000, 144, 0x300)
         self.assertEqual(bank.record('file', 0), 0)
