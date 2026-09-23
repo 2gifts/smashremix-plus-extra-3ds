@@ -18,7 +18,10 @@ def main():
         subprocess.run(list(map(str, args)), cwd=ROOT, check=True)
     audit_path = BUILD / 'fighter-audit.json'
     reference_sha = json.loads((BUILD / 'reference.json').read_text())['rom_sha256']
-    if not audit_path.exists() or json.loads(audit_path.read_text()).get('reference_rom_sha256') != reference_sha:
+    audit_source = ROOT / 'remix/tools/audit_reference_fighters.py'
+    audit_meta = json.loads(audit_path.read_text()) if audit_path.exists() else {}
+    if (audit_meta.get('schema') != 2 or audit_meta.get('reference_rom_sha256') != reference_sha or
+            audit_meta.get('audit_script_sha256') != sha256(audit_source)):
         run(sys.executable, ROOT / 'remix/tools/audit_reference_fighters.py')
     run(sys.executable, ROOT / 'remix/tools/prepare_fighter_probe.py')
     config_path = ROOT / '3ds/build-config.json'

@@ -40,7 +40,7 @@ def load_catalog(path=CATALOG):
 def validate_reference(catalog, audit_path, reference_sha256=None):
     """Do not expose a new fighter merely because its ROM struct exists."""
     report = json.loads(Path(audit_path).read_text())
-    if report.get('schema') != 1 or (reference_sha256 is not None and
+    if report.get('schema') != 2 or (reference_sha256 is not None and
                                      report.get('reference_rom_sha256') != reference_sha256):
         raise ValueError('Fighter audit does not match the pinned reference')
     rows = {row['name']: row for row in report['fighters']}
@@ -50,6 +50,8 @@ def validate_reference(catalog, audit_path, reference_sha256=None):
             raise ValueError(f"Reference fighter mismatch: {fighter['name']}")
         if not row['fixture_data_ready']:
             raise ValueError(f"Reference assets/scripts unready: {fighter['name']}")
+        if fighter['registration'] == 'generic' and not row['action_table']['generic_action_table_compatible']:
+            raise ValueError(f"Native action table requires a custom registration: {fighter['name']}")
 
 
 def render_header(catalog):

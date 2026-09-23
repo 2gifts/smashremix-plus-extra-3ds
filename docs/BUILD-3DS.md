@@ -62,7 +62,7 @@ These commands use the pinned local reference ROM. Generated `.inc` files stay u
 
 ## Adding a fighter to the native development build
 
-The pinned Remix `src/Character.asm` uses `define_character` and action-parameter patch macros to build fighter records. `remix/tools/audit_reference_fighters.py` reads the assembled results and checks scripts and asset dependencies. A passing data audit is only a starting point: inspect that fighter's assembly hooks, specials, projectiles, AI, and parent differences before marking it playable.
+The pinned Remix `src/Character.asm` uses `define_character` and action-parameter patch macros to build fighter records. `remix/tools/audit_reference_fighters.py` reads the assembled results and checks scripts and asset dependencies. It also compares every five-word special-action record with the matching parent in the exact original ROM. The local `remix/build/fighter-audit.json` lists changed status IDs, flags, callback addresses, and added statuses. `remix/build/action-callback-worklist.json` groups the mod-owned callback targets by reference symbol and every fighter/status that uses them, so shared functions can be ported once. A passing data audit is only a starting point: inspect that fighter's other assembly hooks, specials, projectiles, AI, and parent differences before marking it playable.
 
 For a validated fighter, add one record to [`remix/native_fighters.json`](../remix/native_fighters.json), with its reference fighter ID, vanilla parent, and `registration` set to `generic` when vanilla callbacks suffice. Keep `custom` for fighters with their own native registration or status table. Run:
 
@@ -72,7 +72,7 @@ remix/.venv/Scripts/python.exe remix/tools/test_fighter_import.py
 remix/.venv/Scripts/python.exe remix/tools/build_fighter_probe.py
 ```
 
-The builder checks every enabled name, ID, parent, script, and asset closure against the pinned reference audit. It then generates the fighter's motion/script data, the shared native registration table, and bottom-screen fighter labels, includes required asset dependencies, and updates the VS bottom-card cycle from the same catalog. A mismatched or structurally unready record fails the build. Character-specific mechanics still require native C and emulator move tests; this pipeline does not execute N64 MIPS patches on ARM11. The catalog, generator, and shared runtime are source-only; generated ROM-derived includes and the CIA stay local.
+The builder checks every enabled name, ID, parent, script, and asset closure against the pinned reference audit. `generic` registration is rejected if the mod changes an inherited action flag or callback, or adds a status: those changes require a native C implementation and `custom` registration. The builder then generates the fighter's motion/script data, the shared native registration table, and bottom-screen fighter labels, includes required asset dependencies, and updates the VS bottom-card cycle from the same catalog. A mismatched or structurally unready record fails the build. Character-specific mechanics still require native C and emulator move tests; this pipeline does not execute N64 MIPS patches on ARM11. The catalog, generator, and shared runtime are source-only; generated ROM-derived includes and the CIA stay local.
 
 ## Build the fighter development CIA
 

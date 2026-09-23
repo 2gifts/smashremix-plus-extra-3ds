@@ -11,6 +11,7 @@ from prepare_fighter_probe import Scripts, Reference
 from prepare_reference_audio import Bank, package, repack_sequence_bank, verify_bank
 from test_asset_loader import compiler_path
 from native_fighter_catalog import load_catalog, render_header, render_ui, render_generic_data, validate_reference, HEADER, UI
+from audit_reference_fighters import ActionTableAudit, callback_worklist
 
 
 class WordReference:
@@ -22,6 +23,42 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_action_table_audit_separates_inherited_and_custom_callbacks(self):
+        original = bytearray(0xa6f48)
+        base = 0x80084800
+        struct.pack_into('>I', original, 0x92614, base + 0x100)  # Fox struct
+        struct.pack_into('>I', original, 0xa6f44, base + 0x200)  # Fox actions
+        struct.pack_into('>I', original, 0x16c, 4)  # Parent motion count
+        parent_words = [0x11, 0x80100000, 0x80100004, 0x80100008, 0x8010000c,
+                        0x22, 0x80100010, 0x80100014, 0x80100018, 0x8010001c]
+        struct.pack_into('>10I', original, 0x200, *parent_words)
+        action_addr = 0x80400000
+        ref = WordReference({action_addr + i * 4: word for i, word in enumerate(parent_words)})
+        ref.symbols = {'Character.TEST_action_array': action_addr,
+                       'Character.TEST_menu_array': action_addr + 48}
+        audit = ActionTableAudit.__new__(ActionTableAudit)
+        audit.original, audit.ref, audit.sizes = bytes(original), ref, {'FOX': 40}
+        self.assertTrue(audit.audit('TEST', 'FOX', 4)['generic_action_table_compatible'])
+        ref.data[action_addr + 6 * 4] = 0x8040abcd
+        changed = audit.audit('TEST', 'FOX', 4)
+        self.assertFalse(changed['generic_action_table_compatible'])
+        self.assertEqual(changed['changed_inherited_statuses'][0]['status_id'], 0xdd)
+        self.assertEqual(changed['changed_inherited_statuses'][0]['callbacks']['update']['remix'], '8040abcd')
+        ref.symbols['Character.TEST_menu_array'] = action_addr + 64
+        ref.data.update({action_addr + (10 + i) * 4: i for i in range(5)})
+        added = audit.audit('TEST', 'FOX', 5)
+        self.assertEqual(added['added_statuses'], 1)
+        self.assertEqual(added['added_status_records'][0]['status_id'], 0xde)
+        with tempfile.TemporaryDirectory() as dirname:
+            ref.path = Path(dirname) / 'reference.z64'
+            ref.path.write_bytes(b'test-reference')
+            ref.ram_base = action_addr
+            ref.symbols['Shared.native_candidate'] = 0x8040abcd
+            work = callback_worklist(ref, [{'name': name, 'action_table': changed}
+                                           for name in ('ONE', 'TWO')])
+            self.assertEqual(work['unique_expansion_targets'], 1)
+            self.assertEqual(len(work['targets'][0]['uses']), 2)
+
     def test_fighter_catalog_generates_roster_and_rejects_unvalidated_ids(self):
         catalog = load_catalog()
         self.assertEqual(HEADER.read_text(), render_header(catalog))
@@ -44,9 +81,10 @@ class MotionTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'duplicate fighter ID'):
                 load_catalog(path)
             audit = Path(dirname) / 'audit.json'
-            audit.write_text(json.dumps({'schema': 1, 'fighters': [
+            audit.write_text(json.dumps({'schema': 2, 'fighters': [
                 {'name': row['name'], 'fkind': row['fkind'], 'parent': row['parent'],
-                 'fixture_data_ready': row['name'] != generic[0]['name']}
+                 'fixture_data_ready': row['name'] != generic[0]['name'],
+                 'action_table': {'generic_action_table_compatible': True}}
                 for row in catalog['fighters']]}))
             with self.assertRaisesRegex(ValueError, 'assets/scripts unready'):
                 validate_reference(catalog, audit)
@@ -57,6 +95,11 @@ class MotionTests(unittest.TestCase):
                 row['fixture_data_ready'] = True
             audit.write_text(json.dumps(report))
             validate_reference(catalog, audit)
+            report['fighters'][next(i for i, row in enumerate(report['fighters'])
+                                    if row['name'] == generic[0]['name'])]['action_table']['generic_action_table_compatible'] = False
+            audit.write_text(json.dumps(report))
+            with self.assertRaisesRegex(ValueError, 'action table requires a custom registration'):
+                validate_reference(catalog, audit)
 
     def test_roster_cycle_match_and_results_share_parent(self):
         fixture = '''#include <assert.h>
