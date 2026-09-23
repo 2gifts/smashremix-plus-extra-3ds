@@ -39,7 +39,7 @@ def main():
         sound.setparams((2, 2, 32000, 0, 'NONE', 'not compressed'))
         sound.writeframes(bytes(32000 * 4))
     run(tool('bannertool'), 'makesmdh', '-s', 'Remix Falco test', '-l',
-        'Falco in Fox slot - full Remix port unfinished', '-p', 'Remix / decomp / port contributors',
+        'Falco via VS bottom screen - full Remix port unfinished', '-p', 'Remix / decomp / port contributors',
         '-i', dst / 'icon.png', '-o', dst / 'icon.smdh', '-r', 'regionfree',
         '-f', 'visible,allow3d,new3ds,recordusage')
     run(tool('bannertool'), 'makebanner', '-i', dst / 'banner.png', '-a', dst / 'silent.wav', '-o', dst / 'banner.bin')
@@ -53,7 +53,7 @@ def main():
         run(tool('makerom'), '-f', fmt, *flags, *(['-ver', '1'] if fmt == 'cia' else []),
             '-o', dst / ('smash64-development.' + suffix))
     report = {'development_only': True, 'build_variant': 'falco-test', 'fully_playable': False,
-              'scope': 'Falco replaces Fox; vanilla menus, stages and other fighters; no +EXTRA roster',
+              'scope': 'Falco selectable by tapping the Fox player card on the VS bottom screen; full Remix roster and menus unfinished',
               'elf_sha256': sha256(elf), 'title_id': '000400000ff64200', 'files': {}}
     for suffix in ('cia', 'cxi'):
         path = dst / ('smash64-development.' + suffix)

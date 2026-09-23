@@ -3490,6 +3490,29 @@ void mnVSResultsFuncStart(void)
 	{
 		ftManagerSetupFilesAllKind(i);
 	}
+#ifdef PORT
+	/* Results can instantiate each fighter again in a fresh scene arena.
+	 * The vanilla loop above does not load registered mod fighter files;
+	 * making their results GObj with a NULL main-file handle gives an invalid
+	 * FTAttributes pointer. Load each additional participant once here. */
+	for (i = 0; i < ARRAY_COUNT(gSCManagerTransferBattleState.players); i++)
+	{
+		s32 fkind = gSCManagerTransferBattleState.players[i].fkind;
+		s32 j;
+
+		if ((gSCManagerTransferBattleState.players[i].pkind == nFTPlayerKindNot) ||
+		    (fkind <= nFTKindPlayableEnd) || (port_fighter_data(fkind) == NULL))
+		{
+			continue;
+		}
+		for (j = 0; j < i; j++)
+		{
+			if ((gSCManagerTransferBattleState.players[j].pkind != nFTPlayerKindNot) &&
+			    (gSCManagerTransferBattleState.players[j].fkind == fkind)) break;
+		}
+		if (j == i) ftManagerSetupFilesAllKind(fkind);
+	}
+#endif
 	for (i = 0; i < ARRAY_COUNT(sMNVSResultsFigatreeHeaps); i++)
 	{
 		sMNVSResultsFigatreeHeaps[i] = syTaskmanMalloc(gFTManagerFigatreeHeapSize, 0x10);

@@ -1,6 +1,6 @@
 /* Native translation of Fray's Falco/Phantasm.asm and Command.asm in Smash
- * Remix (pinned by remix/upstream.lock.json). This bring-up fixture replaces
- * the Fox slot; it is not a full-roster release or a MIPS interpreter. */
+ * Remix (pinned by remix/upstream.lock.json). This bring-up fixture registers
+ * Falco at fkind 29; it is not a full-roster release or a MIPS interpreter. */
 #include <ft/fighter.h>
 #include <lb/lbreloc.h>
 #include <sys/utils.h>
@@ -338,9 +338,8 @@ void nativeRemixProbeInit(void) {
     desc.special_handler[PORT_FIGHTER_SPECIAL_N] = groundNeutral;
     desc.special_handler[PORT_FIGHTER_SPECIAL_AIR_N] = airNeutral;
     desc.scale = 1.2f;
-    /* Register Falco at the assembled mod's real fkind as well. The test
-     * menu still selects the Fox replacement, but the native registry and
-     * fighter allocation prepass now have an independently backed new row. */
+    /* Register Falco at the assembled mod's real fkind. The bottom-screen
+     * VS selector chooses this independently backed row; Fox stays vanilla. */
     falco_slot_data = *data;
     falco_slot_data.p_file_main = &falco_slot_files[0];
     falco_slot_data.p_file_mainmotion = &falco_slot_files[1];
@@ -354,8 +353,6 @@ void nativeRemixProbeInit(void) {
     falco_slot_data.p_particle = &falco_slot_particle;
     desc.ft_data = &falco_slot_data;
     port_fighter_register(29, &desc); /* Character.FALCO in the pinned ROM */
-    desc.ft_data = data;
-    port_fighter_register(nFTKindFox, &desc);
     native_remix_probe_ready = 1;
-    port_log("REMIX PROBE: native Falco registered in Fox slot\n");
+    port_log("REMIX PROBE: native Falco registered at fkind 29\n");
 }

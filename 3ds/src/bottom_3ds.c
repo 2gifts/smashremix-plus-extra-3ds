@@ -6,6 +6,10 @@
 #include "native_display.h"
 #include "native_perf.h"
 #include "native_controls.h"
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+volatile unsigned native_remix_selected_fkind[4];
+#endif
 extern volatile uint32_t ssb_frame_count;
 uint16_t native_bottom_pixels[320*240] __attribute__((aligned(32)));
 NativeBottomState native_bottom_observed;
@@ -35,6 +39,20 @@ void nativeBottomInit(void){
 }
 void nativeBottomTouch(unsigned x,unsigned y){
     if(!ready)return;
+#ifdef SSB_REMIX_PROBE
+    if(native_bottom_page==BOTTOM_NONE&&native_bottom_observed.scene==NATIVE_REMIX_VS_CSS_SCENE&&
+       x>=8&&x<312&&y>=40&&y<192){
+        unsigned col=(x-8)/156,row=(y-40)/79,px=(x-8)%156,py=(y-40)%79;
+        unsigned slot=row*2+col;
+        if(px<148&&py<73&&slot<4&&native_bottom_observed.players[slot].kind<2&&
+           (native_bottom_observed.players[slot].character==NATIVE_REMIX_FOX_KIND||
+            native_bottom_observed.players[slot].character==NATIVE_REMIX_FALCO_KIND)){
+            native_remix_selected_fkind[slot]=native_remix_selected_fkind[slot]==NATIVE_REMIX_FALCO_KIND?
+                0:NATIVE_REMIX_FALCO_KIND;
+            dirty=1;return;
+        }
+    }
+#endif
     if(native_bottom_page==BOTTOM_CONTROLS){
         unsigned option=nativeBottomControlsHit(x,y);
         if(option==BOTTOM_TAP_JUMP||option==BOTTOM_CSTICK){settingError=nativeControlsToggle(option==BOTTOM_CSTICK)!=0;dirty=1;return;}

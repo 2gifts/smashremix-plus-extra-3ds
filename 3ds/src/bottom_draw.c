@@ -10,11 +10,7 @@
 #define RGB(r,g,b) ((((r)>>3)<<11)|(((g)>>2)<<5)|((b)>>3))
 static const uint16_t paper=RGB(244,237,213),gold=RGB(248,198,62),muted=RGB(167,165,151);
 static const uint16_t colors[4]={RGB(235,68,63),RGB(75,140,235),RGB(241,190,43),RGB(65,188,105)};
-#ifdef SSB_REMIX_PROBE
-#define FOX_SLOT_NAME "FALCO"
-#else
 #define FOX_SLOT_NAME "FOX"
-#endif
 static const char* names[12]={"MARIO",FOX_SLOT_NAME,"DONKEY KONG","SAMUS","LUIGI","LINK","YOSHI","C. FALCON","KIRBY","PIKACHU","JIGGLYPUFF","NESS"};
 static const char* stages[9]={"PEACH'S CASTLE","SECTOR Z","KONGO JUNGLE","PLANET ZEBES","HYRULE CASTLE","YOSHI'S ISLAND","DREAM LAND","SAFFRON CITY","MUSHROOM KINGDOM"};
 typedef struct {uint32_t w,h,offset;} Art;
@@ -92,8 +88,8 @@ static void plate(int x,int y,int w,int h,uint16_t c){
     rect(x,y,w,h,c);rect(x,y,w,1,RGB(127,122,108));rect(x,y,1,h,RGB(98,94,85));
     rect(x+w-1,y+1,1,h-1,RGB(12,12,12));rect(x+1,y+h-1,w-1,1,RGB(8,8,8));
 }
-static unsigned fighterArt(unsigned c){return c==13?0:c==26?2:c>=14&&c<26?c-14:c;}
-static const char* fighterName(unsigned c){return c==12?"MASTER HAND":c==13?"METAL MARIO":c==26?"GIANT DK":c>=14&&c<26?"POLYGON":c<12?names[c]:"SELECT";}
+static unsigned fighterArt(unsigned c){return c==29?1:c==13?0:c==26?2:c>=14&&c<26?c-14:c;}
+static const char* fighterName(unsigned c){return c==29?"FALCO":c==12?"MASTER HAND":c==13?"METAL MARIO":c==26?"GIANT DK":c>=14&&c<26?"POLYGON":c<12?names[c]:"SELECT";}
 static void background(void){
     if(backdropReady){memcpy(canvas,backdrop,sizeof(backdrop));return;}
     rect(0,0,320,240,RGB(29,29,27));
@@ -223,14 +219,20 @@ void nativeBottomDraw(uint16_t* target,const NativeBottomState* s,unsigned fps,u
         if(n<=2){for(unsigned j=0;j<n;j++)card(8,40+j*79,304,73,&s->players[slots[j]],slots[j],s->page,s->training);}
         else for(unsigned j=0;j<4;j++)card(8+(j%2)*156,40+(j/2)*79,148,73,&s->players[j],j,s->page,s->training);
         if(s->page==BOTTOM_BATTLE&&s->stage<9)center(160,201,stages[s->stage],7,muted);
-        else if(s->page==BOTTOM_SELECT)center(160,201,"A SELECT  /  B BACK  /  START READY",7,muted);
+        else if(s->page==BOTTOM_SELECT){
+#ifdef SSB_REMIX_PROBE
+            if(s->scene==16)center(160,201,"TAP FOX CARD TO SWITCH FOX / FALCO",7,muted);
+            else
+#endif
+            center(160,201,"A SELECT  /  B BACK  /  START READY",7,muted);
+        }
         else if(s->page==BOTTOM_STAGE)center(160,201,"CHOOSE A STAGE ON THE TOP SCREEN",7,muted);
     }else{
         header(menuTitle(s->scene),"NINTENDO 64");
         image(BART_LOGO,111,44,98,98,gold,28);
         center(160,154,s->status==~0u?"LOADING GAME":s->scene==1||s->scene>=27&&s->scene<=45?"PRESS START":"A SELECT   /   B BACK",12,paper);
 #ifdef SSB_REMIX_PROBE
-        center(160,179,"FALCO TEST / SELECT FOX",8,gold);
+        center(160,179,"FALCO TEST / VS FOX CARD TO SWITCH",8,gold);
         center(160,194,"FULL REMIX PORT IN DEVELOPMENT",7,muted);
 #else
         center(160,181,"3D SLIDER ADJUSTS DEPTH",8,muted);

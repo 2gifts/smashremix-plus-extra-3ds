@@ -2,7 +2,7 @@
 
 A native 3DS port **in development**, derived from [Smash 64 for New Nintendo 3DS](https://github.com/2gifts/smash64-3ds). The target is the complete [Smash Remix](https://github.com/JSsixtyfour/smashremix) base with [Smash Remix +EXTRA](https://github.com/joaorb64/smashremix-plus-extra), retaining the existing port's stereoscopic rendering, widescreen option, bottom-screen HUD, and control settings.
 
-**The complete Remix +EXTRA port is not ready.** A local development CIA now runs Falco in the original Fox slot, with native movement code and imported move data. It is a fighter integration test, not the expanded roster or finished mod. The original Smash 64 port remains available in its [own repository](https://github.com/2gifts/smash64-3ds).
+**The complete Remix +EXTRA port is not ready.** A local development CIA now offers native Falco in VS mode: select Fox on the top screen, then tap that player's card on the bottom screen to switch between Fox and Falco. This is a fighter integration test, not the expanded roster or finished mod. The original Smash 64 port remains available in its [own repository](https://github.com/2gifts/smash64-3ds).
 
 ## Current progress
 
@@ -19,7 +19,7 @@ Remix adds N64 assembly code as well as characters and assets. Its fighter regis
 
 ## Building and contributing
 
-See the [development build guide](docs/BUILD-3DS.md) to build the reference mod, run checks, or build the Falco test CIA from your own assets. Its HOME Menu label is **Remix Falco test**; select **Fox** to test Falco. The full-mod release packager remains disabled while integration is unfinished.
+See the [development build guide](docs/BUILD-3DS.md) to build the reference mod, run checks, or build the Falco test CIA from your own assets. Its HOME Menu label is **Remix Falco test**; in VS mode, select Fox and tap the corresponding bottom-screen card to choose Falco. The full-mod release packager remains disabled while integration is unfinished.
 
 The target hardware is **New Nintendo 3DS / New 3DS XL**. Gameplay performance and stereo compatibility for Remix are not established yet.
 

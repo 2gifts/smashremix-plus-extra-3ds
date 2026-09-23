@@ -15,6 +15,9 @@ extern char *getenv(const char *name);
 extern int atoi(const char *str);
 extern float port_widescreen_clip_x_scale(void);
 #include "fighter_registry.h"
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 #endif
 
 
@@ -4894,6 +4897,13 @@ void mnPlayersVSSetSceneData(void)
 			gSCManagerTransferBattleState.players[i].team = sMNPlayersVSSlots[i].team;
 		}
 		gSCManagerTransferBattleState.players[i].fkind = sMNPlayersVSSlots[i].fkind;
+#ifdef SSB_REMIX_PROBE
+		if ((gSCManagerTransferBattleState.players[i].fkind == nFTKindFox) &&
+		    (native_remix_selected_fkind[i] == NATIVE_REMIX_FALCO_KIND))
+		{
+			gSCManagerTransferBattleState.players[i].fkind = NATIVE_REMIX_FALCO_KIND;
+		}
+#endif
 		gSCManagerTransferBattleState.players[i].pkind = sMNPlayersVSSlots[i].pkind;
 		gSCManagerTransferBattleState.players[i].costume = sMNPlayersVSSlots[i].costume;
 		gSCManagerTransferBattleState.players[i].shade = sMNPlayersVSSlots[i].shade;
@@ -5255,6 +5265,17 @@ void mnPlayersVSInitPlayer(s32 player)
 	sMNPlayersVSSlots[player].figatree_heap = NULL;
 #endif
 	sMNPlayersVSSlots[player].fkind = gSCManagerTransferBattleState.players[player].fkind;
+#ifdef SSB_REMIX_PROBE
+	/* The original CSS has only twelve portrait IDs. Keep its Fox portrait
+	 * as Falco's temporary proxy when returning from a fkind-29 match, while
+	 * restoring the actual choice on the bottom screen and next match. */
+	if (sMNPlayersVSSlots[player].fkind == NATIVE_REMIX_FALCO_KIND)
+	{
+		native_remix_selected_fkind[player] = NATIVE_REMIX_FALCO_KIND;
+		sMNPlayersVSSlots[player].fkind = nFTKindFox;
+	}
+	else native_remix_selected_fkind[player] = 0;
+#endif
 
 	if ((gSCManagerTransferBattleState.players[player].pkind == nFTPlayerKindMan) && (sMNPlayersVSControllerOrders[player] == -1))
 	{

@@ -1,6 +1,9 @@
 #include <sc/scene.h>
 #include <mn/menu.h>
 #include "native_bottom.h"
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 #include <string.h>
 extern MNPlayersSlotVS sMNPlayersVSSlots[4];
 extern MNPlayersSlot1PGame sMNPlayers1PGameSlot;
@@ -94,6 +97,10 @@ void nativeBottomSnapshot(NativeBottomState* s){
         for(unsigned i=0;i<4;i++){
             MNPlayersSlotVS* q=&sMNPlayersVSSlots[i];NativeBottomPlayer* p=&s->players[i];
             p->kind=q->pkind;p->character=q->fkind;p->costume=q->costume;p->level=q->cpu_level;
+#ifdef SSB_REMIX_PROBE
+            if(q->fkind==nFTKindFox&&native_remix_selected_fkind[i]==NATIVE_REMIX_FALCO_KIND)
+                p->character=NATIVE_REMIX_FALCO_KIND;
+#endif
             p->color=s->teams?(q->team==2?3:q->team):i;p->ready=q->is_fighter_selected;
         }
     }else if(sc==nSCKind1PGamePlayers||sc==nSCKind1PBonus1Players||sc==nSCKind1PBonus2Players){
