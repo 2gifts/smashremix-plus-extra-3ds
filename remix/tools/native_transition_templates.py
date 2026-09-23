@@ -8,6 +8,7 @@ from pathlib import Path
 
 from common import BUILD, sha256, write_json
 from classify_action_callbacks import COLLISION_HELPERS, first_return_words, jal_target
+from native_fkind_branch_transitions import decode_fkind_branches
 from native_straightline_transitions import decode_straightline
 
 
@@ -275,6 +276,7 @@ def decode_transition(ref, address):
     return (decode_status_table(ref, address, actual) or
             decode_fkind_branch(address, actual) or
             decode_fkind_select_branch(address, actual) or
+            decode_fkind_branches(ref, address) or
             decode_straightline(ref, address))
 
 
@@ -292,9 +294,22 @@ def extract_native_transitions(ref, families):
         transition = transitions[address]
         if transition is None:
             continue
-        if transition['template'] not in ('decoded_straightline', 'fkind_ground_branch',
-                                          'fkind_select_branch',
-                                          *TABLE_TEMPLATES):
+        if transition['template'] in ('fkind_ground_branch', 'fkind_select_branch'):
+            # The branch interpreter must agree with the independent exact
+            # MIPS patterns before it is trusted on additional routines.
+            decoded = decode_fkind_branches(ref, address)
+            expected_cases = sorted(({'fkind': kind,
+                                      'status_id': transition['status_conditional_id']}
+                                     for kind in transition['conditional_fkind_ids']
+                                     if transition['status_conditional_id'] != transition['status_id']),
+                                    key=lambda case: case['fkind'])
+            if (decoded is None or decoded['status_id'] != transition['status_id'] or
+                    decoded['status_cases'] != expected_cases or
+                    any(decoded[key] != transition[key] for key in
+                        ('kinetics', 'clamp_air_speed', 'preserve_flags'))):
+                raise ValueError(f'Compiled fighter-kind branch decoder disagrees at {address:08x}')
+        elif transition['template'] not in ('decoded_straightline', 'decoded_fkind_branch',
+                                            *TABLE_TEMPLATES):
             # Keep the hand-checked examples as an independent semantic
             # oracle for the more general instruction decoder.
             decoded = decode_straightline(ref, address)
@@ -323,6 +338,8 @@ def render_native_code(manifest):
             values = ', '.join(str(value) for value in row['status_table'])
             lines += [f'static const u16 nativeRemixStatusTable_{address}[] = {{{values}}};']
             status = f'nativeRemixStatusTable_{address}[fp->status_id - {row["status_base"]}]'
+        elif row.get('status_cases'):
+            status = 'native_status'
         elif 'status_conditional_id' in row:
             kinds = row['conditional_fkind_ids']
             condition = ' || '.join(f'fp->fkind == {kind}' for kind in kinds)
@@ -336,6 +353,12 @@ def render_native_code(manifest):
                      row['preserve_flags'], f'0x{row["preserve_flags"]:x}u')
         lines += [f'static void nativeRemixTransition_{address}(GObj *fighter_gobj) {{',
                   '    FTStruct *fp = ftGetStruct(fighter_gobj);']
+        if row.get('status_cases'):
+            lines += [f'    u32 native_status = {row["status_id"]};',
+                      '    switch (fp->fkind) {']
+            for case in row['status_cases']:
+                lines += [f'    case {case["fkind"]}: native_status = {case["status_id"]}; break;']
+            lines += ['    default: break;', '    }']
         if 'status_table' in row:
             lines += [f'    if (fp->status_id < {row["status_base"]} ||',
                       f'        fp->status_id >= {row["status_base"] + len(row["status_table"])}) return;']

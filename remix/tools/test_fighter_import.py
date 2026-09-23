@@ -31,12 +31,14 @@ from native_entry_patches import extract_entry_effects, render_native_rows as re
 from classify_action_callbacks import classify as classify_action_callbacks
 from native_transition_templates import (TEMPLATES, SHARED_TEMPLATES, TABLE_TEMPLATES,
                                          FKIND_GROUND_BRANCH, FKIND_SELECT_BRANCH,
+                                         decode_fkind_branch, decode_fkind_select_branch,
                                          decode_transition, extract_native_transitions,
                                          render_native_code)
 from native_anim_end_templates import (STATUS_PLAY_CLEAR, DIVE_AIR_INITIAL,
                                        decode_dive_air_initial, extract_native_anim_ends,
                                        render_native_code as render_anim_end_code)
 from native_straightline_transitions import decode_straightline
+from native_fkind_branch_transitions import decode_fkind_branches
 
 
 class WordReference:
@@ -48,6 +50,51 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_symbolic_branch_likely_annuls_not_taken_delay_slot(self):
+        words = [int(value, 16) for value in (
+            '27bdffe0 afbf001c afa40020 8c840084 0c037ba6 00000000 '
+            '8fa40020 8c880084 8d090008 340500e1 340a0008 51490001 '
+            '34050142 8c860078 3c073f80 0c039bc9 afa00010 8fbf001c '
+            '03e00008 27bd0020').split()]
+        ref = SimpleNamespace(words=lambda address, count:
+                              (words + [0] * count)[:count])
+        likely = decode_fkind_branches(ref, 0x80500000)
+        self.assertEqual(likely['status_id'], 0xe1)
+        self.assertEqual(likely['status_cases'], [{'fkind': 8, 'status_id': 0x142}])
+        words[11] = 0x11490001  # Ordinary beq runs its delay slot on both paths.
+        ordinary = decode_fkind_branches(ref, 0x80500000)
+        self.assertEqual(ordinary['status_id'], 0x142)
+        self.assertEqual(ordinary['status_cases'], [])
+
+    def test_symbolic_fighter_kind_branches_model_both_paths(self):
+        # An air transition from the compiled pattern: ordinary Wario and
+        # both Kirby copy kinds must select different statuses, then clamp.
+        words = [int(value, 16) for value in (
+            '27bdffb0 afbf001c afa40038 8c840084 0c037bb2 afa40034 '
+            '8fa40038 8c860084 8cc60008 34050008 50a60005 3405013b '
+            '34050030 50a60002 3405013b 340500e6 8c860078 3c073f80 '
+            '0c039bc9 afa00010 0c0363ae 8fa40034 8fbf001c 27bd0050 '
+            '03e00008 00000000').split()]
+        ref = SimpleNamespace(words=lambda address, count:
+                              (words + [0] * count)[:count])
+        row = decode_fkind_branches(ref, 0x80500000)
+        self.assertEqual(row['status_id'], 0xe6)
+        self.assertEqual(row['status_cases'], [{'fkind': 8, 'status_id': 0x13b},
+                                                {'fkind': 48, 'status_id': 0x13b}])
+        self.assertEqual(row['action_order'], ['air', 'status', 'clamp_air_speed'])
+        native = render_native_code({'transitions': [row], 'wrappers': []})
+        self.assertIn('case 8: native_status = 315;', native)
+        self.assertIn('case 48: native_status = 315;', native)
+        for index, replacement in ((8, 0x8cc6000c),  # Unknown branch input.
+                                   (10, 0x50a60000),  # Backward/invalid target.
+                                   (19, 0xac800184),  # Non-stack side effect.
+                                   (20, 0x0c0363af)):  # Unknown engine call.
+            with self.subTest(instruction=index):
+                original = words[index]
+                words[index] = replacement
+                self.assertIsNone(decode_fkind_branches(ref, 0x80500000))
+                words[index] = original
+
     def test_compiled_fighter_kind_select_supports_air_and_ground(self):
         for kinetics, helper in (('air', 0x0c037bb2), ('ground', 0x0c037ba6)):
             with self.subTest(kinetics=kinetics):
@@ -71,7 +118,7 @@ class MotionTests(unittest.TestCase):
                     with self.subTest(instruction=index):
                         original = words[index]
                         words[index] = replacement
-                        self.assertIsNone(decode_transition(ref, 0x80500000))
+                        self.assertIsNone(decode_fkind_select_branch(0x80500000, words))
                         words[index] = original
 
     def test_compiled_fighter_kind_branch_translates_copy_status(self):
@@ -95,7 +142,7 @@ class MotionTests(unittest.TestCase):
             with self.subTest(instruction=index):
                 original = words[index]
                 words[index] = replacement
-                self.assertIsNone(decode_transition(ref, 0x80500000))
+                self.assertIsNone(decode_fkind_branch(0x80500000, words))
                 words[index] = original
 
     def test_shared_dive_animation_end_transition_is_fail_closed(self):
