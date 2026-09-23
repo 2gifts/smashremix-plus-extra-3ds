@@ -8,6 +8,7 @@ from pathlib import Path
 
 from common import BUILD, sha256, write_json
 from classify_action_callbacks import a1_pointer, first_return_words
+from native_straightline_transitions import decode_straightline
 
 
 ANIM_END_CALL = 0x0c036520  # ftAnimEndCheckSetStatus at 0x800D9480.
@@ -53,6 +54,28 @@ def exact_anim_end_wrapper(ref, address, target):
     )
     return any(tuple(words[:length]) == prefix + middle + ending
                for middle in middles for ending in endings)
+
+
+def exact_plain_anim_end_wrapper(ref, address, target):
+    """Accept a pure compiled callback with either legal pointer-load form."""
+    words = ref.words(address, 12)
+    length = first_return_words(words)
+    if length is None:
+        return False
+    actual = tuple(words[:length])
+    for stack_size in (0x18, 0x20):
+        prefix = (0x27bd0000 | (0x10000 - stack_size), 0xafbf0014)
+        ending = (0x8fbf0014, 0x27bd0000 | stack_size, 0x03e00008, 0)
+        alternate = (0x8fbf0014, 0x03e00008, 0x27bd0000 | stack_size)
+        high = (target + 0x8000) >> 16
+        pointer_loads = ((0x3c050000 | (target >> 16),
+                          0x34a50000 | (target & 0xffff), ANIM_END_CALL, 0),
+                         (0x3c050000 | high, ANIM_END_CALL,
+                          0x24a50000 | (target & 0xffff)))
+        if any(actual == prefix + middle + tail
+               for middle in pointer_loads for tail in (ending, alternate)):
+            return True
+    return False
 
 
 def decode_status_play_clear(ref, address):
@@ -104,11 +127,14 @@ def extract_native_anim_ends(ref, worklist):
             continue
         candidates += 1
         target = a1_pointer(words[:length])
-        if target is None or target < ref.ram_base or not exact_anim_end_wrapper(ref, address, target):
+        if (target is None or target < ref.ram_base or
+                not (exact_anim_end_wrapper(ref, address, target) or
+                     exact_plain_anim_end_wrapper(ref, address, target))):
             continue
         if target not in accepted_targets:
             accepted_targets[target] = (decode_status_play_clear(ref, target) or
-                                        decode_dive_air_initial(ref, target))
+                                        decode_dive_air_initial(ref, target) or
+                                        decode_straightline(ref, target, allow_status_only=True))
         if accepted_targets[target] is None:
             continue
         wrappers.append({'address': f'{address:08x}', 'symbols': row['symbols'],
@@ -127,6 +153,17 @@ def extract_native_anim_ends(ref, worklist):
 def render_native_code(manifest):
     lines = ['/* Exact compiled animation-end callback and status templates. */']
     for row in manifest['transitions']:
+        if row.get('template') == 'decoded_status_only':
+            flags = {0: 'FTSTATUS_PRESERVE_NONE', 1: 'FTSTATUS_PRESERVE_HIT'}.get(
+                row['preserve_flags'], f'0x{row["preserve_flags"]:x}u')
+            frame = '0.0F' if row['frame_begin'] == 'zero' else 'fighter_gobj->anim_frame'
+            lines += [f'static void nativeRemixAnimStatus_{row["address"]}(GObj *fighter_gobj) {{',
+                      f'    ftMainSetStatus(fighter_gobj, {row["status_id"]}, {frame}, '
+                      f'{row["speed"]!r}F, {flags});']
+            if row['play_anim']:
+                lines.append('    ftMainPlayAnimEventsAll(fighter_gobj);')
+            lines += ['}', '']
+            continue
         dive = row.get('template') == 'dive_air_initial'
         lines += [f'static void nativeRemixAnimStatus_{row["address"]}(GObj *fighter_gobj) {{',
                   '    FTStruct *fp = ftGetStruct(fighter_gobj);',

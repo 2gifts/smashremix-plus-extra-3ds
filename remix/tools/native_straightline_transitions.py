@@ -6,6 +6,9 @@ calls and stack writes. Every input to those calls must resolve to a known
 constant or a mapped fighter field. Anything else remains unbound.
 """
 
+import math
+import struct
+
 from classify_action_callbacks import first_return_words, jal_target
 
 
@@ -36,7 +39,7 @@ def add_value(value, amount):
     return UNKNOWN
 
 
-def decode_straightline(ref, address):
+def decode_straightline(ref, address, allow_status_only=False):
     words = ref.words(address, 128)
     length = first_return_words(words)
     if length is None or length > 64:
@@ -127,14 +130,21 @@ def decode_straightline(ref, address):
                 return None
             target = jal_target(address + index * 4, word)
             kind = ENGINE_CALLS.get(target)
+            if allow_status_only and target == 0x800E0830:
+                kind = 'play_anim'
             if kind is None:
                 return None
             if kind == 'status':
                 value, frame, speed = registers[5], registers[6], registers[7]
                 flags = stack.get(registers[29] + 0x10, UNKNOWN)
                 if (registers[4] != GOBJ or frame not in (ANIM_FRAME, 0) or
-                        speed != 0x3f800000 or not isinstance(flags, int) or
+                        not isinstance(speed, int) or not isinstance(flags, int) or
                         flags & ~0x7fff):
+                    return None
+                speed_float = struct.unpack('>f', struct.pack('>I', speed & 0xffffffff))[0]
+                if (not math.isfinite(speed_float) or
+                        not 0.0 < speed_float <= 256.0 or
+                        (not allow_status_only and speed != 0x3f800000)):
                     return None
                 if isinstance(value, int):
                     # Transitions may deliberately return to a vanilla
@@ -151,8 +161,11 @@ def decode_straightline(ref, address):
                     return None
                 actions.append({'kind': kind, 'status_id': status,
                                 'status_delta': delta, 'preserve_flags': flags,
-                                'frame_begin': 'zero' if frame == 0 else 'current'})
-            elif registers[4] == FIGHTER:
+                                'frame_begin': 'zero' if frame == 0 else 'current',
+                                'speed': speed_float})
+            elif kind == 'play_anim' and registers[4] == GOBJ:
+                actions.append({'kind': kind})
+            elif kind in ('ground', 'air', 'clamp_air_speed') and registers[4] == FIGHTER:
                 actions.append({'kind': kind})
             else:
                 return None
@@ -169,6 +182,16 @@ def decode_straightline(ref, address):
             return None
         index += 1
     kinds = [action['kind'] for action in actions]
+    if allow_status_only and kinds in (['status'], ['status', 'play_anim']):
+        status_action = actions[0]
+        if status_action['status_id'] is None:
+            return None
+        return {'address': f'{address:08x}', 'template': 'decoded_status_only',
+                'status_id': status_action['status_id'],
+                'preserve_flags': status_action['preserve_flags'],
+                'frame_begin': status_action['frame_begin'],
+                'speed': status_action['speed'],
+                'play_anim': kinds[-1] == 'play_anim'}
     if (kinds not in (['ground', 'status'], ['air', 'status'],
                       ['air', 'status', 'clamp_air_speed'],
                       ['air', 'clamp_air_speed', 'status'])):

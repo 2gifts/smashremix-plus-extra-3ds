@@ -35,7 +35,8 @@ from native_transition_templates import (TEMPLATES, SHARED_TEMPLATES, TABLE_TEMP
                                          decode_transition, extract_native_transitions,
                                          render_native_code)
 from native_anim_end_templates import (STATUS_PLAY_CLEAR, DIVE_AIR_INITIAL,
-                                       decode_dive_air_initial, extract_native_anim_ends,
+                                       decode_dive_air_initial, exact_plain_anim_end_wrapper,
+                                       extract_native_anim_ends,
                                        render_native_code as render_anim_end_code)
 from native_straightline_transitions import decode_straightline
 from native_fkind_branch_transitions import decode_fkind_branches
@@ -334,6 +335,35 @@ class MotionTests(unittest.TestCase):
             wrapper2[5] = 0xac80017c  # Wrapper has an extra side effect.
             self.assertEqual(extract_native_anim_ends(ref, worklist)
                              ['recognized_action_callback_count'], 1)
+
+    def test_compiled_plain_anim_end_uses_symbolic_status_decoder(self):
+        wrapper_address, target = 0x80500000, 0x80500100
+        wrapper = [0x27bdffe8, 0xafbf0014, 0x3c058050, 0x34a50100,
+                   0x0c036520, 0, 0x8fbf0014, 0x03e00008, 0x27bd0018]
+        transition = [0x27bdffe0, 0xafbf001c, 0xafa40020, 0x340500e5,
+                      0x8fa40020, 0x00003025, 0x3c073f80, 0x24010001,
+                      0x0c039bc9, 0xafa10010, 0x0c03820c, 0x8fa40020,
+                      0x8fbf001c, 0x03e00008, 0x27bd0020]
+        code = {wrapper_address: wrapper, target: transition}
+        ref = SimpleNamespace(words=lambda address, count:
+                              (code[address] + [0] * count)[:count])
+        self.assertTrue(exact_plain_anim_end_wrapper(ref, wrapper_address, target))
+        self.assertIsNone(decode_straightline(ref, target))
+        decoded = decode_straightline(ref, target, allow_status_only=True)
+        self.assertEqual(decoded['status_id'], 0xe5)
+        self.assertEqual(decoded['preserve_flags'], 1)
+        self.assertTrue(decoded['play_anim'])
+        generated = render_anim_end_code({'transitions': [decoded], 'wrappers': []})
+        self.assertIn('ftMainSetStatus(fighter_gobj, 229, 0.0F, 1.0F,', generated)
+        self.assertIn('ftMainPlayAnimEventsAll(fighter_gobj);', generated)
+        transition[9] = 0xafa00014  # The fifth status argument is now unknown.
+        self.assertIsNone(decode_straightline(ref, target, allow_status_only=True))
+        transition[9] = 0xafa10010
+        transition[11] = 0xac80017c  # An unmodelled fighter write is forbidden.
+        self.assertIsNone(decode_straightline(ref, target, allow_status_only=True))
+        transition[11] = 0x8fa40020
+        wrapper[3] = 0xac80017c
+        self.assertFalse(exact_plain_anim_end_wrapper(ref, wrapper_address, target))
 
     def test_extra_autolink_angle_matches_ground_air_and_reverse_hit_rules(self):
         fixture = r'''

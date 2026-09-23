@@ -844,6 +844,17 @@
     "azahar_stereo_dkult_regression_frame": 2038,
     "scope": "Both the animation-end wrapper and its mod-owned transition must match exact compiled instructions. Ten generated pairs, including four Knuckles dive-initialization transitions, are available to the shared action importer. No enabled fighter invokes them, so in-game move behavior remains unverified."
   },
+  "compiled_status_only_animation_end_import": {
+    "compiled_wrapper_candidates": 35,
+    "checked_pairs_after_shared_decoder": 13,
+    "newly_decoded_transition_addresses": ["805a456c", "805a47a4", "805f3698"],
+    "native_bound_expansion_callbacks_total": 111,
+    "total_expansion_callbacks": 852,
+    "host_fighter_import_tests_passed": 49,
+    "development_cia_package_sha256": "6c140ecb06e239e8d9c107ab5e71c1989cb0c592b463bd211dae64bc6a0441d8",
+    "azahar_stereo_drl_regression_frame": 5146,
+    "scope": "The offline MIPS decoder accepts status-only animation-end transitions when their arguments, optional animation playback, and return path are fully modeled. It generated two Dedede and one Meta Knight callback without fighter-specific bindings. Their fighters remain outside the development roster, so the stereo Dr. Luigi match is a regression check, not gameplay validation for these moves."
+  },
   "compiled_extra_autolink_hook": {
     "host_math_and_branch_cases_passed": true,
     "n64_to_arm_field_offsets_checked": true,
@@ -856,7 +867,7 @@
     "development_catalog_fighters": 19,
     "action_table_bindable_audit_fighters": 28,
     "native_bound_expansion_callbacks_at_match_validation": 24,
-    "current_native_bound_expansion_callbacks": 108,
+    "current_native_bound_expansion_callbacks": 111,
     "total_expansion_callbacks": 852,
     "validated_fixture_assets": 1737,
     "development_cia_sha256": "f9bfca305ede8ca466cc6582a41542bda71cef2643a25f4a56cb2b871c028f8e",
