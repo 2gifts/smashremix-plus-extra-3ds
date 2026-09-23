@@ -55,6 +55,7 @@ typedef struct NativeRemixResultsText {
 #include "native_victory_bgm_rows.inc"
 #include "native_winner_fgm_rows.inc"
 #include "native_results_text_rows.inc"
+#include "native_crowd_chant_rows.inc"
 volatile s32 native_remix_last_winner_fgm = -1;
 volatile s32 native_remix_last_results_text_fkind = -1;
 typedef char NativeRemixTablePatchCountCheck[
@@ -108,6 +109,13 @@ s32 nativeRemixResultsWins(unsigned fkind, f32 *lx, s32 *singular) {
             return TRUE;
         }
     return FALSE;
+}
+
+s32 nativeRemixCrowdChantFGM(unsigned fkind) {
+    if (fkind < ARRAY_COUNT(native_remix_crowd_chant_fgm) &&
+        native_remix_crowd_chant_fgm[fkind] != 0)
+        return native_remix_crowd_chant_fgm[fkind];
+    return -1;
 }
 
 static int has_animation(const FTMotionDesc *motions, unsigned count, unsigned fid) {

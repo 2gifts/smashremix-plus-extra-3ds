@@ -24,6 +24,7 @@ from native_results_patches import (extract_victory_bgm, extract_winner_fgm,
                                     extract_results_text, render_results_text_rows,
                                     render_native_rows as render_victory_bgm,
                                     render_winner_fgm_rows)
+from native_crowd_patches import extract_crowd_chants, render_native_rows as render_crowd_chants
 
 
 class WordReference:
@@ -35,6 +36,36 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_compiled_crowd_chants_cover_added_fighters_and_bound_audio_ids(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            root = Path(dirname)
+            (root / 'src').mkdir()
+            (root / 'src/Character.asm').write_text('''
+                move_table(crowd_chant_fgm, 0xA81A8, 0x2)
+                scope get_crowd_chant_fgm_: {
+                add_to_table(crowd_chant_fgm, id.{name}, id.{parent}, 0x2)
+            ''')
+            path = root / 'reference.z64'
+            path.write_bytes(b'private fixture')
+            ref = SimpleNamespace(path=path)
+            fighters = [
+                {'name': 'FALCO', 'fkind': 29,
+                 'tables': {'crowd_chant_fgm': list((712).to_bytes(2, 'big'))}},
+                {'name': 'NFALCO', 'fkind': 97,
+                 'tables': {'crowd_chant_fgm': list((0x2B7).to_bytes(2, 'big'))}}]
+            tables = {'layouts': {'crowd_chant_fgm': 2}, 'fighters': fighters}
+            audit = {'fighters': [{'name': row['name'], 'fkind': row['fkind']}
+                                  for row in fighters]}
+            manifest = extract_crowd_chants(ref, tables, audit, 1924)
+            self.assertEqual([row['fgm_id'] for row in manifest['fighters']], [712, 695])
+            self.assertIn('[97] = 695', render_crowd_chants(manifest))
+            fighters[0]['tables']['crowd_chant_fgm'] = list((1924).to_bytes(2, 'big'))
+            with self.assertRaisesRegex(ValueError, 'exceeds FGM microcode'):
+                extract_crowd_chants(ref, tables, audit, 1924)
+            fighters[0]['tables']['crowd_chant_fgm'] = [0]
+            with self.assertRaisesRegex(ValueError, 'truncated crowd chant ID'):
+                extract_crowd_chants(ref, tables, audit, 1924)
+
     def test_compiled_results_text_imports_all_rows_and_rejects_bad_glyphs(self):
         with tempfile.TemporaryDirectory() as dirname:
             root = Path(dirname)

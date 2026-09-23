@@ -17,6 +17,7 @@ from reference_table_patches import write_reference_tables
 from native_fireball_patches import write_fireballs
 from native_kirby_patches import write_kirby_rows
 from native_results_patches import write_results_patches
+from native_crowd_patches import write_crowd_chants
 from native_patch_worklist import write_worklist
 from native_action_patches import write_action_patches
 
@@ -270,6 +271,7 @@ def main():
     fireball_manifest = write_fireballs(ref, table_manifest, audit, catalog, out)
     write_kirby_rows(ref, table_manifest, audit, out)
     _, winner_voices, _ = write_results_patches(ref, table_manifest, audit, out)
+    crowd_chants = write_crowd_chants(ref, table_manifest, audit, out)
     write_worklist(audit, table_manifest, fireball_manifest, catalog)
     (out / 'generic_variants_data.inc').write_text(render_generic_data(catalog))
 
@@ -332,6 +334,8 @@ def main():
     prepare_audio()
     if json.loads((BUILD / 'audio/manifest.json').read_text())['fgm_microcode_count'] != winner_voices['fgm_microcode_count']:
         raise ValueError('Winner voice IDs and native audio package disagree')
+    if crowd_chants['fgm_microcode_count'] != winner_voices['fgm_microcode_count']:
+        raise ValueError('Crowd chant IDs and native audio package disagree')
     for path in (BUILD / 'audio').glob('*.bin'):
         shutil.copy2(path, assets / 'audio' / path.name)
     for name in ('initial-save.bin', 'bottom-ui.bin'):

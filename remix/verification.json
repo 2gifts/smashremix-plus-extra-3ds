@@ -960,10 +960,25 @@
     },
     "scope": "All compiled added-fighter name and position rows plus one native results transition; only Falco was exercised in Azahar. Ampersand and hyphen glyphs were structurally checked, not visually tested in-game."
   },
+  "compiled_crowd_chants": {
+    "decoded_added_fighters": 88,
+    "fgm_microcode_count": 1924,
+    "highest_crowd_chant_id": 1827,
+    "azahar_stereo_table_check": {
+      "passed": true,
+      "tested_cxi_sha256": "39e1a842dd9690b888fe4f102e4bb4dc42c1b991aa15579324efd38d98ce6374",
+      "tested_elf_sha256": "65b8932ef944715adf1ca74c9f9716df4e6390c6490125b310cd78f30940d0dc",
+      "package_verified_cia_sha256": "f40caf7c423adb55a44083ec5ef77efa1514e3a8d21b4cf8e219fd2bc3300b62",
+      "rows_verified": 88,
+      "observed": {"FALCO": 712, "DKULT": 603, "NFALCO": 695}
+    },
+    "azahar_stereo_falco_match_to_results": true,
+    "scope": "All 88 compiled crowd-chant rows matched Azahar memory and a stereo Falco match reached results; chant playback itself has not been exercised."
+  },
   "fighter_import_host_tests": {
     "passed": true,
-    "tests": 28,
-    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors, victory BGM thunk decoding, winner voice bounds, and compiled results text validation"
+    "tests": 29,
+    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors, victory BGM thunk decoding, winner voice bounds, compiled results text validation, and crowd chant ID bounds"
   },
   "save_writer_host_tests": {
     "passed": true,
