@@ -14,6 +14,7 @@ from pathlib import Path
 from common import BUILD, ROOT, checked_sources, sha256, write_json
 from native_fighter_catalog import load_catalog, render_generic_data, render_header, render_ui, validate_reference, HEADER, UI
 from reference_table_patches import write_reference_tables
+from native_action_patches import write_action_patches
 
 
 class Reference:
@@ -202,6 +203,7 @@ def main():
               f'#define REMIX_PROBE_ATTRIBUTE_OFFSET 0x{data[24]:x}']
     out = BUILD / 'fighter-probe'
     out.mkdir(exist_ok=True)
+    write_action_patches(ref, audit, catalog, out)
     (out / 'falco_data.inc').write_text('\n'.join(lines) + '\n')
 
     # Bring the first +EXTRA fighter's data into the same private fixture.

@@ -334,12 +334,9 @@ void nativeRemixProbeInit(void) {
     remix_relocate_scripts();
     dGMColScriptsDescs[98] = (GMColDesc){phantasm_blue, 100, TRUE};
     memcpy(falco_status, desc.special_descs, sizeof(falco_status));
-    falco_status[0xe1 - 0xdc].proc_update = ftAnimEndSetWait;
-    falco_status[0xe1 - 0xdc].proc_interrupt = groundPhantasm;
-    falco_status[0xe2 - 0xdc].proc_update = ftFoxSpecialAirHiEndProcUpdate;
-    falco_status[0xe2 - 0xdc].proc_interrupt = airPhantasm;
-    falco_status[0xe2 - 0xdc].proc_physics = airPhysics;
-    falco_status[0xe2 - 0xdc].proc_map = airMap;
+#define NATIVE_REMIX_ACTION_STATUS falco_status
+#include "falco_action_patches.inc"
+#undef NATIVE_REMIX_ACTION_STATUS
     desc.special_descs = falco_status;
     desc.special_descs_count = ARRAY_COUNT(falco_status);
     desc.special_handler[PORT_FIGHTER_SPECIAL_N] = groundNeutral;

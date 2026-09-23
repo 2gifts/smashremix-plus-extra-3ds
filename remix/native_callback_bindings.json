@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "auto_action_patches": ["FALCO"],
+  "bindings": [
+    {"address": "80576f74", "reference": "Phantasm.ground_subroutine_", "native": "groundPhantasm"},
+    {"address": "805770ec", "reference": "Phantasm.air_subroutine_", "native": "airPhantasm"},
+    {"address": "80577310", "reference": "Phantasm.air_physics_", "native": "airPhysics"},
+    {"address": "80577364", "reference": "Phantasm.air_collision_", "native": "airMap"}
+  ]
+}

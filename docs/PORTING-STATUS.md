@@ -67,6 +67,7 @@ The Falco executable passed nine move checks in Azahar: grounded/airborne Phanta
 - `remix/build/fighter-audit.json`: all added fighter IDs, parents, command census, script findings, and asset closures.
 - `remix/build/fighter-table-patches.json`: compiled fixed-width Character table values and per-parent differences for all 88 fighters; costume, entry-action, and down-bound sound rows feed the native registry.
 - `remix/build/action-callback-worklist.json`: shared mod-owned callback targets with every fighter/status use.
+- `remix/native_callback_bindings.json`: source-only expansion callback bindings. Original callback addresses are resolved from decomp address comments; Falco's compiled action patches are generated from both sources, while most expansion callbacks remain unported.
 - `remix/build/fighter-catalog/manifest.json`: generated native motion-data scope and syntax-check status; no new fighter is registered by this tool.
 - `remix/build/audio/manifest.json`: expanded sound and music packages, hashes, and validation counts.
 - `remix/build/audio/mod-song-emulator.json`: private Azahar sound-test result for an imported Remix track.

@@ -12,7 +12,11 @@ from prepare_reference_audio import Bank, package, repack_sequence_bank, verify_
 from test_asset_loader import compiler_path
 from native_fighter_catalog import load_catalog, render_header, render_ui, render_generic_data, validate_reference, HEADER, UI
 from audit_reference_fighters import ActionTableAudit, callback_worklist
-from reference_table_patches import extract_table_patches, render_native_tables
+from reference_table_patches import (discover_layouts, extract_table_patches,
+                                     render_native_tables, source_layouts,
+                                     validate_generic_dispatch)
+from native_action_patches import (load_bindings, render_action_assignments,
+                                   vanilla_callback_symbols)
 
 
 class WordReference:
@@ -24,6 +28,69 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_vanilla_callback_addresses_bind_by_decomp_function_comment(self):
+        callbacks = vanilla_callback_symbols()
+        self.assertEqual(callbacks[0x800d94c4], 'ftAnimEndSetWait')
+        self.assertEqual(callbacks[0x8015c750], 'ftFoxSpecialAirHiEndProcUpdate')
+        with tempfile.TemporaryDirectory() as dirname:
+            root = Path(dirname)
+            (root / 'one.c').write_text('// 0x80100000\nvoid first(GObj *gobj) {}\n')
+            (root / 'two.c').write_text('// 0x80100000\nvoid second(GObj *gobj) {}\n')
+            self.assertNotIn(0x80100000, vanilla_callback_symbols(root))
+
+    def test_action_callback_bindings_apply_shared_symbols_once_and_fail_closed(self):
+        fighter = {'name': 'TEST', 'action_table': {
+            'inherited_statuses': 2, 'added_statuses': 0, 'added_status_records': [],
+            'changed_inherited_statuses': [
+                {'status_id': 0xdd, 'flags': None,
+                 'callbacks': {'interrupt': {'original': '00000000', 'remix': '80500000'}}},
+            ]}}
+        with tempfile.TemporaryDirectory() as dirname:
+            path = Path(dirname) / 'bindings.json'
+            path.write_text(json.dumps({'schema': 1, 'auto_action_patches': [],
+                                        'bindings': [{'address': '80500000',
+                                                      'reference': 'Shared.interrupt',
+                                                      'native': 'nativeInterrupt'}]}))
+            _, bindings = load_bindings(path, {'Shared.interrupt': 0x80500000})
+            output = render_action_assignments(fighter, bindings, 2)
+            self.assertIn('NATIVE_REMIX_ACTION_STATUS[1].proc_interrupt = nativeInterrupt;', output)
+            self.assertIn('ARRAY_COUNT(NATIVE_REMIX_ACTION_STATUS) == 2', output)
+            with self.assertRaisesRegex(ValueError, 'Stale reference callback'):
+                load_bindings(path, {'Shared.interrupt': 0x80500004})
+            with self.assertRaisesRegex(ValueError, 'unbound interrupt'):
+                render_action_assignments(fighter, {}, 2)
+            fighter['action_table']['changed_inherited_statuses'][0]['flags'] = {'original': '0', 'remix': '1'}
+            with self.assertRaisesRegex(ValueError, 'changed action flags'):
+                render_action_assignments(fighter, bindings, 2)
+
+    def test_character_table_macro_widths_override_ambiguous_symbol_gaps(self):
+        source = '''
+            move_table(yoshi_egg, 0x103160, 0x1C)
+            move_table_12(default_costume, 0xA7030, 0x8)
+            id_table(variant_original)
+            scope magnifying_glass_zoom {
+                table:
+                constant TABLE_ORIGIN(origin())
+                fill table + (NUM_CHARACTERS * 2) - pc()
+                scope hook: { }
+            }
+        '''
+        widths = source_layouts(source)
+        self.assertEqual(widths['yoshi_egg'], 28)
+        self.assertEqual(widths['default_costume'], 8)
+        self.assertEqual(widths['variant_original'], 4)
+        self.assertEqual(widths['magnifying_glass_zoom'], 2)
+        ref = SimpleNamespace(symbols={
+            'Character.yoshi_egg.table': 0x80400000,
+            'Character.default_costume.table': 0x80402000,
+            'Character.variant_original.table': 0x80403000,
+            'Character.magnifying_glass_zoom.table': 0x80404000,
+        })
+        self.assertEqual(discover_layouts(ref, 116, source)['yoshi_egg'], 28)
+        ref.symbols['Character.default_costume.table'] = 0x80400100
+        with self.assertRaisesRegex(ValueError, 'source width exceeds'):
+            discover_layouts(ref, 116, source)
+
     def test_compiled_table_patch_imports_costumes_for_entire_generic_roster(self):
         catalog = load_catalog()
         with tempfile.TemporaryDirectory() as dirname:
@@ -48,6 +115,15 @@ class MotionTests(unittest.TestCase):
             self.assertEqual(output.count('static FTCostume'), len(generic))
             self.assertIn(f'{{4, 5, 6}}, {generic[0]["fkind"]}', output)
             self.assertIn('{220, 221}, 300', output)
+            manifest['layouts'].update({name: 4 for name in (
+                'ground_nsp', 'ground_usp', 'ground_dsp',
+                'air_nsp', 'air_usp', 'air_dsp')})
+            validate_generic_dispatch(catalog, manifest)
+            generic_row = next(row for row in manifest['fighters'] if row['name'] == generic[0]['name'])
+            generic_row['changed_from_parent'].append('ground_nsp')
+            with self.assertRaisesRegex(ValueError, 'custom special-entry dispatch'):
+                validate_generic_dispatch(catalog, manifest)
+            generic_row['changed_from_parent'].remove('ground_nsp')
             tampered = json.loads(json.dumps(manifest))
             tampered['fighters'][next(i for i, row in enumerate(tampered['fighters'])
                                      if row['name'] == generic[0]['name'])]['fkind'] += 1
