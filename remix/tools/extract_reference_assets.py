@@ -11,7 +11,8 @@ import struct
 import sys
 from pathlib import Path
 from common import BUILD, ROOT, checked_sources, sha256, write_json
-from relocation_layout import reverse_dependencies, stable_cross_file_target
+from relocation_layout import (cross_file_target_contexts, reverse_dependencies,
+                               stable_cross_file_target)
 
 def chain(data, first):
     seen = set()
@@ -142,6 +143,21 @@ def main():
                     for row in metadata]
         parents = reverse_dependencies(original)
         layout_cache = {}
+
+        # Internal relocations can also point past their file into a later
+        # allocation. Record every possible root layout before deciding whether
+        # such a pointer can ever be safely canonicalized. Merely finding one
+        # valid owner is insufficient: another loader may reach the same file
+        # without allocating that owner at all.
+        for issue in relocation_issues:
+            if issue['kind'] != 'internal_target_outside_file':
+                continue
+            contexts = cross_file_target_contexts(
+                original, parents, issue['file_id'], issue['file_id'],
+                issue['target'], layout_cache)
+            for candidate in contexts['candidate_owners']:
+                candidate['symbol'] = metadata[candidate['file_id']]['symbol']
+            issue['load_contexts'] = contexts
 
         changed_files = set()
         for entry in metadata:

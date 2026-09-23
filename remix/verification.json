@@ -162,7 +162,23 @@
       "slot": 3708,
       "target": 9928,
       "file_size": 4704,
-      "file_name": "PEACH_TURNIP_GFX"
+      "file_name": "PEACH_TURNIP_GFX",
+      "load_contexts": {
+        "candidate_owners": [
+          {
+            "file_id": 161,
+            "offset": 5224,
+            "load_roots": [
+              4974
+            ],
+            "symbol": null
+          }
+        ],
+        "unmapped_load_roots": [
+          5143,
+          5144
+        ]
+      }
     },
     {
       "file_id": 5144,
@@ -170,7 +186,23 @@
       "slot": 3712,
       "target": 9408,
       "file_size": 4704,
-      "file_name": "PEACH_TURNIP_GFX"
+      "file_name": "PEACH_TURNIP_GFX",
+      "load_contexts": {
+        "candidate_owners": [
+          {
+            "file_id": 161,
+            "offset": 4704,
+            "load_roots": [
+              4974
+            ],
+            "symbol": null
+          }
+        ],
+        "unmapped_load_roots": [
+          5143,
+          5144
+        ]
+      }
     }
   ],
   "tested_source_sha256": {

@@ -1,7 +1,8 @@
 import unittest
 
 from relocation_layout import (dependency_layout, cross_file_target,
-                               reverse_dependencies, stable_cross_file_target)
+                               cross_file_target_contexts, reverse_dependencies,
+                               stable_cross_file_target)
 
 
 class DependencyLayoutTest(unittest.TestCase):
@@ -39,6 +40,20 @@ class DependencyLayoutTest(unittest.TestCase):
         # The N64 loader registers an allocation before walking its links;
         # a repeated file ID is therefore reused rather than recursed into.
         self.assertEqual(dependency_layout(entries, 0)[0], {0: 0, 1: 16})
+
+    def test_internal_target_reports_all_load_contexts(self):
+        # A leaf can reach a later sibling only when the outer parent loads it.
+        entries = [
+            {'size': 8, 'external_files': [1, 2]},
+            {'size': 8, 'external_files': []},
+            {'size': 12, 'external_files': []},
+        ]
+        contexts = cross_file_target_contexts(
+            entries, reverse_dependencies(entries), 1, 1, 16)
+        self.assertEqual(contexts, {
+            'candidate_owners': [{'file_id': 2, 'offset': 0, 'load_roots': [0]}],
+            'unmapped_load_roots': [1],
+        })
 
 
 if __name__ == '__main__':

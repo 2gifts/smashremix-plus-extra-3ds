@@ -62,6 +62,39 @@ def reverse_dependencies(entries):
     return parents
 
 
+def cross_file_target_contexts(entries, parents, source, dependency, byte_offset,
+                               layouts=None):
+    """Show where an out-of-file target lands under every possible load root.
+
+    This is diagnostic evidence, not permission to rewrite a pointer: a target
+    that works only when one particular parent loaded first is context-dependent.
+    """
+    layouts = layouts if layouts is not None else {}
+    roots, pending = {source}, [source]
+    while pending:
+        for parent in parents[pending.pop()]:
+            if parent not in roots:
+                roots.add(parent)
+                pending.append(parent)
+    destinations = {}
+    unmapped = []
+    for root in sorted(roots):
+        if root not in layouts:
+            layouts[root] = dependency_layout(entries, root)
+        destination = cross_file_target(layouts[root], dependency, byte_offset)
+        if destination is None:
+            unmapped.append(root)
+        else:
+            destinations.setdefault(destination, []).append(root)
+    return {
+        'candidate_owners': [
+            {'file_id': owner, 'offset': offset, 'load_roots': load_roots}
+            for (owner, offset), load_roots in sorted(destinations.items())
+        ],
+        'unmapped_load_roots': unmapped,
+    }
+
+
 def stable_cross_file_target(entries, parents, source, dependency, byte_offset,
                              layouts=None):
     """Accept a target only if every possible ancestor-root layout agrees."""
