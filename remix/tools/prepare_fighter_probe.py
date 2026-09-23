@@ -9,6 +9,7 @@ import json
 import re
 import shutil
 import struct
+from collections import Counter
 from pathlib import Path
 from common import BUILD, ROOT, checked_sources, sha256, write_json
 
@@ -53,22 +54,43 @@ class Scripts:
     # interpreting them as four-byte no-ops and corrupting script alignment.
     LENGTHS = {3: 5, 4: 5, 7: 2, 12: 2, 13: 2, 31: 4,
                34: 2, 36: 2, 38: 4, 39: 4, 46: 2}
+    # Structural decoding only. Runtime support is a separate requirement.
+    # D6's second word points at halfword FGM IDs; DB jumps into file 2.
+    CUSTOM_LENGTHS = {**{op: 1 for op in range(0xd0, 0xdf)},
+                      0xd6: 2, 0xd9: 2, 0xdc: 2}
 
-    def __init__(self, reference):
+    def __init__(self, reference, allow_custom=False, external_scripts=None):
         self.ref = reference
+        self.allow_custom = allow_custom
+        self.external_scripts = external_scripts or {}
         self.words = {}
         self.pointers = {}
         self.visited = set()
+        self.custom_commands = Counter()
 
     def script(self, address):
+        if address in self.external_scripts:
+            return
         while address not in self.visited:
             self.visited.add(address)
             word = self.ref.words(address, 1)[0]
             op = word >> 26
-            if (op > 51 and word >> 24 not in (0xd0, 0xd2, 0xd3)) or op == 13:
-                raise ValueError(f'Unported command {op:#x} at {address:08x}')
-            count = self.LENGTHS.get(op, 1)
+            byte = word >> 24
+            known_custom = byte in ((self.CUSTOM_LENGTHS if self.allow_custom else
+                                     {0xd0: 1, 0xd2: 1, 0xd3: 1}))
+            if (op > 51 and not known_custom) or op == 13:
+                raise ValueError(f'Unported command byte {byte:#x} at {address:08x}')
+            count = self.CUSTOM_LENGTHS[byte] if op > 51 else self.LENGTHS.get(op, 1)
             self.copy(address, count)
+            if op > 51:
+                self.custom_commands[byte] += 1
+                if byte == 0xd6:
+                    target = self.words[address + 4]
+                    ids = word & 0xff
+                    if not ids or ids > 64:
+                        raise ValueError(f'Invalid random SFX count {ids} at {address:08x}')
+                    self.copy(target, (ids + 1) // 2)
+                    self.pointers[address + 4] = target
             if op == 12:
                 target = self.words[address + 4]
                 # Two FTThrowHitDesc records, seven 32-bit values each.
@@ -76,9 +98,11 @@ class Scripts:
                 self.pointers[address + 4] = target
             if op in (34, 36, 46):
                 target = self.words[address + 4]
+                if not target:
+                    raise ValueError(f'Null branch target from {address:08x}')
                 self.pointers[address + 4] = target
                 self.script(target)
-            if op in (0, 35, 36):
+            if op in (0, 35, 36) or byte == 0xdb:
                 return
             address += count * 4
             if len(self.visited) > 16384:
@@ -91,17 +115,24 @@ class Scripts:
                 raise ValueError('Conflicting motion payload')
             self.words[slot] = word
 
-    def emit(self):
+    def emit(self, prefix='remix', extern_entrypoints=()):
         addresses = sorted(self.words)
         indices = {a: i for i, a in enumerate(addresses)}
         # Compact only at gaps. Every decoded instruction's words must retain
         # adjacency, including fallthrough at shared script entry points.
-        lines = ['static u32 remix_script_words[] = {']
+        externs = sorted({self.external_scripts[target] for target in (*self.pointers.values(), *extern_entrypoints)
+                          if target in self.external_scripts})
+        lines = [f'extern s32 {name}[];' for name in externs]
+        lines += [f'static u32 {prefix}_script_words[] = {{']
         lines += ['    ' + ','.join(f'0x{self.words[a]:08x}u' for a in addresses[i:i+8]) + ','
                   for i in range(0, len(addresses), 8)]
-        lines += ['};', 'static void remix_probe_relocate_scripts(void) {']
+        lines += ['};', f'static void {prefix}_relocate_scripts(void) {{']
         for slot, target in sorted(self.pointers.items()):
-            lines.append(f'    remix_script_words[{indices[slot]}] = portRelocRegisterPointer(&remix_script_words[{indices[target]}]);')
+            if target in self.external_scripts:
+                expression = self.external_scripts[target]
+            else:
+                expression = f'&{prefix}_script_words[{indices[target]}]'
+            lines.append(f'    {prefix}_script_words[{indices[slot]}] = portRelocRegisterPointer({expression});')
         lines += ['}']
         return lines, indices
 

@@ -15,10 +15,13 @@ The project starts from the console-tested Smash 64 3DS port, v1.0.1. Remix +EXT
 - A Falco integration fixture now substitutes the original Fox slot: 219 main motions, 15 menu motions, 813 decoded motion words, 10 relocated script pointers, and a validated closure of 179 assets. It translates Phantasm movement into native C, applies Falco's Firebird adjustments, and implements the frame-speed and translation commands used by its scripts. Animation classification excludes the empty motion ID so shared menu sprites are not corrupted.
 - Expanded SFX conversion resolves the mod's split ROM/RAM bank into native packages: 1,516 sounds/samples, 1,667 sound-table entries, and 1,924 microcode entries. Serialized pointer bounds and unchanged sample bytes are verified. Music remains the original game's bank.
 - A separate, plainly labeled Falco test CIA starts without a debugger and uses title ID `000400000ff64200` and `/3ds/ssb64-remix-falco-test/`. Package checks verify its executable, assets and normal startup defaults. First-run save creation and backup recovery have regression coverage.
+- A reference-table audit now identifies all 88 added fighter records, including the 19 +EXTRA records. It resolves original menu-script references to their native decomp symbols, decodes the expanded custom-command formats, and traces each fighter's asset dependencies. It can generate ARM-syntax-checked motion data for 69 records. This is data import only: those fighters remain disabled until native callbacks, roster presentation, and gameplay are integrated.
+- The shared native command path now handles Remix commands `D0`–`DC`: frame speed, armor, hit direction, translation, vertical velocity, fast fall, random sound, kinetic state, hit sound, color, facing reversal, file-2 script jump, and alternate voice. +EXTRA's `DD`/`DE` hitlag and DI multipliers and mod-wide engine behavior remain unported.
 
 ## Remaining native integration
 
 1. **Fighters and engine patches.** The original C engine has the vanilla fighter tables. Remix supplies an expanded registry, action tables, callbacks, items, AI, and engine hooks in N64 MIPS assembly. These must be translated or mapped to native C implementations, with correct ARM structures and pointers. The inventory records 404 base Remix assembly files and 1,969 patch calls; +EXTRA adds 19 fighter definitions, including variants, and additional code.
+   The current audit finds 16 fighter dependency closures containing unresolved relocation records and four fighters with undecodable or null script targets. Structural import for other fighters does not establish correct moves, specials, or menu behavior.
 2. **Movesets and relocation semantics.** The current conversion flags 32 relocation compatibility issues across 23 files, including character main files, turnip graphics, and Game & Watch end images. These are observations from the native validator, not a claim that all those files are broken in the upstream N64 game. Resolve their intended usage before applying native pointer fixups; do not silence the checks or pad invalid targets into apparently valid memory.
 3. **Menus, stages, sound and saves.** Integrate expanded selection menus, mod stage loading and callbacks, audio banks, and the mod's save data. Preserve original and mod credits. The reference builder includes the entire base mod; it is not limited to +EXTRA's character folders.
 4. **Gameplay validation.** Exercise actual new-character moves, projectiles, collisions, KO/results, single-player transitions, and credits in the 3DS emulator. Then measure memory use and frame times on New 3DS hardware, including four fighters and stereo. The original port's performance does not establish Remix performance.
@@ -41,6 +44,8 @@ The packaged executable passed nine move checks in Azahar: grounded/airborne Pha
 - `remix/build/loader-test/verified.json`: expanded-loader checks.
 - `remix/build/asset-probe/build.json`: raw-asset diagnostic build hashes.
 - `remix/build/fighter-probe/manifest.json`: native fighter fixture scope and asset closure.
+- `remix/build/fighter-audit.json`: all added fighter IDs, parents, command census, script findings, and asset closures.
+- `remix/build/fighter-catalog/manifest.json`: generated native motion-data scope and syntax-check status; no new fighter is registered by this tool.
 - `remix/build/audio/manifest.json`: expanded sound packages and validation counts.
 - `3ds/build/falco-test/package/verified.json`: development package integrity and startup defaults.
 

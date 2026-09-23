@@ -68,6 +68,64 @@ int main(){
         with self.assertRaisesRegex(ValueError, 'Unported command'):
             Scripts(WordReference({0x100: 0xd4000000})).script(0x100)
 
+    def test_reference_import_retains_random_sound_array_and_native_menu_script(self):
+        words = {0x100: 0xd6ff0003, 0x104: 0x400,
+                 0x108: 34 << 26, 0x10c: 0x300, 0x110: 0,
+                 0x400: 0x12345678, 0x404: 0x9abc0000}
+        scripts = Scripts(WordReference(words), allow_custom=True,
+                          external_scripts={0x300: 'D_ovl1_803918A4'})
+        scripts.script(0x100)
+        lines, indices = scripts.emit()
+        self.assertEqual(scripts.pointers, {0x104: 0x400, 0x10c: 0x300})
+        self.assertEqual(scripts.custom_commands[0xd6], 1)
+        self.assertEqual(indices[0x404], indices[0x400] + 1)
+        self.assertIn('extern s32 D_ovl1_803918A4[];', lines)
+        self.assertTrue(any('portRelocRegisterPointer(D_ovl1_803918A4)' in line for line in lines))
+
+    def test_seek_replay_skips_reference_excluded_commands(self):
+        source = (ROOT / '3ds/src/remix_falco_probe.c').read_text()
+        start = source.index('void nativeRemixProbeSeekCommand(')
+        function = source[start:source.index('\n}', start) + 2]
+        fixture = '''#include <cassert>
+#include <initializer_list>
+using u32 = unsigned;
+struct GObj {};
+struct FTStruct {};
+struct FTMotionScript {unsigned *p_script;};
+static int dispatched;
+void nativeRemixProbeCommand(GObj *, FTStruct *, FTMotionScript *ms) {
+    dispatched++;
+    ms->p_script++;
+}
+''' + function + '''
+int main() {
+    GObj g; FTStruct f;
+    unsigned words[3] = {0, 0x12345678, 0};
+    FTMotionScript ms;
+    for (unsigned byte : {0xd4u,0xd5u,0xdau}) {
+        words[0]=byte<<24; ms.p_script=words; dispatched=0;
+        nativeRemixProbeSeekCommand(&g,&f,&ms);
+        assert(ms.p_script==words+1 && dispatched==0);
+    }
+    for (unsigned byte : {0xd6u,0xd9u,0xdcu}) {
+        words[0]=byte<<24; ms.p_script=words; dispatched=0;
+        nativeRemixProbeSeekCommand(&g,&f,&ms);
+        assert(ms.p_script==words+2 && dispatched==0);
+    }
+    for (unsigned byte : {0xd0u,0xd1u,0xd2u,0xd3u,0xd7u,0xd8u,0xdbu}) {
+        words[0]=byte<<24; ms.p_script=words; dispatched=0;
+        nativeRemixProbeSeekCommand(&g,&f,&ms);
+        assert(ms.p_script==words+1 && dispatched==1);
+    }
+}
+'''
+        out = BUILD / 'fighter-import-test'
+        out.mkdir(parents=True, exist_ok=True)
+        path, exe = out / 'seek.cpp', out / 'seek-test.exe'
+        path.write_text(fixture)
+        subprocess.run([compiler_path(None), '-std=c++17', str(path), '-o', str(exe)], check=True)
+        subprocess.run([str(exe)], check=True)
+
     def test_reference_rejects_unaligned_or_unmapped_data(self):
         ref = Reference.__new__(Reference)
         ref.rom_base, ref.ram_base, ref.rom = 16, 0x2000, bytes(64)

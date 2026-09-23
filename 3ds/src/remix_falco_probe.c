@@ -2,16 +2,21 @@
  * Remix (pinned by remix/upstream.lock.json). This bring-up fixture replaces
  * the Fox slot; it is not a full-roster release or a MIPS interpreter. */
 #include <ft/fighter.h>
+#include <lb/lbreloc.h>
+#include <sys/utils.h>
 #include <string.h>
 #include <stdlib.h>
 #include "fighter_registry.h"
 #include "native_remix_probe.h"
 extern u32 portRelocRegisterPointer(void *);
 extern void port_log(const char *, ...);
+extern alSoundEffect *func_800269C0_275C0(u16);
 #include "falco_data.inc"
 
 static float translation[4] = {1, 1, 1, 1};
 static unsigned char direction[4][4];
+static unsigned short hit_fgm[4][4];
+static unsigned env_color[4];
 static unsigned short pressed[4];
 static FTStatusDesc falco_status[26];
 static s32 menu_count = ARRAY_COUNT(remix_menu_motions);
@@ -35,13 +40,27 @@ int nativeRelocIsFighterAnimation(unsigned int fid) {
 }
 
 void nativeRemixProbeReset(FTStruct *fp) {
-    if (fp->player < 4) translation[fp->player] = 1.0f;
+    if (fp->player < 4) {
+        translation[fp->player] = 1.0f;
+        env_color[fp->player] = 0;
+    }
+}
+unsigned nativeRemixProbeEnvColor(FTStruct *fp) {
+    return fp->player < 4 ? env_color[fp->player] : 0;
 }
 float nativeRemixProbeTranslation(FTStruct *fp) {
     return fp->player < 4 ? translation[fp->player] : 1.0f;
 }
 void nativeRemixProbeHitboxReset(unsigned player, unsigned slot) {
-    if (player < 4 && slot < 4) direction[player][slot] = 0;
+    if (player < 4 && slot < 4) {
+        direction[player][slot] = 0;
+        hit_fgm[player][slot] = 0xffffu;
+    }
+}
+unsigned nativeRemixProbeHitFgm(FTStruct *attacker, FTAttackColl *hit) {
+    ptrdiff_t slot = hit - attacker->attack_colls;
+    if (attacker->player >= 4 || slot < 0 || slot >= 4) return 0xffffu;
+    return hit_fgm[attacker->player][slot];
 }
 void nativeRemixProbeDamageDirection(FTStruct *victim, FTStruct *attacker, FTAttackColl *hit) {
     ptrdiff_t slot = hit - attacker->attack_colls;
@@ -53,6 +72,7 @@ void nativeRemixProbeDamageDirection(FTStruct *victim, FTStruct *attacker, FTAtt
 
 void nativeRemixProbeCommand(GObj *gobj, FTStruct *fp, FTMotionScript *ms) {
     u32 cmd = *(u32 *)ms->p_script;
+    unsigned advance_words = 1;
     union { u32 u; float f; } value = {.u = (cmd & 0xffffu) << 16};
     switch (cmd >> 24) {
     case 0xd0: {
@@ -66,6 +86,9 @@ void nativeRemixProbeCommand(GObj *gobj, FTStruct *fp, FTMotionScript *ms) {
         }
         break;
     }
+    case 0xd1:
+        fp->knockback_resist_status = value.f;
+        break;
     case 0xd2:
         if (fp->player >= 4 || ((cmd >> 8) & 255) >= 4 || (cmd & 255) > 2) abort();
         direction[fp->player][(cmd >> 8) & 255] = cmd & 255;
@@ -73,11 +96,91 @@ void nativeRemixProbeCommand(GObj *gobj, FTStruct *fp, FTMotionScript *ms) {
     case 0xd3:
         if (fp->player < 4) translation[fp->player] = value.f;
         break;
+    case 0xd4:
+        fp->physics.vel_air.y = value.f;
+        break;
+    case 0xd5:
+        fp->is_fastfall = (cmd & 0xffu) != 0;
+        break;
+    case 0xd6: {
+        unsigned chance = (cmd >> 16) & 0xffu;
+        unsigned type = (cmd >> 8) & 0xffu;
+        unsigned count = cmd & 0xffu;
+        if (!count || count > 64 || type > 1) abort();
+        u32 *ids = PORT_RESOLVE(((u32 *)ms->p_script)[1]);
+        if (!ids) abort();
+        if (syUtilsRandIntRange(100) < chance) {
+            unsigned index = syUtilsRandIntRange(count);
+            unsigned word = ids[index / 2];
+            unsigned fgm = (index & 1) ? word & 0xffffu : word >> 16;
+            if (fgm != 0xffffu) {
+                if (type) ftParamPlayVoice(fp, fgm);
+                else func_800269C0_275C0(fgm);
+            }
+        }
+        advance_words = 2;
+        break;
+    }
+    case 0xd7:
+        fp->ga = (cmd & 0xffu) != 0;
+        fp->jumps_used = fp->ga ? 1 : 0;
+        break;
+    case 0xd8: {
+        if (fp->player >= 4) abort();
+        unsigned flags = (cmd >> 16) & 0xffu;
+        unsigned fgm = cmd & 0xffffu;
+        if (flags >> 4) {
+            for (unsigned i = 0; i < 4; i++) hit_fgm[fp->player][i] = fgm;
+        } else {
+            unsigned slot = flags & 0x0fu;
+            if (slot >= 4) abort();
+            hit_fgm[fp->player][slot] = fgm;
+        }
+        break;
+    }
+    case 0xd9:
+        if (fp->player < 4) env_color[fp->player] = ((u32 *)ms->p_script)[1];
+        advance_words = 2;
+        break;
+    case 0xda:
+        fp->lr = -fp->lr;
+        break;
+    case 0xdb: {
+        FTData *data = fp->data;
+        unsigned offset = cmd & 0xffffu;
+        if ((offset & 3u) || !data || !data->p_file_mainmotion || !*data->p_file_mainmotion ||
+            offset + 4u > lbRelocGetFileSize(data->file_mainmotion_id)) abort();
+        ms->p_script = (u32 *)((u8 *)*data->p_file_mainmotion + offset);
+        return;
+    }
+    case 0xdc: {
+        unsigned fgm = (fp->input.pl.button_hold & fp->input.button_mask_l) ?
+                       ((u32 *)ms->p_script)[1] & 0xffffu : cmd & 0xffffu;
+        if (fgm != 0xffffu) ftParamPlayVoice(fp, fgm);
+        advance_words = 2;
+        break;
+    }
     default:
         port_log("REMIX unported command %08lx\n", (unsigned long)cmd);
         abort();
     }
-    ms->p_script = (u32 *)ms->p_script + 1;
+    ms->p_script = (u32 *)ms->p_script + advance_words;
+}
+
+/* The reference has a second command table for replaying effects when an
+ * animation starts mid-script. It deliberately suppresses movement, random
+ * sounds, color, facing reversal and alternate voice in that path. */
+void nativeRemixProbeSeekCommand(GObj *gobj, FTStruct *fp, FTMotionScript *ms) {
+    unsigned byte = *(u32 *)ms->p_script >> 24;
+    if (byte == 0xd4 || byte == 0xd5 || byte == 0xda) {
+        ms->p_script = (u32 *)ms->p_script + 1;
+        return;
+    }
+    if (byte == 0xd6 || byte == 0xd9 || byte == 0xdc) {
+        ms->p_script = (u32 *)ms->p_script + 2;
+        return;
+    }
+    nativeRemixProbeCommand(gobj, fp, ms);
 }
 
 static unsigned bufferButtons(FTStruct *fp) {
@@ -166,7 +269,7 @@ void nativeRemixProbeInit(void) {
     data->mainmotion_array_count = ARRAY_COUNT(remix_main_motions);
     data->submotion = (FTMotionDescArray *)remix_menu_motions;
     data->submotion_array_count = &menu_count;
-    remix_probe_relocate_scripts();
+    remix_relocate_scripts();
     dGMColScriptsDescs[98] = (GMColDesc){phantasm_blue, 100, TRUE};
     memcpy(falco_status, desc.special_descs, sizeof(falco_status));
     falco_status[0xe1 - 0xdc].proc_update = ftAnimEndSetWait;

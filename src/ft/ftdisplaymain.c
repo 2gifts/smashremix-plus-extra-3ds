@@ -10,6 +10,9 @@
 #include "hooks/Events.h"
 extern float port_widescreen_clip_x_scale(void);
 #endif
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_probe.h"
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -1237,6 +1240,9 @@ void ftDisplayMainProcDisplay(GObj *fighter_gobj)
         u32 sr_env_color;
         CALL_EVENT(FighterEnvColorQueryEvent, fp->player, 0u);
         sr_env_color = FighterEnvColorQueryEvent_.rgba;
+#ifdef SSB_REMIX_PROBE
+        if (!sr_env_color) sr_env_color = nativeRemixProbeEnvColor(fp);
+#endif
         if (sr_env_color != 0u)
         {
             gDPSetEnvColor

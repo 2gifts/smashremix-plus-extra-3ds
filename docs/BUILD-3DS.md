@@ -50,6 +50,16 @@ The ARM11 diagnostic is `remix/build/asset-probe/remix-asset-probe.3dsx`. In Aza
 
 See [PORTING-STATUS.md](PORTING-STATUS.md). `3ds/tools/build_release.py` and `3ds/tools/package.py` stop while the native target is marked unfinished. The eventual application uses title ID `000400000ff64100` and `/3ds/ssb64-remix-extra/`, separate from the original port. Do not copy the original port's save into that folder: the expanded save layout still needs integration.
 
+To audit the assembled fighter table and generate local ARM motion-data candidates:
+
+```powershell
+remix/.venv/Scripts/python.exe remix/tools/audit_reference_fighters.py
+remix/.venv/Scripts/python.exe remix/tools/prepare_fighter_catalog.py
+remix/.venv/Scripts/python.exe remix/tools/verify_fighter_catalog.py
+```
+
+These commands use the pinned local reference ROM. Generated `.inc` files stay under ignored `remix/build/fighter-catalog/` and are not linked into the game automatically. The report distinguishes script and asset structure from native gameplay implementation.
+
 ## Build the Falco development CIA
 
 Complete the reference extraction above and configure the existing 3DS toolchain. Set `vanilla_assets` in the ignored `3ds/build-config.json` to the asset directory produced by the original 3DS port's local build. It needs `reloc.pak`, `audio/`, `particles/`, `initial-save.bin` and `bottom-ui.bin`. If omitted, the tool looks for `assets/` two directories above the configured BattleShip checkout, matching the original port's `3ds/vendor/BattleShip` layout.

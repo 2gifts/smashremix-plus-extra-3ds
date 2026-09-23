@@ -186,7 +186,10 @@ void ftMainParseMotionEvent(GObj *fighter_gobj, FTStruct *fp, FTMotionScript *ms
     switch (ev_kind)
     {
 #ifdef SSB_REMIX_PROBE
-    case 52: /* Remix uses the full command byte for 0xD0..0xD3. */
+    case 52: /* Remix uses the full command byte for 0xD0..0xDF. */
+    case 53:
+    case 54:
+    case 55:
         nativeRemixProbeCommand(fighter_gobj, fp, ms);
         break;
 #endif
@@ -1001,10 +1004,12 @@ void ftMainUpdateMotionEventsForwardEffect(GObj *fighter_gobj)
                     switch (ev_kind)
                     {
 #ifdef SSB_REMIX_PROBE
-                    /* Remix replays frame speed, direction and translation
-                     * commands while seeking an animation too. */
+                    /* Remix uses a second command table when seeking. */
                     case 52:
-                        nativeRemixProbeCommand(fighter_gobj, fp, ms);
+                    case 53:
+                    case 54:
+                    case 55:
+                        nativeRemixProbeSeekCommand(fighter_gobj, fp, ms);
                         break;
 #endif
                     case nFTMotionEventEnd:
@@ -2272,7 +2277,20 @@ void ftMainPlayHitSFX(FTStruct *fp, FTAttackColl *attack_coll)
         func_80026738_27338(fp->p_sfx);
     }
     fp->p_sfx = NULL, fp->sfx_id = 0;
-    lbCommonMakePositionFGM(dFTMainHitCollisionFGMs[attack_coll->fgm_kind][attack_coll->fgm_level], fp->joints[nFTPartsJointTopN]->translate.vec.f.x);
+    {
+        u16 original = dFTMainHitCollisionFGMs[attack_coll->fgm_kind][attack_coll->fgm_level];
+#ifdef SSB_REMIX_PROBE
+        unsigned override = nativeRemixProbeHitFgm(fp, attack_coll);
+        if (override != 0xffffu)
+        {
+            if (override & 0x8000u)
+                lbCommonMakePositionFGM(original, fp->joints[nFTPartsJointTopN]->translate.vec.f.x);
+            lbCommonMakePositionFGM(override & 0x7fffu, fp->joints[nFTPartsJointTopN]->translate.vec.f.x);
+        }
+        else
+#endif
+        lbCommonMakePositionFGM(original, fp->joints[nFTPartsJointTopN]->translate.vec.f.x);
+    }
 }
 
 // 0x800E2CC0

@@ -427,7 +427,18 @@
     "3ds/src/native_assets.cpp": "de9e583f538f3ee07bb0eae00c65e71c04bc30383180e4d492700bb0a4b649a4",
     "remix/tests/asset_probe.cpp": "62fdc6cffc842e32890f24172e068c69987585495ec72902fbb0d907fc12249c"
   },
-  "scope": "Reference builds, raw asset loading, and inherited host tests only. Native Remix fighter and engine integration, relocation fixes, gameplay, stereo validation, and hardware performance work remain.",
+  "scope": "Pinned reference and asset audits, a native Falco fixture, and generated fighter motion-data candidates. Full Remix and +EXTRA roster, stages, menus, saves, AI, and hardware performance remain unverified.",
+  "fighter_data_import": {
+    "reference_table_records": 88,
+    "plus_extra_records": 19,
+    "structurally_importable_motion_sets": 69,
+    "arm11_syntax_checked": 69,
+    "fighters_with_relocation_issues": 16,
+    "fighters_with_script_target_issues": 4,
+    "fighters_requiring_unported_custom_commands": 5,
+    "native_roster_fighters_added": 0,
+    "scope": "Motion data only; no new roster entry, native special-move callback, or gameplay validation."
+  },
   "falco_development_fixture": {
     "scope": "Falco replaces Fox; vanilla menus, stages and other fighters; no +EXTRA roster",
     "complete_falco_parity": false,
@@ -436,8 +447,8 @@
     "published_binary": false,
     "title_id": "000400000ff64200",
     "sd_directory": "/3ds/ssb64-remix-falco-test/",
-    "elf_sha256": "87c4158392df26fb3ff5b4661421ea50edab75995ed91f07e8c6ab136e4a3fb4",
-    "cia_sha256": "4af0f7682e1cbd68ac03864e45dad017a72ab1c52b555bf29dbd32e6f3a5956a",
+    "elf_sha256": "4f491eb67b4e59c18845ef0dbff53d367cbb7760130e3d9820ea941d9e1d7b64",
+    "cia_sha256": "2a606ffee7641be89412d3419b45b1ffec0794c8457a5b959d675a47a30c71f1",
     "cia_bytes": 35529664,
     "main_motions": 219,
     "menu_motions": 15,
@@ -484,7 +495,7 @@
         "passed": true
       }
     ],
-    "emulator_test_elf_sha256": "87c4158392df26fb3ff5b4661421ea50edab75995ed91f07e8c6ab136e4a3fb4",
+    "emulator_test_elf_sha256": "4f491eb67b4e59c18845ef0dbff53d367cbb7760130e3d9820ea941d9e1d7b64",
     "sd_errors_during_move_checks": 0,
     "package_integrity_verified": true,
     "normal_startup_defaults_verified": {
@@ -516,7 +527,7 @@
     "pristine_emulator_startup_verified": true,
     "four_fighter_stereo_match_to_results_verified": true,
     "results_scene_observed": 24,
-    "results_frame_observed": 7737,
+    "results_frame_observed": 5300,
     "sd_errors_after_results": 0,
     "emulator_invalid_memory_accesses_detected": false,
     "stereo_capture_eyes_differ": true
@@ -553,8 +564,8 @@
   },
   "fighter_import_host_tests": {
     "passed": true,
-    "tests": 7,
-    "scope": "motion graph pointers, unsupported commands, empty animation ID, split audio bank, malformed ranges and sample preservation"
+    "tests": 9,
+    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, unsupported commands, empty animation ID, split audio bank, malformed ranges and sample preservation"
   },
   "save_writer_host_tests": {
     "passed": true,
