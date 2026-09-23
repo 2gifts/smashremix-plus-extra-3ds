@@ -15,7 +15,7 @@ from audit_reference_fighters import ActionTableAudit, callback_worklist
 from reference_table_patches import (discover_layouts, extract_table_patches,
                                      render_native_tables, source_layouts,
                                      validate_generic_dispatch)
-from native_action_patches import (load_bindings, render_action_assignments,
+from native_action_patches import (load_bindings, render_action_assignments, render_flags,
                                    vanilla_callback_symbols)
 from native_fireball_patches import FIREBALL_BASE, extract_fireballs, render_rows, render_lookup
 from native_patch_worklist import build_worklist
@@ -140,9 +140,33 @@ class MotionTests(unittest.TestCase):
                 load_bindings(path, {'Shared.interrupt': 0x80500004})
             with self.assertRaisesRegex(ValueError, 'unbound interrupt'):
                 render_action_assignments(fighter, {}, 2)
-            fighter['action_table']['changed_inherited_statuses'][0]['flags'] = {'original': '0', 'remix': '1'}
-            with self.assertRaisesRegex(ValueError, 'changed action flags'):
+            fighter['action_table']['changed_inherited_statuses'][0]['flags'] = {
+                'original': '30c40010', 'remix': '30c80011'}
+            output = render_action_assignments(fighter, bindings, 2)
+            self.assertIn('NATIVE_REMIX_ACTION_STATUS[1].mflags.motion_id = 195;', output)
+            self.assertIn('NATIVE_REMIX_ACTION_STATUS[1].mflags.attack_id = 8;', output)
+            self.assertIn('NATIVE_REMIX_ACTION_STATUS[1].sflags.halfword = 0x0011u;', output)
+            fighter['action_table']['added_statuses'] = 1
+            fighter['action_table']['added_status_records'] = [{
+                'status_id': 0xde,
+                'words': ['ff800012', '00000000', '80500000', '00000000', '00000000']
+            }]
+            output = render_action_assignments(fighter, bindings, 2)
+            self.assertIn('ARRAY_COUNT(NATIVE_REMIX_ACTION_STATUS) == 3', output)
+            self.assertIn('NATIVE_REMIX_ACTION_STATUS[2].mflags.motion_id = -2;', output)
+            self.assertIn('NATIVE_REMIX_ACTION_STATUS[2].proc_interrupt = nativeInterrupt;', output)
+            self.assertNotIn('NATIVE_REMIX_ACTION_STATUS[2].proc_update', output)
+            fighter['action_table']['added_status_records'][0]['status_id'] = 0xdf
+            with self.assertRaisesRegex(ValueError, 'not contiguous'):
                 render_action_assignments(fighter, bindings, 2)
+
+    def test_compiled_status_flags_reject_incomplete_words(self):
+        self.assertEqual(render_flags(0, '30c40010'), [
+            'NATIVE_REMIX_ACTION_STATUS[0].mflags.motion_id = 195;',
+            'NATIVE_REMIX_ACTION_STATUS[0].mflags.attack_id = 4;',
+            'NATIVE_REMIX_ACTION_STATUS[0].sflags.halfword = 0x0010u;'])
+        with self.assertRaisesRegex(ValueError, 'Invalid compiled action flags'):
+            render_flags(0, '30c4')
 
     def test_character_table_macro_widths_override_ambiguous_symbol_gaps(self):
         source = '''

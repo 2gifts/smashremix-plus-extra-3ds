@@ -17,6 +17,34 @@ ROLES = {'update': 'proc_update', 'interrupt': 'proc_interrupt',
          'physics': 'proc_physics', 'map': 'proc_map'}
 
 
+def render_flags(index, word):
+    """Translate the packed N64 motion/status word into native fields.
+
+    FTStatusDesc is deliberately not binary-compatible with the N64 record on
+    ARM, so copying the word into the C structure would corrupt its fields.
+    """
+    if not re.fullmatch(r'[0-9A-Fa-f]{8}', word):
+        raise ValueError(f'Invalid compiled action flags: {word!r}')
+    packed = int(word, 16)
+    motion = (packed >> 22) & 0x3ff
+    if motion & 0x200:
+        motion -= 0x400
+    attack = (packed >> 16) & 0x3f
+    status = packed & 0xffff
+    return [f'NATIVE_REMIX_ACTION_STATUS[{index}].mflags.motion_id = {motion};',
+            f'NATIVE_REMIX_ACTION_STATUS[{index}].mflags.attack_id = {attack};',
+            f'NATIVE_REMIX_ACTION_STATUS[{index}].sflags.halfword = 0x{status:04x}u;']
+
+
+def render_callback(index, role, address, bindings):
+    if address == 0:
+        return None
+    native = bindings.get(address)
+    if native is None:
+        raise ValueError(f'unbound {role} callback {address:08x}')
+    return f'NATIVE_REMIX_ACTION_STATUS[{index}].{ROLES[role]} = {native};'
+
+
 def vanilla_callback_symbols(root=ROOT / 'src'):
     """Use decomp address comments to bind existing void(GObj *) callbacks."""
     result = {}
@@ -68,28 +96,36 @@ def load_bindings(path=BINDINGS, symbols=None):
 def render_action_assignments(fighter, bindings, status_count):
     """Return a complete, deterministic C patch for one already-copied table."""
     table = fighter['action_table']
-    if table['added_statuses'] or table['added_status_records']:
-        raise ValueError(f"{fighter['name']}: added statuses need native descriptors")
     if table['inherited_statuses'] != status_count:
         raise ValueError(f"{fighter['name']}: native status count differs from reference")
+    added = table['added_status_records']
+    if len(added) != table['added_statuses']:
+        raise ValueError(f"{fighter['name']}: added status count differs from reference")
     lines = [f'/* Compiled Character.edit_action patches for {fighter["name"]}. */',
-             f'_Static_assert(ARRAY_COUNT(NATIVE_REMIX_ACTION_STATUS) == {status_count}, '
+             f'_Static_assert(ARRAY_COUNT(NATIVE_REMIX_ACTION_STATUS) == {status_count + len(added)}, '
              '"Compiled action table size changed");']
     for status in sorted(table['changed_inherited_statuses'], key=lambda item: item['status_id']):
         index = status['status_id'] - 0xdc
         if not 0 <= index < status_count:
             raise ValueError(f"{fighter['name']}: action status outside inherited table")
         if status['flags'] is not None:
-            raise ValueError(f"{fighter['name']}: changed action flags need native translation")
+            lines.extend(render_flags(index, status['flags']['remix']))
         for role in ROLES:
             callback = status['callbacks'].get(role)
             if callback is None:
                 continue
             address = int(callback['remix'], 16)
-            native = bindings.get(address)
-            if native is None:
-                raise ValueError(f"{fighter['name']}: unbound {role} callback {address:08x}")
-            lines.append(f'NATIVE_REMIX_ACTION_STATUS[{index}].{ROLES[role]} = {native};')
+            line = render_callback(index, role, address, bindings)
+            lines.append(line or f'NATIVE_REMIX_ACTION_STATUS[{index}].{ROLES[role]} = NULL;')
+    for offset, status in enumerate(added):
+        index = status_count + offset
+        if status['status_id'] != 0xdc + index or len(status['words']) != 5:
+            raise ValueError(f"{fighter['name']}: added action status is not contiguous")
+        lines.extend(render_flags(index, status['words'][0]))
+        for role, word in zip(ROLES, status['words'][1:]):
+            line = render_callback(index, role, int(word, 16), bindings)
+            if line is not None:
+                lines.append(line)
     return '\n'.join(lines) + '\n'
 
 
