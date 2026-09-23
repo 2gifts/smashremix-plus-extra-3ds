@@ -18,6 +18,7 @@ from native_fireball_patches import write_fireballs
 from native_kirby_patches import write_kirby_rows
 from native_results_patches import write_results_patches
 from native_crowd_patches import write_crowd_chants
+from native_hit_sound_patches import write_hit_sounds
 from native_entry_patches import write_entry_effects
 from native_patch_worklist import write_worklist
 from native_action_patches import (action_table_bindable, load_bindings,
@@ -237,6 +238,7 @@ def main():
     write_kirby_rows(ref, table_manifest, audit, out)
     _, winner_voices, _ = write_results_patches(ref, table_manifest, audit, out)
     crowd_chants = write_crowd_chants(ref, table_manifest, audit, out)
+    write_hit_sounds(ref, table_manifest, audit, out)
     entry_effects = write_entry_effects(ref, table_manifest, audit, out)
     write_worklist(audit, table_manifest, fireball_manifest, catalog, entry_effects)
     (out / 'generic_variants_data.inc').write_text(render_generic_data(catalog))

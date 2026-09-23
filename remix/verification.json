@@ -960,6 +960,19 @@
     },
     "scope": "All compiled added-fighter name and position rows plus one native results transition; only Falco was exercised in Azahar. Ampersand and hyphen glyphs were structurally checked, not visually tested in-game."
   },
+  "compiled_japanese_hit_sounds": {
+    "compiled_fighter_rows": 88,
+    "japanese_type_fighters": 13,
+    "japanese_type_enabled_fighters": 11,
+    "fgm_microcode_count": 1924,
+    "compiled_japanese_punch_ids": [147, 146, 145],
+    "compiled_japanese_kick_ids": [144, 143, 142],
+    "development_cia_sha256": "a0996e5492ca2dfb0ed0677d7cfb84e35c3fb85a41aee4ec13f46fd07176e75f",
+    "development_cxi_sha256": "2efba57f3bac9b5cb5662e9e8c24dca5b33e0bb00aeed622688c7b5f2e2be4d6",
+    "development_elf_sha256": "182694d11dd1bf52d1cf065ae499a8827039df8bffde7cf7c793969c84188d2a",
+    "azahar_stereo_jfox_match": {"passed": true, "frame": 2025, "observed_japanese_kick_fgm_id": 142},
+    "scope": "The common fighter-hit path selected a compiled Japanese kick ID in one stereo J Fox match. All 88 sound-type rows and 24 table IDs passed structural and bank-bound checks; audible fidelity and the Remix Japanese-sounds override menu remain unverified."
+  },
   "compiled_crowd_chants": {
     "decoded_added_fighters": 88,
     "fgm_microcode_count": 1924,
@@ -1027,8 +1040,8 @@
   },
   "fighter_import_host_tests": {
     "passed": true,
-    "tests": 33,
-    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors and compiled generic action-table C execution, victory BGM thunk decoding, winner voice bounds, compiled results text validation, crowd chant ID bounds, compiled entry-effect pointer reuse, callback-family classification, and strict native transition-template generation"
+    "tests": 34,
+    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors and compiled generic action-table C execution, victory BGM thunk decoding, winner voice bounds, compiled results text validation, crowd chant ID bounds, compiled Japanese hit-sound IDs and fighter types, compiled entry-effect pointer reuse, callback-family classification, and strict native transition-template generation"
   },
   "save_writer_host_tests": {
     "passed": true,

@@ -52,6 +52,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('name', help='Catalogued fighter name, such as DRL')
     parser.add_argument('--through-results', action='store_true')
+    parser.add_argument('--expect-j-hit', action='store_true',
+                        help='Require a Japanese hit sound selected during combat')
     args = parser.parse_args()
     name = args.name.upper()
     catalog = {row['name']: row for row in load_catalog()['fighters']}
@@ -73,6 +75,12 @@ def main():
     bindings.update({int(item['address'], 16): item['native']
                      for item in transitions['wrappers']})
     action_array = symbols.get(f'native_remix_{name.lower()}_actions')
+    hit_manifest = json.loads((BUILD / 'fighter-hit-sound-patches.json').read_text())
+    expected_j_hits = {item for family in hit_manifest['japanese_hit_fgm'][:2]
+                       for item in family}
+    if args.expect_j_hit and not next(item for item in hit_manifest['fighters']
+                                      if item['name'] == name)['sound_type']:
+        parser.error(f'{name} does not use the compiled Japanese hit-sound table')
     if not row['action_table']['generic_action_table_compatible'] and action_array is None:
         raise AssertionError(f'{name}: generated action array missing from executable')
     callback_checks = []
@@ -93,6 +101,7 @@ def main():
         f'{a} {b} {keys:x} {x} {y}\n' for a, b, keys, x, y in actions))
     seen_match = False
     actions_verified = False
+    j_hits_observed = set()
     statuses = set()
     result = None
     try:
@@ -115,6 +124,11 @@ def main():
                 if scene == 21:
                     assert emulator.command(connection, f'M{address:x},1:{expected_kind:02x}') == 'OK'
                 if scene == 22 and frame > 1100:
+                    if args.expect_j_hit:
+                        selected_hit = struct.unpack('<i', read(
+                            symbols['native_remix_last_j_hit_fgm'], 4))[0]
+                        if selected_hit in expected_j_hits:
+                            j_hits_observed.add(selected_hit)
                     if action_array is not None and not actions_verified:
                         for status_id, role_index, original_address in callback_checks:
                             expected_symbol = bindings.get(original_address)
@@ -162,6 +176,9 @@ def main():
                 break
         if not result or not result.get('passed'):
             raise AssertionError(result or 'Fighter did not enter match')
+        if args.expect_j_hit and not j_hits_observed:
+            raise AssertionError(f'{name}: Japanese punch/kick hit sound was not selected')
+        result['japanese_hit_fgms_observed'] = sorted(j_hits_observed)
         result['observed_statuses'] = sorted(statuses)
         assert not any(message in (DATA / 'game.log').read_text(errors='replace')
                        for message in ('ABORT', 'invalid/stale token', 'unported command'))

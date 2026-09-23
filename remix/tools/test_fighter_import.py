@@ -26,6 +26,7 @@ from native_results_patches import (extract_victory_bgm, extract_winner_fgm,
                                     render_native_rows as render_victory_bgm,
                                     render_winner_fgm_rows)
 from native_crowd_patches import extract_crowd_chants, render_native_rows as render_crowd_chants
+from native_hit_sound_patches import extract_hit_sounds, render_native_rows as render_hit_sounds
 from native_entry_patches import extract_entry_effects, render_native_rows as render_entry_effects
 from classify_action_callbacks import classify as classify_action_callbacks
 from native_transition_templates import (TEMPLATES, extract_native_transitions,
@@ -41,6 +42,52 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_compiled_japanese_hit_sounds_cover_all_fighters_and_audio_ids(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            root = Path(dirname)
+            (root / 'src').mkdir()
+            (root / 'src/Character.asm').write_text('''
+                scope sound_type_J:
+                OS.copy_segment(ORIGINAL_TABLE, 48)
+                scope apply_sound_type_:
+                li      a0, sound_type.table
+                dh      FGM.hit.J_PUNCH_S
+                dh      FGM.hit.J_KICK_L
+            ''')
+            rom = bytearray(0xA4600 + 48)
+            original = list(range(1, 25))
+            japanese = [147, 146, 145, 144, 143, 142, *original[6:]]
+            struct.pack_into('>24H', rom, 0xA4500, *original)
+            struct.pack_into('>24H', rom, 0xA4600, *japanese)
+            path = root / 'reference.z64'
+            path.write_bytes(rom)
+            ref = SimpleNamespace(path=path, rom=rom, ram_base=0x80400000,
+                                  rom_base=0xA4600,
+                                  symbols={'Character.sound_type_J.table': 0x80400000})
+            fighters = [{'name': 'JSAMUS', 'fkind': 36,
+                         'tables': {'sound_type': [1]}},
+                        {'name': 'FALCO', 'fkind': 29,
+                         'tables': {'sound_type': [0]}}]
+            tables = {'layouts': {'sound_type': 1}, 'fighters': fighters}
+            audit = {'fighters': [{'name': row['name'], 'fkind': row['fkind']}
+                                  for row in fighters]}
+            result = extract_hit_sounds(ref, tables, audit, 1924)
+            self.assertEqual(result['japanese_hit_fgm'][0], [147, 146, 145])
+            self.assertEqual(result['japanese_hit_fgm'][1], [144, 143, 142])
+            self.assertIn('[36] = 1', render_hit_sounds(result))
+            self.assertIn('{147, 146, 145}', render_hit_sounds(result))
+            fighters[0]['tables']['sound_type'] = [2]
+            with self.assertRaisesRegex(ValueError, 'invalid compiled hit sound type'):
+                extract_hit_sounds(ref, tables, audit, 1924)
+            fighters[0]['tables']['sound_type'] = [1]
+            struct.pack_into('>H', rom, 0xA4600, 1924)
+            with self.assertRaisesRegex(ValueError, 'exceeds FGM microcode'):
+                extract_hit_sounds(ref, tables, audit, 1924)
+            struct.pack_into('>H', rom, 0xA4600, japanese[0])
+            struct.pack_into('>H', rom, 0xA4600 + 12, 77)
+            with self.assertRaisesRegex(ValueError, 'changes an unexpected family'):
+                extract_hit_sounds(ref, tables, audit, 1924)
+
     def test_exact_collision_transition_templates_generate_shared_native_code(self):
         with tempfile.TemporaryDirectory() as dirname:
             path = Path(dirname) / 'reference.z64'

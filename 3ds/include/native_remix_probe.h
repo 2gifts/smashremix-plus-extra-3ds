@@ -11,5 +11,6 @@ void nativeRemixProbeDamageDirection(FTStruct *, FTStruct *, FTAttackColl *);
 void nativeRemixProbeApplyHitMultipliers(FTStruct *, FTStruct *, FTAttackColl *);
 float nativeRemixProbeDiMultiplier(FTStruct *);
 unsigned nativeRemixProbeHitFgm(FTStruct *, FTAttackColl *);
+int nativeRemixHitSoundFGM(unsigned fkind, unsigned kind, unsigned level);
 unsigned nativeRemixProbeEnvColor(FTStruct *);
 #endif

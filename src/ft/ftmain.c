@@ -2290,6 +2290,11 @@ void ftMainPlayHitSFX(FTStruct *fp, FTAttackColl *attack_coll)
     {
         u16 original = dFTMainHitCollisionFGMs[attack_coll->fgm_kind][attack_coll->fgm_level];
 #ifdef SSB_REMIX_PROBE
+        int japanese = nativeRemixHitSoundFGM(fp->fkind, attack_coll->fgm_kind,
+                                              attack_coll->fgm_level);
+        if (japanese >= 0) original = (u16)japanese;
+#endif
+#ifdef SSB_REMIX_PROBE
         unsigned override = nativeRemixProbeHitFgm(fp, attack_coll);
         if (override != 0xffffu)
         {

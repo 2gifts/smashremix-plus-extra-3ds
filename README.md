@@ -14,6 +14,7 @@ A native 3DS port **in development**, derived from [Smash 64 for New Nintendo 3D
 - Nineteen native fighter integration paths in the development build. Falco, DK Ult, and Japanese Pikachu have dedicated native move logic; the shared importer covers the other catalogued variants, including Dr. Luigi and Metal Luigi. Earlier variants have targeted move checks; the newest two have stereo match-to-results smoke tests, not complete moveset parity.
 - One [validated fighter catalog](remix/native_fighters.json) drives the temporary selector, ROM-derived motion/script extraction, asset closure, and shared native registration. The build generates native action tables for generic fighters whose compiled callbacks all have native bindings, and rejects unbound callbacks. Custom move logic remains native C; see the [contribution workflow](docs/BUILD-3DS.md#adding-a-fighter-to-the-native-development-build).
 - Expanded sound-bank conversion with validated pointers and unchanged sample payloads.
+- Shared import of Remix's compiled per-fighter Japanese hit-sound selection and sound IDs; the mod's sound-override menu is still pending.
 - Separate application identity and save directory for the eventual 3DS build.
 
 Remix adds N64 assembly code as well as characters and assets. Its fighter registry, new moves, engine patches, menus, and save layout still need native integration. See [porting status](docs/PORTING-STATUS.md) for what is tested and what remains.

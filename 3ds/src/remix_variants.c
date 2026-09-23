@@ -64,11 +64,13 @@ typedef struct NativeRemixEntryEffect {
 #include "native_winner_fgm_rows.inc"
 #include "native_results_text_rows.inc"
 #include "native_crowd_chant_rows.inc"
+#include "native_hit_sound_rows.inc"
 #include "native_entry_effect_rows.inc"
 #include "native_collision_templates.inc"
 #include "generic_action_tables.inc"
 volatile s32 native_remix_last_winner_fgm = -1;
 volatile s32 native_remix_last_results_text_fkind = -1;
+volatile s32 native_remix_last_j_hit_fgm = -1;
 typedef char NativeRemixTablePatchCountCheck[
     ARRAY_COUNT(native_remix_table_patches) == ARRAY_COUNT(native_remix_generic_defs) ? 1 : -1];
 
@@ -127,6 +129,16 @@ s32 nativeRemixCrowdChantFGM(unsigned fkind) {
         native_remix_crowd_chant_fgm[fkind] != 0)
         return native_remix_crowd_chant_fgm[fkind];
     return -1;
+}
+
+int nativeRemixHitSoundFGM(unsigned fkind, unsigned kind, unsigned level) {
+    if (fkind >= ARRAY_COUNT(native_remix_hit_sound_type) ||
+        native_remix_hit_sound_type[fkind] == 0 ||
+        kind >= ARRAY_COUNT(native_remix_j_hit_fgms) ||
+        level >= ARRAY_COUNT(native_remix_j_hit_fgms[0]))
+        return -1;
+    native_remix_last_j_hit_fgm = native_remix_j_hit_fgms[kind][level];
+    return native_remix_last_j_hit_fgm;
 }
 
 s32 nativeRemixEntryEffectKind(unsigned fkind) {

@@ -84,6 +84,8 @@ remix/.venv/Scripts/python.exe remix/tools/build_fighter_probe.py
 
 The builder checks every enabled name, ID, parent, script, and asset closure against the pinned reference audit. For `generic` registrations it copies the native parent action table, applies compiled flag and callback changes, and appends added statuses. An unbound callback fails the build; a bound table still needs emulator move testing before its fighter can be considered complete. The builder also generates motion/script data, compiled costume patches, shared native registration, bottom-screen labels, and the VS bottom-card cycle. Character-specific MIPS functions cannot execute on ARM11; their native implementations and emulator move tests remain necessary. The catalog, generator, and shared runtime are source-only; generated ROM-derived includes and the CIA stay local.
 
+The shared hit-sound importer reads all 88 compiled `sound_type` rows and the assembled Japanese sound-ID table. It validates the IDs against the packaged FGM bank and applies the Japanese table at the common fighter-hit playback path for J-type attackers. This reproduces Remix's default per-fighter sound selection; the mod's Japanese-sounds override menu is not yet native.
+
 ## Build the fighter development CIA
 
 Complete the reference extraction above and configure the existing 3DS toolchain. Set `vanilla_assets` in the ignored `3ds/build-config.json` to the asset directory produced by the original 3DS port's local build. It needs `reloc.pak`, `audio/`, `particles/`, `initial-save.bin` and `bottom-ui.bin`. If omitted, the tool looks for `assets/` two directories above the configured BattleShip checkout, matching the original port's `3ds/vendor/BattleShip` layout.
