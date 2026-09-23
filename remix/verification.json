@@ -759,26 +759,27 @@
     "collision_wrappers": 180,
     "unique_collision_transition_targets": 169,
     "normalized_transition_shapes": 80,
-    "scope": "Compiled MIPS callback dependencies grouped by shared original collision helper and transition instruction shape. Seven exact patterns and a restricted straight-line decoder now generate 64 native transitions and 65 collision wrappers; the remaining patterns are unbound."
+    "scope": "Compiled MIPS callback dependencies grouped by shared original collision helper and transition instruction shape. Nine exact patterns, including status-table transitions, and a restricted straight-line decoder now generate 72 native transitions and 73 collision wrappers; the remaining patterns are unbound."
   },
   "native_transition_templates": {
-    "exact_transition_patterns": 7,
-    "generated_transitions": 64,
-    "generated_collision_callbacks": 65,
+    "exact_transition_patterns": 9,
+    "generated_transitions": 72,
+    "generated_collision_callbacks": 73,
     "straightline_decoded_transitions": 38,
-    "native_bound_expansion_callbacks": 75,
+    "native_bound_expansion_callbacks": 83,
     "total_expansion_callbacks": 852,
     "host_pattern_rejection_test": true,
     "development_cia_build_and_package_checks": true,
-    "development_cia_sha256": "b5b88fb995b5a57cd36a3e74442008a43a2eef79feff70314b22a2f883d87840",
+    "development_cia_sha256": "9f18cd54b1b1d63808bf66ace722cf9ba1dace201a70fe1e0844ae4800719c76",
     "development_cxi_sha256": "b3f2727653ee91ef2709d4b80f1ca833749c5c38e5fb3b335b29ffe1eb140450",
     "azahar_stereo_falco_match_frame": 2036,
-    "scope": "The offline decoder permits only known engine calls, stack-local writes, mapped call arguments, and a restored return path. All 26 earlier exact templates agree with its derived semantics. Generated callbacks are available to the shared action importer but the new callbacks were not invoked in a match."
+    "azahar_stereo_drl_regression_frame": 2018,
+    "scope": "The offline decoders permit only checked engine calls, stack-local writes, mapped call arguments, restored return paths, and symbol-bounded status-table reads. Eight Goemon/Ebisumaru and Kirby-copy status-table transitions are generated without fighter-specific bindings. They were compiled and a stereo development match passed, but the new moves were not invoked in that match."
   },
   "native_animation_end_templates": {
     "compiled_wrapper_candidates": 35,
     "exact_wrapper_and_transition_pairs": 6,
-    "native_bound_expansion_callbacks_total": 75,
+    "native_bound_expansion_callbacks_total": 83,
     "total_expansion_callbacks": 852,
     "host_pattern_rejection_test": true,
     "arm11_build_and_package_checks": true,
@@ -799,7 +800,7 @@
     "development_catalog_fighters": 19,
     "action_table_bindable_audit_fighters": 28,
     "native_bound_expansion_callbacks_at_match_validation": 24,
-    "current_native_bound_expansion_callbacks": 75,
+    "current_native_bound_expansion_callbacks": 83,
     "total_expansion_callbacks": 852,
     "validated_fixture_assets": 1737,
     "development_cia_sha256": "f9bfca305ede8ca466cc6582a41542bda71cef2643a25f4a56cb2b871c028f8e",
@@ -814,8 +815,8 @@
   },
   "fighter_import_host_tests": {
     "passed": true,
-    "tests": 38,
-    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, +EXTRA autolink angle and knockback math, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors and compiled generic action-table C execution, victory BGM thunk decoding, winner voice bounds, compiled results text validation, crowd chant ID bounds, compiled Japanese hit-sound IDs and fighter types, compiled entry-effect pointer reuse, callback-family classification, strict native transition-template generation, restricted straight-line MIPS decoding with rejection cases, and paired animation-end callback rejection"
+    "tests": 39,
+    "scope": "motion graph pointers, original menu-script symbols, random-sound arrays, seek replay commands, +EXTRA hit-multiplier decoding and native application, +EXTRA autolink angle and knockback math, unsupported commands, empty animation ID, split audio bank, malformed ranges, sample preservation, sparse music sequence repacking, shared fighter parent/cycle mapping, compiled action descriptors and compiled generic action-table C execution, victory BGM thunk decoding, winner voice bounds, compiled results text validation, crowd chant ID bounds, compiled Japanese hit-sound IDs and fighter types, compiled entry-effect pointer reuse, callback-family classification, strict native transition-template generation, compiled status-table decoding and rejection cases, restricted straight-line MIPS decoding with rejection cases, and paired animation-end callback rejection"
   },
   "save_writer_host_tests": {
     "passed": true,

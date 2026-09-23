@@ -3,6 +3,7 @@
 Exact templates and a restricted straight-line decoder accept only known
 engine calls and side effects. Unknown instructions remain unbound.
 """
+import struct
 from pathlib import Path
 
 from common import BUILD, sha256, write_json
@@ -60,6 +61,73 @@ SHARED_TEMPLATES = {
         0x0c039bc9, 0xafae0010, 0x8fbf001c, 0x27bd0038,
         0x03e00008, 0x00000000),
 }
+
+# Compiled status-table transitions use the same instruction stream across
+# fighters, with only the table address and source-status base changing.
+# Match every instruction, including the stack flag and optional air clamp.
+TABLE_TEMPLATES = {
+    'air_status_table': (
+        0x27bdffc8, 0xafbf001c, 0xafa40038, 0x8c840084,
+        0x0c037bb2, 0xafa40034, 0x8fa20034, 0x8fa40038,
+        None, None, 0x8c4f0024, None, 0x000f7840,
+        0x01cf7021, 0x95c50000, 0x8c860078, 0x3c073f80,
+        None, 0x0c039bc9, 0xafae0010, 0x0c0363ae,
+        0x8fa40034, 0x8fbf001c, 0x03e00008, 0x27bd0038),
+    'ground_status_table': (
+        0x27bdffc8, 0xafbf001c, 0xafa40038, 0x8c840084,
+        0x0c037ba6, 0xafa40034, 0x8fa20034, 0x8fa40038,
+        None, None, 0x8c4f0024, None, 0x000f7840,
+        0x01cf7021, 0x95c50000, 0x8c860078, 0x3c073f80,
+        None, 0x0c039bc9, 0xafae0010, 0x8fbf001c,
+        0x03e00008, 0x27bd0038),
+}
+
+
+def decode_status_table(ref, address, actual):
+    for name, pattern in TABLE_TEMPLATES.items():
+        if len(actual) != len(pattern) or any(
+                expected is not None and word != expected
+                for word, expected in zip(actual, pattern)):
+            continue
+        # lui/ori t6 and addiu t7,t7,-base are the only variable
+        # instructions. Reject register changes and alternate arithmetic.
+        if (actual[8] & 0xffff0000 != 0x3c0e0000 or
+                actual[9] & 0xffff0000 != 0x35ce0000 or
+                actual[11] & 0xffff0000 != 0x25ef0000 or
+                actual[17] not in (0x340e0802, 0x340e0803)):
+            continue
+        base = -(struct.unpack('>h', struct.pack('>H', actual[11] & 0xffff))[0])
+        table_address = ((actual[8] & 0xffff) << 16) | (actual[9] & 0xffff)
+        if not 0xdc <= base < 0x4000 or not hasattr(ref, 'symbols'):
+            continue
+        names = [symbol for symbol, value in ref.symbols.items()
+                 if value == table_address and symbol.endswith('_table')]
+        later = [value for value in ref.symbols.values() if value > table_address]
+        if not names or not later:
+            continue
+        end = min(later)
+        size = end - table_address
+        if (size < 6 or size > 64 or size % 2 or table_address % 2 or
+                not hasattr(ref, 'rom') or not hasattr(ref, 'ram_base') or
+                not hasattr(ref, 'rom_base')):
+            continue
+        offset = table_address - ref.ram_base + ref.rom_base
+        if offset < 0 or offset + size > len(ref.rom):
+            continue
+        values = list(struct.unpack_from('>' + str(size // 2) + 'H', ref.rom, offset))
+        # Tables are padded with one zero halfword when necessary. A zero
+        # anywhere else would be an unmodelled source-status entry.
+        if values[-1] == 0:
+            values.pop()
+        if (len(values) < 2 or base + len(values) > 0x4000 or
+                any(value < 0xdc or value >= 0x4000 for value in values)):
+            continue
+        return {'address': f'{address:08x}', 'template': name,
+                'status_id': None, 'status_base': base,
+                'status_table': values, 'kinetics': 'air' if name.startswith('air') else 'ground',
+                'clamp_air_speed': name.startswith('air'),
+                'preserve_flags': actual[17] & 0xffff}
+    return None
 
 WRAPPER_ENDINGS = (
     (0x27bd0018, 0x03e00008, 0x00000000),
@@ -139,7 +207,7 @@ def decode_transition(ref, address):
                 'kinetics': 'ground' if name.startswith('ground') else 'air',
                 'clamp_air_speed': name.startswith('air'),
                 'preserve_flags': 1 if name == 'ground_fixed_preserve_hit' else 0x800}
-    return decode_straightline(ref, address)
+    return decode_status_table(ref, address, actual) or decode_straightline(ref, address)
 
 
 def extract_native_transitions(ref, families):
@@ -156,7 +224,7 @@ def extract_native_transitions(ref, families):
         transition = transitions[address]
         if transition is None:
             continue
-        if transition['template'] != 'decoded_straightline':
+        if transition['template'] not in ('decoded_straightline', *TABLE_TEMPLATES):
             # Keep the hand-checked examples as an independent semantic
             # oracle for the more general instruction decoder.
             decoded = decode_straightline(ref, address)
@@ -181,13 +249,21 @@ def render_native_code(manifest):
     lines = ['/* Exact compiled MIPS collision-transition templates. */']
     for row in manifest['transitions']:
         address = row['address']
-        status = (str(row['status_id']) if row['status_id'] is not None else
-                  f'fp->status_id {"+" if row["status_delta"] > 0 else "-"} {abs(row["status_delta"])}')
+        if 'status_table' in row:
+            values = ', '.join(str(value) for value in row['status_table'])
+            lines += [f'static const u16 nativeRemixStatusTable_{address}[] = {{{values}}};']
+            status = f'nativeRemixStatusTable_{address}[fp->status_id - {row["status_base"]}]'
+        else:
+            status = (str(row['status_id']) if row['status_id'] is not None else
+                      f'fp->status_id {"+" if row["status_delta"] > 0 else "-"} {abs(row["status_delta"])}')
         flags = {0: 'FTSTATUS_PRESERVE_NONE', 1: 'FTSTATUS_PRESERVE_HIT',
                  0x800: 'FTSTATUS_PRESERVE_LOOPSFX'}.get(
                      row['preserve_flags'], f'0x{row["preserve_flags"]:x}u')
         lines += [f'static void nativeRemixTransition_{address}(GObj *fighter_gobj) {{',
                   '    FTStruct *fp = ftGetStruct(fighter_gobj);']
+        if 'status_table' in row:
+            lines += [f'    if (fp->status_id < {row["status_base"]} ||',
+                      f'        fp->status_id >= {row["status_base"] + len(row["status_table"])}) return;']
         for action in row.get('action_order',
                               [row['kinetics'], 'status'] +
                               (['clamp_air_speed'] if row['clamp_air_speed'] else [])):

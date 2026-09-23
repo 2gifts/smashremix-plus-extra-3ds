@@ -29,7 +29,7 @@ from native_crowd_patches import extract_crowd_chants, render_native_rows as ren
 from native_hit_sound_patches import extract_hit_sounds, render_native_rows as render_hit_sounds
 from native_entry_patches import extract_entry_effects, render_native_rows as render_entry_effects
 from classify_action_callbacks import classify as classify_action_callbacks
-from native_transition_templates import (TEMPLATES, SHARED_TEMPLATES,
+from native_transition_templates import (TEMPLATES, SHARED_TEMPLATES, TABLE_TEMPLATES,
                                          decode_transition, extract_native_transitions,
                                          render_native_code)
 from native_anim_end_templates import (STATUS_PLAY_CLEAR, extract_native_anim_ends,
@@ -46,6 +46,42 @@ class WordReference:
 
 
 class MotionTests(unittest.TestCase):
+    def test_compiled_status_table_transitions_decode_shared_pattern(self):
+        for name, pattern in TABLE_TEMPLATES.items():
+            with self.subTest(template=name):
+                words = list(pattern)
+                words[8:10] = [0x3c0e8050, 0x35ce0200]
+                words[11] = 0x25efff1b  # Source statuses begin at 0xe5.
+                words[17] = 0x340e0802
+                rom = bytearray(0x300)
+                struct.pack_into('>8H', rom, 0x200,
+                                 0xec, 0xed, 0xed, 0xed, 0xed, 0xed, 0xee, 0)
+                ref = SimpleNamespace(
+                    words=lambda address, count: (words + [0] * count)[:count],
+                    symbols={'Fixture.transition_table': 0x80500200,
+                             'Fixture.after_table': 0x80500210},
+                    rom=rom, ram_base=0x80500000, rom_base=0)
+                row = decode_transition(ref, 0x80500000)
+                self.assertEqual(row['status_base'], 0xe5)
+                self.assertEqual(row['status_table'], [0xec, 0xed, 0xed, 0xed,
+                                                        0xed, 0xed, 0xee])
+                native = render_native_code({'transitions': [row], 'wrappers': []})
+                self.assertIn('fp->status_id - 229', native)
+                self.assertIn('fp->status_id >= 236', native)
+                self.assertIn('0x802u', native)
+                self.assertEqual('ftPhysicsClampAirVelXMax(fp);' in native,
+                                 name.startswith('air'))
+                words[17] = 0x340e0803  # Preserve-hit variant shares the decoder.
+                self.assertEqual(decode_transition(ref, 0x80500000)['preserve_flags'], 0x803)
+                words[17] = 0x340e0804
+                self.assertIsNone(decode_transition(ref, 0x80500000))
+                words[17] = 0x340e0802
+                words[14] = 0x95c50002  # Different table access is unsafe.
+                self.assertIsNone(decode_transition(ref, 0x80500000))
+                words[14] = pattern[14]
+                struct.pack_into('>H', rom, 0x204, 0)
+                self.assertIsNone(decode_transition(ref, 0x80500000))
+
     def test_straightline_compiled_transition_decodes_only_known_effects(self):
         # Source-independent MIPS fixture: set grounded, set status at the
         # live animation frame with preservation bits 0x24, then return.
