@@ -8,7 +8,7 @@
 #endif
 #ifdef SSB_REMIX_PROBE
 #include "native_remix_roster.h"
-#define FT_COMPUTER_IS_SAMUS(kind) ((kind) == nFTKindSamus || (kind) == NATIVE_REMIX_ESAMUS_KIND)
+#define FT_COMPUTER_IS_SAMUS(kind) ((kind) == nFTKindSamus || (kind) == NATIVE_REMIX_ESAMUS_KIND || (kind) == NATIVE_REMIX_JSAMUS_KIND)
 #define FT_COMPUTER_IS_LINK(kind) ((kind) == nFTKindLink || (kind) == NATIVE_REMIX_ELINK_KIND || (kind) == NATIVE_REMIX_JLINK_KIND)
 #define FT_COMPUTER_IS_NESS(kind) ((kind) == nFTKindNess || (kind) == NATIVE_REMIX_JNESS_KIND)
 #else
@@ -4278,6 +4278,7 @@ sb32 ftComputerCheckDetectTarget(FTStruct *this_fp, f32 detect_range_base)
                                     case nFTKindSamus:
 #ifdef SSB_REMIX_PROBE
                                     case NATIVE_REMIX_ESAMUS_KIND:
+                                    case NATIVE_REMIX_JSAMUS_KIND:
 #endif
                                     case nFTKindLuigi:
                                     case nFTKindLink:
@@ -4306,6 +4307,7 @@ sb32 ftComputerCheckDetectTarget(FTStruct *this_fp, f32 detect_range_base)
                         case nFTKindSamus:
 #ifdef SSB_REMIX_PROBE
                         case NATIVE_REMIX_ESAMUS_KIND:
+                        case NATIVE_REMIX_JSAMUS_KIND:
 #endif
                             if (this_fp->passive_vars.samus.charge_level == FTSAMUS_CHARGE_MAX)
                             {
@@ -5903,6 +5905,7 @@ sb32 ftComputerCheckTryChargeSpecialN(FTStruct *fp)
     case nFTKindSamus:
 #ifdef SSB_REMIX_PROBE
     case NATIVE_REMIX_ESAMUS_KIND:
+    case NATIVE_REMIX_JSAMUS_KIND:
 #endif
         if
         (
@@ -5983,6 +5986,7 @@ sb32 ftComputerCheckTryCancelSpecialN(FTStruct *fp)
     case nFTKindSamus:
 #ifdef SSB_REMIX_PROBE
     case NATIVE_REMIX_ESAMUS_KIND:
+    case NATIVE_REMIX_JSAMUS_KIND:
 #endif
         if
         (
@@ -7036,6 +7040,7 @@ sb32 func_ovl3_80138AA8(FTStruct *this_fp, sb32 is_delay)
         case nFTKindSamus:
 #ifdef SSB_REMIX_PROBE
         case NATIVE_REMIX_ESAMUS_KIND:
+        case NATIVE_REMIX_JSAMUS_KIND:
 #endif
         case nFTKindLuigi:
         case nFTKindPikachu:

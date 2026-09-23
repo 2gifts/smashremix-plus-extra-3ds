@@ -1445,6 +1445,7 @@ void ftParamResetStatUpdateColAnim(GObj *fighter_gobj)
     case nFTKindSamus:
 #ifdef SSB_REMIX_PROBE
     case NATIVE_REMIX_ESAMUS_KIND:
+    case NATIVE_REMIX_JSAMUS_KIND:
 #endif
     case nFTKindNSamus:
         if (fp->passive_vars.samus.charge_level == FTSAMUS_CHARGE_MAX)
@@ -2016,6 +2017,7 @@ void* ftParamMakeEffect(GObj *fighter_gobj, s32 effect_id, s32 joint_id, Vec3f *
         case nFTKindSamus:
 #ifdef SSB_REMIX_PROBE
         case NATIVE_REMIX_ESAMUS_KIND:
+        case NATIVE_REMIX_JSAMUS_KIND:
 #endif
             joint_id = FTSAMUS_CHARGE_EFFECT_JOINT;
 

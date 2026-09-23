@@ -37,6 +37,7 @@ def main():
         sources.append(ROOT/'src/remix_jpika_probe.c')
         sources.append(ROOT/'src/remix_epika_probe.c')
         sources.append(ROOT/'src/remix_esamus_probe.c')
+        sources.append(ROOT/'src/remix_jsamus_probe.c')
         sources.append(ROOT/'src/remix_elink_probe.c')
         sources.append(ROOT/'src/remix_jlink_probe.c')
         sources.append(ROOT/'src/remix_jyoshi_probe.c')
@@ -55,7 +56,7 @@ def main():
     else:sources.append(ROOT/'src/bringup_render.c')
     for src in sources:
         obj=out/(src.stem+'.o')
-        if src.stem in ['game_host','vanilla_policy','render_bridge','gfx_pc','save_layout_check','stereo_camera','bottom_game','wallpaper','control_game','remix_falco_probe','remix_dkult_probe','remix_jpika_probe','remix_epika_probe','remix_esamus_probe','remix_elink_probe','remix_jlink_probe','remix_jyoshi_probe','remix_jmario_probe','remix_jfalcon_probe','remix_jluigi_probe','remix_jdk_probe','remix_jness_probe']:
+        if src.stem in ['game_host','vanilla_policy','render_bridge','gfx_pc','save_layout_check','stereo_camera','bottom_game','wallpaper','control_game','remix_falco_probe','remix_dkult_probe','remix_jpika_probe','remix_epika_probe','remix_esamus_probe','remix_jsamus_probe','remix_elink_probe','remix_jlink_probe','remix_jyoshi_probe','remix_jmario_probe','remix_jfalcon_probe','remix_jluigi_probe','remix_jdk_probe','remix_jness_probe']:
             flags=game_flags()
         else:
             flags=[*ARCH,'-std=gnu11','-O2','-g','-D__3DS__','-DSSB_BRINGUP',

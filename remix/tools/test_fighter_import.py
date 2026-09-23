@@ -29,7 +29,8 @@ int main(void) {
     assert(nativeRemixNextKind(NATIVE_REMIX_JPIKA_KIND, NATIVE_REMIX_JPIKA_KIND) == NATIVE_REMIX_EPIKA_KIND);
     assert(nativeRemixNextKind(NATIVE_REMIX_EPIKA_KIND, NATIVE_REMIX_EPIKA_KIND) == 0);
     assert(nativeRemixNextKind(NATIVE_REMIX_MARIO_KIND, 0) == NATIVE_REMIX_JMARIO_KIND);
-    assert(nativeRemixNextKind(NATIVE_REMIX_SAMUS_KIND, 0) == NATIVE_REMIX_ESAMUS_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_SAMUS_KIND, 0) == NATIVE_REMIX_JSAMUS_KIND);
+    assert(nativeRemixNextKind(NATIVE_REMIX_JSAMUS_KIND, NATIVE_REMIX_JSAMUS_KIND) == NATIVE_REMIX_ESAMUS_KIND);
     assert(nativeRemixNextKind(NATIVE_REMIX_ESAMUS_KIND, NATIVE_REMIX_ESAMUS_KIND) == 0);
     assert(nativeRemixNextKind(NATIVE_REMIX_LINK_KIND, 0) == NATIVE_REMIX_ELINK_KIND);
     assert(nativeRemixNextKind(NATIVE_REMIX_ELINK_KIND, NATIVE_REMIX_ELINK_KIND) == NATIVE_REMIX_JLINK_KIND);
@@ -48,6 +49,7 @@ int main(void) {
     assert(nativeRemixParentKind(NATIVE_REMIX_EPIKA_KIND) == NATIVE_REMIX_PIKACHU_KIND);
     assert(nativeRemixParentKind(NATIVE_REMIX_JMARIO_KIND) == NATIVE_REMIX_MARIO_KIND);
     assert(nativeRemixParentKind(NATIVE_REMIX_ESAMUS_KIND) == NATIVE_REMIX_SAMUS_KIND);
+    assert(nativeRemixParentKind(NATIVE_REMIX_JSAMUS_KIND) == NATIVE_REMIX_SAMUS_KIND);
     assert(nativeRemixParentKind(NATIVE_REMIX_ELINK_KIND) == NATIVE_REMIX_LINK_KIND);
     assert(nativeRemixParentKind(NATIVE_REMIX_JLINK_KIND) == NATIVE_REMIX_LINK_KIND);
     assert(nativeRemixParentKind(NATIVE_REMIX_JYOSHI_KIND) == NATIVE_REMIX_YOSHI_KIND);
@@ -158,6 +160,7 @@ int main(void) {
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JPIKA_KIND) == nFTKindPikachu);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_EPIKA_KIND) == nFTKindPikachu);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_ESAMUS_KIND) == nFTKindSamus);
+    assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JSAMUS_KIND) == nFTKindSamus);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_ELINK_KIND) == nFTKindLink);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JLINK_KIND) == nFTKindLink);
     assert(ftKirbySpecialNGetCopyTableKind(NATIVE_REMIX_JYOSHI_KIND) == nFTKindYoshi);
@@ -198,6 +201,9 @@ int main(void) {
         es_source = (ROOT / '3ds/src/remix_esamus_probe.c').read_text()
         es_start = es_source.index('int nativeRemixESamusIsAnimation(')
         es_function = es_source[es_start:es_source.index('\n}', es_start) + 2]
+        js_source = (ROOT / '3ds/src/remix_jsamus_probe.c').read_text()
+        js_start = js_source.index('int nativeRemixJSamusIsAnimation(')
+        js_function = js_source[js_start:js_source.index('\n}', js_start) + 2]
         link_source = (ROOT / '3ds/src/remix_elink_probe.c').read_text()
         link_start = link_source.index('int nativeRemixELinkIsAnimation(')
         link_function = link_source[link_start:link_source.index('\n}', link_start) + 2]
@@ -236,6 +242,8 @@ static Motion remix_epika_main_motions[]={{0,{0}},{28,{0}},{29,{8}}};
 static Motion remix_epika_menu_motions[]={{0,{0}},{30,{0}}};
 static Motion remix_esamus_main_motions[]={{0,{0}},{31,{0}},{32,{8}}};
 static Motion remix_esamus_menu_motions[]={{0,{0}},{33,{0}}};
+static Motion remix_jsamus_main_motions[]={{0,{0}},{46,{0}},{47,{8}}};
+static Motion remix_jsamus_menu_motions[]={{0,{0}},{48,{0}}};
 static Motion remix_elink_main_motions[]={{0,{0}},{34,{0}},{35,{8}}};
 static Motion remix_elink_menu_motions[]={{0,{0}},{36,{0}}};
 static Motion remix_jlink_main_motions[]={{0,{0}},{40,{0}},{41,{8}}};
@@ -256,7 +264,7 @@ static Motion remix_jness_menu_motions[]={{0,{0}},{45,{0}}};
         for line in (ROOT / 'src/ft/ftdef.h').read_text().splitlines():
             if line.startswith('#define FTANIM_FLAG_ANIMJOINT ') or line.startswith('#define FTANIM_FLAG_SHIELDPOSE '):
                 fixture += line + '\n'
-        fixture += dk_function + '\n' + jp_function + '\n' + ep_function + '\n' + es_function + '\n' + link_function + '\n' + jlink_function + '\n' + yoshi_function + '\n' + mario_function + '\n' + falcon_function + '\n' + luigi_function + '\n' + jdk_function + '\n' + jness_function + '\n' + function + '''
+        fixture += dk_function + '\n' + jp_function + '\n' + ep_function + '\n' + es_function + '\n' + js_function + '\n' + link_function + '\n' + jlink_function + '\n' + yoshi_function + '\n' + mario_function + '\n' + falcon_function + '\n' + luigi_function + '\n' + jdk_function + '\n' + jness_function + '\n' + function + '''
 int main(){
     assert(!nativeRelocIsFighterAnimation(0));
     assert(nativeRelocIsFighterAnimation(4));
@@ -301,10 +309,14 @@ int main(){
     assert(nativeRelocIsFighterAnimation(43));
     assert(!nativeRelocIsFighterAnimation(44));
     assert(nativeRelocIsFighterAnimation(45));
+    assert(nativeRelocIsFighterAnimation(46));
+    assert(!nativeRelocIsFighterAnimation(47));
+    assert(nativeRelocIsFighterAnimation(48));
     assert(!nativeRemixDKUltIsAnimation(0));
     assert(!nativeRemixJPikaIsAnimation(0));
     assert(!nativeRemixEPikaIsAnimation(0));
     assert(!nativeRemixESamusIsAnimation(0));
+    assert(!nativeRemixJSamusIsAnimation(0));
     assert(!nativeRemixELinkIsAnimation(0));
     assert(!nativeRemixJLinkIsAnimation(0));
     assert(!nativeRemixJYoshiIsAnimation(0));

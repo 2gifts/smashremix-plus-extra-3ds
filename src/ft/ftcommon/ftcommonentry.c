@@ -235,6 +235,10 @@ void ftCommonAppearSetStatus(GObj *fighter_gobj)
         break;
 
     case nFTKindSamus:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_ESAMUS_KIND:
+    case NATIVE_REMIX_JSAMUS_KIND:
+#endif
         efManagerSamusEntryPointMakeEffect(&fp->entry_pos);
         break;
 

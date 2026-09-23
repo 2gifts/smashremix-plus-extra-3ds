@@ -1,6 +1,9 @@
 #include <ft/fighter.h>
 #include <wp/weapon.h>
 #include <it/item.h>
+#ifdef SSB_REMIX_PROBE
+#include "native_remix_roster.h"
+#endif
 #ifdef PORT
 #include <ft/ftcommon/ftcommonfunctions.h>
 #endif
@@ -451,6 +454,10 @@ void mpCommonSetFighterLandingParams(GObj *fighter_gobj)
 
     case nFTKindSamus:
     case nFTKindNSamus:
+#ifdef SSB_REMIX_PROBE
+    case NATIVE_REMIX_ESAMUS_KIND:
+    case NATIVE_REMIX_JSAMUS_KIND:
+#endif
         fp->passive_vars.samus.charge_recoil = 0;
         return;
 

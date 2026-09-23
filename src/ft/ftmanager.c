@@ -700,6 +700,7 @@ void ftManagerInitFighter(GObj *fighter_gobj, FTDesc *desc)
     case nFTKindSamus:
 #ifdef SSB_REMIX_PROBE
     case NATIVE_REMIX_ESAMUS_KIND:
+    case NATIVE_REMIX_JSAMUS_KIND:
 #endif
     case nFTKindNSamus:
         fp->passive_vars.samus.charge_level = 0;

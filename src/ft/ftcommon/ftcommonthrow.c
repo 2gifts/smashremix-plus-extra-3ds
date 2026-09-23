@@ -128,7 +128,7 @@ void ftCommonThrowSetStatus(GObj *fighter_gobj, sb32 is_throwf)
 
     if ((this_fp->fkind == nFTKindSamus) || (this_fp->fkind == nFTKindNSamus)
 #ifdef SSB_REMIX_PROBE
-        || (this_fp->fkind == NATIVE_REMIX_ESAMUS_KIND)
+        || (this_fp->fkind == NATIVE_REMIX_ESAMUS_KIND) || (this_fp->fkind == NATIVE_REMIX_JSAMUS_KIND)
 #endif
         )
     {

@@ -116,7 +116,7 @@ void ftCommonCatchSetStatus(GObj *fighter_gobj)
 
     if (((fp->fkind == nFTKindSamus) || (fp->fkind == nFTKindNSamus)
 #ifdef SSB_REMIX_PROBE
-        || (fp->fkind == NATIVE_REMIX_ESAMUS_KIND)
+        || (fp->fkind == NATIVE_REMIX_ESAMUS_KIND) || (fp->fkind == NATIVE_REMIX_JSAMUS_KIND)
 #endif
         ) && (efManagerSamusGrappleBeamGlowMakeEffect(fighter_gobj) != NULL))
     {
