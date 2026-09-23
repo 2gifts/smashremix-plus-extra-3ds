@@ -132,12 +132,14 @@ def decode_straightline(ref, address):
             if kind == 'status':
                 value, frame, speed = registers[5], registers[6], registers[7]
                 flags = stack.get(registers[29] + 0x10, UNKNOWN)
-                if (registers[4] != GOBJ or frame != ANIM_FRAME or
+                if (registers[4] != GOBJ or frame not in (ANIM_FRAME, 0) or
                         speed != 0x3f800000 or not isinstance(flags, int) or
                         flags & ~0x7fff):
                     return None
                 if isinstance(value, int):
-                    if not 0xdc <= value < 0x4000:
+                    # Transitions may deliberately return to a vanilla
+                    # common status, such as LandingHeavy (0x20).
+                    if not 0 <= value < 0x4000:
                         return None
                     status = value
                     delta = None
@@ -148,7 +150,8 @@ def decode_straightline(ref, address):
                 else:
                     return None
                 actions.append({'kind': kind, 'status_id': status,
-                                'status_delta': delta, 'preserve_flags': flags})
+                                'status_delta': delta, 'preserve_flags': flags,
+                                'frame_begin': 'zero' if frame == 0 else 'current'})
             elif registers[4] == FIGHTER:
                 actions.append({'kind': kind})
             else:
@@ -171,10 +174,13 @@ def decode_straightline(ref, address):
                       ['air', 'clamp_air_speed', 'status'])):
         return None
     status_action = next(action for action in actions if action['kind'] == 'status')
-    return {'address': f'{address:08x}', 'template': 'decoded_straightline',
+    result = {'address': f'{address:08x}', 'template': 'decoded_straightline',
             'status_id': status_action['status_id'],
             'status_delta': status_action['status_delta'],
             'kinetics': kinds[0],
             'clamp_air_speed': 'clamp_air_speed' in kinds,
             'preserve_flags': status_action['preserve_flags'],
             'action_order': kinds}
+    if status_action['frame_begin'] == 'zero':
+        result['frame_begin'] = 'zero'
+    return result

@@ -226,6 +226,35 @@ class MotionTests(unittest.TestCase):
                 self.assertIsNone(decode_straightline(ref, address))
                 words[index] = original
 
+    def test_straightline_transition_accepts_explicit_zero_start_frame(self):
+        # addiu/or a2,r0,r0 is the N64 call's literal frame-zero argument.
+        # The fifth (preserve-flags) argument must still be initialized.
+        words = [0x27bdffe0, 0xafbf001c, 0xafa40020, 0x0c037ba6,
+                 0x8c840084, 0x8fa40020, 0x340500ed, 0x00003025,
+                 0x340e0003, 0xafae0010, 0x0c039bc9, 0x3c073f80,
+                 0x8fbf001c, 0x27bd0020, 0x03e00008, 0]
+        ref = SimpleNamespace(words=lambda address, count:
+                              (words + [0] * count)[:count])
+        row = decode_straightline(ref, 0x80500000)
+        self.assertEqual(row['frame_begin'], 'zero')
+        self.assertIn('ftMainSetStatus(fighter_gobj, 237, 0.0F,',
+                      render_native_code({'transitions': [row], 'wrappers': []}))
+        words[9] = 0  # An unspecified fifth argument is not safe to lift.
+        self.assertIsNone(decode_straightline(ref, 0x80500000))
+
+    def test_straightline_transition_can_land_in_vanilla_common_status(self):
+        words = [0x27bdffe0, 0xafbf001c, 0xafa40020, 0x0c037ba6,
+                 0x8c840084, 0x8fa40020, 0x34050020, 0x00003025,
+                 0x3c073f80, 0x0c039bc9, 0xafa00010,
+                 0x8fbf001c, 0x03e00008, 0x27bd0020]
+        ref = SimpleNamespace(words=lambda address, count:
+                              (words + [0] * count)[:count])
+        row = decode_straightline(ref, 0x80500000)
+        self.assertEqual(row['status_id'], 0x20)
+        self.assertEqual(row['frame_begin'], 'zero')
+        self.assertIn('ftMainSetStatus(fighter_gobj, 32, 0.0F,',
+                      render_native_code({'transitions': [row], 'wrappers': []}))
+
     def test_compiled_animation_end_pairs_bind_only_complete_transitions(self):
         with tempfile.TemporaryDirectory() as dirname:
             path = Path(dirname) / 'reference.z64'

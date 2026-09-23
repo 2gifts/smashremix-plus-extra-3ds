@@ -366,7 +366,8 @@ def render_native_code(manifest):
                               [row['kinetics'], 'status'] +
                               (['clamp_air_speed'] if row['clamp_air_speed'] else [])):
             if action == 'status':
-                lines += [f'    ftMainSetStatus(fighter_gobj, {status}, fighter_gobj->anim_frame,',
+                frame = '0.0F' if row.get('frame_begin') == 'zero' else 'fighter_gobj->anim_frame'
+                lines += [f'    ftMainSetStatus(fighter_gobj, {status}, {frame},',
                           f'                    1.0F, {flags});']
             elif action == 'clamp_air_speed':
                 lines.append('    ftPhysicsClampAirVelXMax(fp);')
