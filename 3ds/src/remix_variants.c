@@ -81,6 +81,7 @@ typedef struct NativeRemixVariantMeta {
 #include "native_collision_templates.inc"
 #include "native_anim_end_templates.inc"
 #include "native_guarded_original_callbacks.inc"
+#include "native_ground_walk_physics.inc"
 #include "generic_action_tables.inc"
 volatile s32 native_remix_last_winner_fgm = -1;
 volatile s32 native_remix_last_results_text_fkind = -1;

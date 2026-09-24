@@ -998,6 +998,19 @@
     "development_cia_sha256": "33089e6e4445315f7508de4b4be9571fa07cf25573e07786100843d1a1a61ce4",
     "scope": "Five exact Sonic/Knuckles-family aerial collision callbacks select a checked native landing transition when motion flag 2 is clear, or the original cliff/wait helper otherwise. A separate instruction decoder agrees on each landing transition's status change and side effects. The affected fighters remain outside the development roster, so their move behavior is not yet emulator-tested and the private CIA is not a full-mod release."
   },
+  "shared_ground_walk_physics_import": {
+    "pinned_expansion_callbacks": 852,
+    "native_bound_callbacks": 126,
+    "ground_walk_callback_addresses": 2,
+    "ground_walk_action_table_uses": 20,
+    "decoded_speeds": [0.25, -0.25],
+    "decoded_friction": 30.0,
+    "unbound_shape_groups_with_collision_target_split": 417,
+    "source_only_fighter_import_tests_passed": 53,
+    "development_elf_sha256": "00da61aa87285f75f62b41a14fe85dd07cc54f3f2c8fb079785cc1a823df8e02",
+    "development_cia_sha256": "132fd38e1d6bf7dca4189484a200fbfd28aa63894bd97fc829f05e3683745f12",
+    "scope": "One exact compiled physics shape supplies signed stick-speed and friction constants to two original native physics helpers. Goemon's other unbound callbacks keep these generated handlers outside the development roster; they are source-tested and ARM-built but not directly emulator-tested. The private CIA remains development-only."
+  },
   "fighter_import_host_tests": {
     "passed": true,
     "tests": 44,

@@ -43,6 +43,8 @@ from native_straightline_transitions import decode_straightline
 from native_guarded_original_callbacks import (CAPTAIN_TURN,
                                                extract_guarded_original_callbacks,
                                                render_native_code as render_guarded_original_code)
+from native_ground_walk_physics import (GROUND_WALK, extract_ground_walks,
+                                        render_native_code as render_ground_walk_code)
 from native_fkind_branch_transitions import decode_fkind_branches
 from native_variant_metadata import extract_variant_metadata, render_variant_metadata
 
@@ -435,6 +437,33 @@ class MotionTests(unittest.TestCase):
             worklist['reference_rom_sha256'] = 'stale'
             with self.assertRaisesRegex(ValueError, 'pinned ROM'):
                 extract_guarded_original_callbacks(ref, worklist)
+
+    def test_compiled_ground_walk_physics_decodes_shared_float_constants(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            path = Path(dirname) / 'reference.z64'
+            path.write_bytes(b'pinned ground-walk fixture')
+            first, second, changed = 0x80500000, 0x80500040, 0x80500080
+            base = list(GROUND_WALK)
+            base[4], base[6] = 0x3c053e80, 0x3c0641f0
+            code = {first: base[:], second: base[:], changed: base[:]}
+            code[second][4] = 0x3c05be80
+            code[changed][6] = 0x3c06c1f0  # Negative friction is invalid.
+            ref = SimpleNamespace(path=path, words=lambda address, count:
+                                  (code[address] + [0] * count)[:count])
+            worklist = {'reference_rom_sha256': sha256(path), 'targets': [
+                {'address': f'{address:08x}', 'symbols': [f'Fixture{index}'],
+                 'uses': [{'fighter': 'FIXTURE', 'status_id': 229, 'role': 'physics'}]}
+                for index, address in enumerate((first, second, changed))]}
+            manifest = extract_ground_walks(ref, worklist)
+            self.assertEqual(manifest['recognized_callbacks'], 2)
+            self.assertEqual([row['speed'] for row in manifest['accepted']], [0.25, -0.25])
+            self.assertEqual([row['friction'] for row in manifest['accepted']], [30.0, 30.0])
+            native = render_ground_walk_code(manifest)
+            self.assertEqual(native.count('ftPhysicsSetGroundVelTransferAir(gobj);'), 2)
+            self.assertIn('0x1.0000000000000p-2f', native)
+            self.assertIn('-0x1.0000000000000p-2f', native)
+            code[first][7] = 0x0c0361f5  # Original transfer helper changed.
+            self.assertEqual(extract_ground_walks(ref, worklist)['recognized_callbacks'], 1)
 
     def test_conditional_landing_wrapper_reuses_checked_ground_transition(self):
         with tempfile.TemporaryDirectory() as dirname:
