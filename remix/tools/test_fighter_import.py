@@ -198,7 +198,8 @@ class MotionTests(unittest.TestCase):
         code = render_anim_end_code({'transitions': [row], 'wrappers': []})
         self.assertIn('FTSTATUS_PRESERVE_FASTFALL', code)
         self.assertIn('fp->is_fastfall = FALSE;', code)
-        self.assertIn('const s32 dive_armed = 1;', code)
+        self.assertIn('fp->motion_vars.flags.flag2 = 1;', code)
+        self.assertNotIn('status_vars', code)
         for index, replacement in ((2, 0x340e0001),  # Wrong status flags.
                                    (16, 0xac800184),  # Lost armed variable.
                                    (20, 0xa083018c)):  # Wrong fighter flag.
@@ -327,7 +328,10 @@ class MotionTests(unittest.TestCase):
             generated = render_anim_end_code(result)
             self.assertIn('ftAnimEndCheckSetStatus', generated)
             self.assertIn('FTSTATUS_PRESERVE_HIT', generated)
-            self.assertIn('memset(&fp->status_vars, 0, 3 * sizeof(s32));', generated)
+            self.assertIn('fp->motion_vars.flags.flag2 = 0;', generated)
+            self.assertNotIn('status_vars', generated)
+            self.assertTrue(all(row['template'] == 'decoded_entry_reset'
+                                for row in result['transitions']))
             transition[15] = 0xac810184  # Temp-variable side effect changed.
             self.assertEqual(extract_native_anim_ends(ref, worklist)
                              ['recognized_action_callback_count'], 0)
@@ -364,6 +368,40 @@ class MotionTests(unittest.TestCase):
         transition[11] = 0x8fa40020
         wrapper[3] = 0xac80017c
         self.assertFalse(exact_plain_anim_end_wrapper(ref, wrapper_address, target))
+
+    def test_animation_end_entry_reset_imports_shared_shape_and_rejects_new_effect(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            path = Path(dirname) / 'reference.z64'
+            path.write_bytes(b'pinned animation end fixture')
+            wrapper_address, target = 0x80500000, 0x80500100
+            wrapper = [0x27bdffe8, 0xafbf0014, 0x3c058050, 0x34a50100,
+                       0x0c036520, 0, 0x8fbf0014, 0x03e00008, 0x27bd0018]
+            transition = [0x27bdffe0, 0xafbf001c, 0xafa40020, 0x340500e5,
+                          0x8fa40020, 0x00003025, 0x3c073f80, 0x24010001,
+                          0x0c039bc9, 0xafa10010, 0x0c03820c, 0x8fa40020,
+                          0x8fa40020, 0x8c840084, 0xac80017c, 0x8fbf001c,
+                          0x03e00008, 0x27bd0020]
+            code = {wrapper_address: wrapper, target: transition}
+            ref = SimpleNamespace(path=path, ram_base=0x80400000,
+                                  words=lambda address, count:
+                                  (code[address] + [0] * count)[:count])
+            worklist = {'reference_rom_sha256': sha256(path),
+                        'targets': [{'address': f'{wrapper_address:08x}',
+                                     'symbols': ['Fixture.anim_end'], 'uses': []}]}
+            result = extract_native_anim_ends(ref, worklist)
+            self.assertEqual(result['recognized_action_callback_count'], 1)
+            self.assertEqual(result['transitions'][0]['template'], 'decoded_entry_reset')
+            generated = render_anim_end_code(result)
+            self.assertIn('ftMainSetStatus(fighter_gobj, 229, 0.0F, 1.0F,', generated)
+            self.assertIn('ftMainPlayAnimEventsAll(fighter_gobj);', generated)
+            self.assertIn('fp->motion_vars.flags.flag0 = 0;', generated)
+            transition[14] = 0xac80018c  # A different fighter write is unknown.
+            self.assertEqual(extract_native_anim_ends(ref, worklist)
+                             ['recognized_action_callback_count'], 0)
+            transition[14] = 0xac80017c
+            wrapper[3] = 0xac80017c  # The wrapper must remain side-effect-free.
+            self.assertEqual(extract_native_anim_ends(ref, worklist)
+                             ['recognized_action_callback_count'], 0)
 
     def test_extra_autolink_angle_matches_ground_air_and_reverse_hit_rules(self):
         fixture = r'''

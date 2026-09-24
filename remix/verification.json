@@ -959,6 +959,20 @@
     "azahar_nlucas_action_callback_slots_verified": 10,
     "scope": "The final six Character patch tables drive a shared, fail-closed special-entry translator and unresolved shape worklist. Ness-derived fighters keep the original Ness effect model resident for fixed-offset PK Thunder artwork while using their own fighter and projectile files. Lucas and N Lucas reached results in timed stereo Azahar matches without stale-token or unsupported-command errors; Japanese Ness passed an active-match regression. These are match smoke tests, not complete moveset, AI, mode, or hardware-performance validation. The private CIA is not a full-mod release."
   },
+  "shared_callback_frontier_and_motion_flags": {
+    "pinned_expansion_callbacks": 852,
+    "native_bound_callbacks": 112,
+    "animation_end_candidates": 35,
+    "checked_animation_end_pairs": 13,
+    "generic_entry_reset_transitions": 6,
+    "unbound_shape_groups_with_collision_target_split": 420,
+    "routines_without_return_in_scan_window": 20,
+    "source_only_fighter_import_tests_passed": 50,
+    "source_only_auto_roster_tests_passed": 3,
+    "development_elf_sha256": "c61b9cf7dbe3442cdf367164e3c1155fe6a949a5aea6032083cb4a5bea80df05",
+    "development_cia_sha256": "25e8000cf9ed45b7b47fca38d9131a46e4edce2b5636f5e9eeeca90e8cc1876e",
+    "scope": "The animation-end importer uses one restricted semantic decoder for six shared status/animation/motion-flag reset transitions, independently cross-checked against the pinned exact pattern. The four dive templates now write motion flags rather than unrelated status variables. The generated callback frontier ranks unbound compiled behavior by impact but does not bind matching shapes. The affected callbacks are not linked into the current development roster, and their move behavior has not yet been emulator-tested. The private CIA is not a full-mod release."
+  },
   "fighter_import_host_tests": {
     "passed": true,
     "tests": 44,

@@ -132,9 +132,16 @@ def extract_native_anim_ends(ref, worklist):
                      exact_plain_anim_end_wrapper(ref, address, target))):
             continue
         if target not in accepted_targets:
-            accepted_targets[target] = (decode_status_play_clear(ref, target) or
-                                        decode_dive_air_initial(ref, target) or
-                                        decode_straightline(ref, target, allow_status_only=True))
+            decoded = decode_straightline(ref, target, allow_status_only=True,
+                                          allow_entry_resets=True)
+            exact_clear = decode_status_play_clear(ref, target)
+            if exact_clear and (not decoded or
+                                decoded.get('template') != 'decoded_entry_reset' or
+                                decoded['status_id'] != exact_clear['status_id'] or
+                                decoded['preserve_flags'] != 1 or
+                                decoded['reset_motion_flags'] != [0, 1, 2]):
+                raise ValueError(f'Animation-end decoder disagrees with exact pattern at {target:08x}')
+            accepted_targets[target] = decoded or decode_dive_air_initial(ref, target)
         if accepted_targets[target] is None:
             continue
         wrappers.append({'address': f'{address:08x}', 'symbols': row['symbols'],
@@ -153,31 +160,32 @@ def extract_native_anim_ends(ref, worklist):
 def render_native_code(manifest):
     lines = ['/* Exact compiled animation-end callback and status templates. */']
     for row in manifest['transitions']:
-        if row.get('template') == 'decoded_status_only':
+        if row.get('template') in ('decoded_status_only', 'decoded_entry_reset'):
             flags = {0: 'FTSTATUS_PRESERVE_NONE', 1: 'FTSTATUS_PRESERVE_HIT'}.get(
                 row['preserve_flags'], f'0x{row["preserve_flags"]:x}u')
             frame = '0.0F' if row['frame_begin'] == 'zero' else 'fighter_gobj->anim_frame'
             lines += [f'static void nativeRemixAnimStatus_{row["address"]}(GObj *fighter_gobj) {{',
                       f'    ftMainSetStatus(fighter_gobj, {row["status_id"]}, {frame}, '
                       f'{row["speed"]!r}F, {flags});']
-            if row['play_anim']:
+            if row['template'] == 'decoded_entry_reset' or row['play_anim']:
                 lines.append('    ftMainPlayAnimEventsAll(fighter_gobj);')
+            if row['template'] == 'decoded_entry_reset':
+                lines.append('    FTStruct *fp = ftGetStruct(fighter_gobj);')
+                for index in row['reset_motion_flags']:
+                    lines.append(f'    fp->motion_vars.flags.flag{index} = 0;')
             lines += ['}', '']
             continue
-        dive = row.get('template') == 'dive_air_initial'
+        if row.get('template') != 'dive_air_initial':
+            raise ValueError(f'Unrecognized animation-end template {row.get("template")}')
         lines += [f'static void nativeRemixAnimStatus_{row["address"]}(GObj *fighter_gobj) {{',
                   '    FTStruct *fp = ftGetStruct(fighter_gobj);',
                   f'    ftMainSetStatus(fighter_gobj, {row["status_id"]}, 0.0F, 1.0F, '
-                  f'{"FTSTATUS_PRESERVE_FASTFALL" if dive else "FTSTATUS_PRESERVE_HIT"});',
+                  'FTSTATUS_PRESERVE_FASTFALL);',
                   '    ftMainPlayAnimEventsAll(fighter_gobj);',
-                  '    _Static_assert(sizeof(fp->status_vars) >= 3 * sizeof(s32),',
-                  '                   "Three compiled move variables need storage");',
-                  '    memset(&fp->status_vars, 0, 3 * sizeof(s32));']
-        if dive:
-            lines += ['    const s32 dive_armed = 1;',
-                      '    memcpy((u8*)&fp->status_vars + 2 * sizeof(s32),',
-                      '           &dive_armed, sizeof(dive_armed));',
-                      '    fp->is_fastfall = FALSE;']
+                  '    fp->motion_vars.flags.flag0 = 0;',
+                  '    fp->motion_vars.flags.flag1 = 0;',
+                  '    fp->motion_vars.flags.flag2 = 1;',
+                  '    fp->is_fastfall = FALSE;']
         lines += ['}', '']
     for row in manifest['wrappers']:
         lines += [f'void {row["native"]}(GObj *fighter_gobj) {{',

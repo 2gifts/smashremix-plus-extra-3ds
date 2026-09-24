@@ -233,6 +233,10 @@ def write_action_patches(ref, audit, catalog, out, auto_bindings=None):
             for row in sorted(unresolved, key=lambda item: (-len(item['uses']), item['address']))[:30]],
         'fighter_action_coverage': fighter_coverage,
     })
+    from native_callback_frontier import rank_callback_frontier
+    families = json.loads((BUILD / 'action-callback-families.json').read_text())
+    write_json(BUILD / 'native-callback-frontier.json',
+               rank_callback_frontier(ref, worklist, audit, bindings, families))
     rows = {row['name']: row for row in audit['fighters']}
     enabled = {row['name']: row for row in catalog['fighters']}
     names = config.get('auto_action_patches')
