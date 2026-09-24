@@ -144,11 +144,11 @@ def render_action_assignments(fighter, bindings, status_count):
                         for status in table['changed_inherited_statuses']
                         for callback in status['callbacks'].values()
                         if callback is not None and int(callback['remix'], 16) in bindings
-                        and bindings[int(callback['remix'], 16)].startswith('nativeRemixCollision_')}
+                        and bindings[int(callback['remix'], 16)].startswith('nativeRemix')}
                        | {bindings[int(word, 16)]
                           for status in added for word in status['words'][1:]
                           if int(word, 16) in bindings
-                          and bindings[int(word, 16)].startswith('nativeRemixCollision_')})
+                          and bindings[int(word, 16)].startswith('nativeRemix')})
     return '\n'.join([*(f'extern void {name}(GObj *);' for name in generated), *lines]) + '\n'
 
 

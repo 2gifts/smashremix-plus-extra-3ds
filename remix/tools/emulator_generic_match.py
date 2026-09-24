@@ -97,6 +97,12 @@ def main():
     bindings.update({int(item['address'], 16): item['native']
                      for item in generated['bindings']})
     action_array = symbols.get(f'native_remix_{name.lower()}_actions')
+    if name == 'FALCO':
+        # Falco predates the generic registrar but uses the same compiled
+        # action patch stream; verify its live table pointers too.
+        action_array = symbols.get('falco_status')
+        if action_array is None:
+            raise AssertionError('Falco action array missing from executable')
     hit_manifest = json.loads((BUILD / 'fighter-hit-sound-patches.json').read_text())
     expected_j_hits = {item for family in hit_manifest['japanese_hit_fgm'][:2]
                        for item in family}
@@ -221,6 +227,8 @@ def main():
                 break
         if not result or not result.get('passed'):
             raise AssertionError(result or 'Fighter did not enter match')
+        if name == 'FALCO' and not actions_verified:
+            raise AssertionError('Falco compiled action pointers were not verified')
         if args.expect_j_hit and not j_hits_observed:
             raise AssertionError(f'{name}: Japanese punch/kick hit sound was not selected')
         result['japanese_hit_fgms_observed'] = sorted(j_hits_observed)

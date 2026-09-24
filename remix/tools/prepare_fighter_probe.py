@@ -31,6 +31,7 @@ from native_variant_metadata import write_variant_metadata
 from native_anim_end_templates import write_native_anim_ends
 from native_guarded_original_callbacks import write_guarded_original_callbacks
 from native_ground_walk_physics import write_ground_walks
+from native_vanilla_clone_callbacks import write_clones
 from native_stage_tables import write_stage_tables
 from native_auto_roster import write_auto_catalog
 from native_lucas_air_move import write_lucas_air_move
@@ -241,6 +242,12 @@ def main():
         address = int(row['address'], 16)
         if address in auto_bindings:
             raise ValueError(f'Duplicate ground-walk callback {address:08x}')
+        auto_bindings[address] = row['native']
+    vanilla_clones = write_clones(ref, worklist, out)
+    for row in vanilla_clones['accepted']:
+        address = int(row['address'], 16)
+        if address in auto_bindings:
+            raise ValueError(f'Duplicate vanilla-clone callback {address:08x}')
         auto_bindings[address] = row['native']
     lucas_air_move = write_lucas_air_move(ref, out)
     lucas_address = int(lucas_air_move['address'], 16)

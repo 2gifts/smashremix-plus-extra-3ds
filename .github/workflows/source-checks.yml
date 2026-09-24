@@ -38,3 +38,5 @@ jobs:
           python -m unittest discover -s remix/tools -p test_native_auto_roster.py
           python -m unittest discover -s remix/tools -p test_native_lucas_air_move.py
           python -m unittest discover -s remix/tools -p test_native_special_dispatch.py
+          python -m unittest discover -s remix/tools -p test_native_callback_dependencies.py
+          python -m unittest discover -s remix/tools -p test_native_vanilla_clone_callbacks.py

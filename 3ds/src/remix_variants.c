@@ -6,6 +6,7 @@
 #include <ft/ftanimend.h>
 #include <ft/ftphysics.h>
 #include <ft/ftchar/ftcaptain/ftcaptainfunctions.h>
+#include <ft/ftchar/ftmario/ftmariofunctions.h>
 #include <mp/mpcommon.h>
 #include <string.h>
 #include "fighter_registry.h"
@@ -82,6 +83,7 @@ typedef struct NativeRemixVariantMeta {
 #include "native_anim_end_templates.inc"
 #include "native_guarded_original_callbacks.inc"
 #include "native_ground_walk_physics.inc"
+#include "native_vanilla_clone_callbacks.inc"
 #include "generic_action_tables.inc"
 volatile s32 native_remix_last_winner_fgm = -1;
 volatile s32 native_remix_last_results_text_fkind = -1;

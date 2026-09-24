@@ -28,11 +28,26 @@
   "callback_dependency_graph": {
     "reference_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
     "compiled_callback_targets": 852,
-    "native_bound_targets": 126,
+    "native_bound_targets": 142,
     "distinct_original_engine_calls_reachable_from_unbound": 177,
     "distinct_expansion_helpers_reachable_from_unbound": 321,
     "callbacks_with_opaque_control_flow": 83,
     "scope": "Static first-return-window direct-call inventory only; it does not translate or execute MIPS, prove full control flow, or establish gameplay parity."
+  },
+  "vanilla_clone_callback_import": {
+    "reference_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
+    "original_mario_callback_sha256": "ab7be5cc796a24299b4438a1183b098fcb7adf1953527544c83049cfdd09d6e6",
+    "compiled_words_checked_per_callback": 48,
+    "accepted_callback_targets": 17,
+    "action_table_uses": 61,
+    "total_bound_callback_targets": 142,
+    "host_branch_tests_passed": true,
+    "development_cia_sha256": "8d656ffcd978ff181b2b123ff79b3bdf21eee1a7bc2e823a7a4693bf6f49c520",
+    "falco_stereo_azahar_results_frame": 5112,
+    "falco_action_table_callback_pointers_verified": 6,
+    "falco_status_226_observed": true,
+    "falco_emulator_result_sha256": "265733c7a38650dc5c03f9c3a576d2689727d0e0b1442a337c5fef882e8f43e4",
+    "scope": "One verified original-code clone family; generated native map behavior was host-tested and Falco reached results after entering its mapped action, but every collision branch and the other owning fighters have not been emulator-tested. Development CIA only."
   },
   "assets": {
     "source_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",

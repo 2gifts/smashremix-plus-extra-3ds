@@ -295,17 +295,6 @@ void airPhysics(GObj *gobj) {
     if (ftGetStruct(gobj)->motion_vars.flags.flag2 == 5) ftPhysicsApplyAirVelDrift(gobj);
     else ftPhysicsApplyAirVelFriction(gobj);
 }
-void airMap(GObj *gobj) {
-    FTStruct *fp = ftGetStruct(gobj);
-    if (fp->ga == nMPKineticsAir) {
-        if (fp->motion_vars.flags.flag1 == 0 || fp->physics.vel_air.y >= 0.0f)
-            mpCommonCheckFighterProject(gobj);
-        else if (mpCommonCheckFighterPassCliff(gobj, ftMarioSpecialHiProcPass)) {
-            if (fp->coll_data.mask_stat & MAP_FLAG_CLIFF_MASK) ftCommonCliffCatchSetStatus(gobj);
-            else ftCommonLandingFallSpecialSetStatus(gobj, FALSE, 0x1.66p-2f); /* 0x3EB30000 */
-        }
-    } else mpCommonSetFighterFallOnEdgeBreak(gobj);
-}
 static void neutral(GObj *gobj, int air) {
     FTStruct *fp = ftGetStruct(gobj);
     ftMainSetStatus(gobj, air ? nFTFoxStatusSpecialAirN : nFTFoxStatusSpecialN,
