@@ -245,7 +245,7 @@ void ftNessSpecialLwInitVars(GObj *fighter_gobj)
 
 #ifdef PORT
 #ifdef SSB_REMIX_PROBE
-    if (fp->fkind == NATIVE_REMIX_JNESS_KIND)
+    if (nativeRemixIsVariantOf(fp->fkind, nFTKindNess))
         fp->special_coll = (FTSpecialColl*) ((uintptr_t)*fp->data->p_file_mainmotion +
             (intptr_t)llNessMainMotionLwAbsorbFTSpecialColl);
     else

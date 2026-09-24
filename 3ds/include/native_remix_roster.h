@@ -91,6 +91,10 @@ static inline unsigned nativeRemixIsVariant(unsigned fkind) {
     return nativeRemixParentKind(fkind) != fkind;
 }
 
+static inline unsigned nativeRemixIsVariantOf(unsigned fkind, unsigned parent) {
+    return fkind != parent && nativeRemixParentKind(fkind) == parent;
+}
+
 static inline unsigned nativeRemixResolveKind(unsigned parent, unsigned selected) {
     for (unsigned i = 0; i < sizeof(native_remix_variants) / sizeof(native_remix_variants[0]); i++)
         if (native_remix_variants[i].fkind == selected && native_remix_variants[i].parent == parent)

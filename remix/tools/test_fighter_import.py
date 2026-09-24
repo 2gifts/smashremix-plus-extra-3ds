@@ -1089,6 +1089,9 @@ int main(void) {
     assert(nativeRemixParentKind(NATIVE_REMIX_EPUFF_KIND) == NATIVE_REMIX_JIGGLYPUFF_KIND);
     assert(nativeRemixResolveKind(NATIVE_REMIX_NESS_KIND, NATIVE_REMIX_JNESS_KIND) == NATIVE_REMIX_JNESS_KIND);
     assert(nativeRemixParentKind(NATIVE_REMIX_JNESS_KIND) == NATIVE_REMIX_NESS_KIND);
+    assert(nativeRemixIsVariantOf(NATIVE_REMIX_JNESS_KIND, NATIVE_REMIX_NESS_KIND));
+    assert(!nativeRemixIsVariantOf(NATIVE_REMIX_NESS_KIND, NATIVE_REMIX_NESS_KIND));
+    assert(!nativeRemixIsVariantOf(NATIVE_REMIX_JNESS_KIND, NATIVE_REMIX_FOX_KIND));
     assert(nativeRemixNextKind(NATIVE_REMIX_FOX_KIND, NATIVE_REMIX_FALCO_KIND) == NATIVE_REMIX_JFOX_KIND);
     assert(nativeRemixNextKind(NATIVE_REMIX_JFOX_KIND, NATIVE_REMIX_JFOX_KIND) == 0);
     assert(nativeRemixParentKind(NATIVE_REMIX_JFOX_KIND) == NATIVE_REMIX_FOX_KIND);

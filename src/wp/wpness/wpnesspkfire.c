@@ -138,7 +138,7 @@ GObj* wpNessPKFireMakeWeapon(GObj *fighter_gobj, Vec3f *pos, Vec3f *vel, f32 ang
     WPDesc desc = dWPNessPKFireWeaponDesc;
 #ifdef SSB_REMIX_PROBE
     FTStruct *fp = ftGetStruct(fighter_gobj);
-    if (fp->fkind == NATIVE_REMIX_JNESS_KIND)
+    if (nativeRemixIsVariantOf(fp->fkind, nFTKindNess))
         desc.p_weapon = fp->data->p_file_special2;
 #endif
     GObj *weapon_gobj = wpManagerMakeWeapon(fighter_gobj, &desc, pos, (WEAPON_FLAG_COLLPROJECT | WEAPON_FLAG_PARENT_FIGHTER));
@@ -151,7 +151,7 @@ GObj* wpNessPKFireMakeWeapon(GObj *fighter_gobj, Vec3f *pos, Vec3f *vel, f32 ang
     wp = wpGetStruct(weapon_gobj);
 #ifdef SSB_REMIX_PROBE
     wp->weapon_vars.pkfire.p_file = desc.p_weapon;
-    wp->weapon_vars.pkfire.particle_bank_id = fp->fkind == NATIVE_REMIX_JNESS_KIND ?
+    wp->weapon_vars.pkfire.particle_bank_id = nativeRemixIsVariantOf(fp->fkind, nFTKindNess) ?
         *fp->data->p_particle : gFTNessParticleBankID;
 #endif
 

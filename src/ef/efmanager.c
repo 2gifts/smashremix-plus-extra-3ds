@@ -5052,7 +5052,7 @@ GObj* efManagerNessPsychicMagnetMakeEffect(GObj *fighter_gobj)
     EFDesc desc = dEFManagerNessPsychicMagnetEffectDesc;
 #ifdef SSB_REMIX_PROBE
     FTStruct *fp = ftGetStruct(fighter_gobj);
-    if (fp->fkind == NATIVE_REMIX_JNESS_KIND)
+    if (nativeRemixIsVariantOf(fp->fkind, nFTKindNess))
         /* Remix puts Magnet in slot 6 and the new PK Fire art in slot 7. */
         desc.file_head = fp->data->p_file_special1;
 #endif
@@ -5134,10 +5134,6 @@ GObj* efManagerNessPKThunderTrailMakeEffect(GObj *fighter_gobj)
     fp = ftGetStruct(fighter_gobj);
 
     EFDesc desc = dEFManagerNessPKThunderTrailEffectDesc;
-#ifdef SSB_REMIX_PROBE
-    if (fp->fkind == NATIVE_REMIX_JNESS_KIND)
-        desc.file_head = fp->data->p_file_model;
-#endif
     effect_gobj = efManagerMakeEffectNoForce(&desc);
 
     if (effect_gobj == NULL)
@@ -5189,11 +5185,6 @@ GObj* efManagerNessPKReflectTrailMakeEffect(GObj *weapon_gobj)
     wp = wpGetStruct(weapon_gobj);
 
     EFDesc desc = dEFManagerNessPKReflectTrailEffectDesc;
-#ifdef SSB_REMIX_PROBE
-    FTStruct *origin = ftGetStruct(wp->weapon_vars.pkthunder.parent_gobj);
-    if (origin->fkind == NATIVE_REMIX_JNESS_KIND)
-        desc.file_head = origin->data->p_file_model;
-#endif
     effect_gobj = efManagerMakeEffectNoForce(&desc);
 
     if (effect_gobj == NULL)
@@ -5221,10 +5212,6 @@ GObj* efManagerNessPKThunderWaveMakeEffect(GObj *fighter_gobj)
 {
     FTStruct *fp = ftGetStruct(fighter_gobj);
     EFDesc desc = dEFManagerNessPKThunderWaveEffectDesc;
-#ifdef SSB_REMIX_PROBE
-    if (fp->fkind == NATIVE_REMIX_JNESS_KIND)
-        desc.file_head = fp->data->p_file_model;
-#endif
     GObj *effect_gobj = efManagerMakeEffectNoForce(&desc);
 
     if (effect_gobj == NULL)

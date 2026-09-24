@@ -10,7 +10,8 @@
 static void **wpNessPKThunderFile(GObj *fighter_gobj)
 {
     FTStruct *fp = ftGetStruct(fighter_gobj);
-    return fp->fkind == NATIVE_REMIX_JNESS_KIND ? fp->data->p_file_main : &gFTNessFileMain;
+    return nativeRemixIsVariantOf(fp->fkind, nFTKindNess) ?
+        fp->data->p_file_main : &gFTNessFileMain;
 }
 
 static GObj *wpNessPKThunderOrigin(GObj *weapon_gobj, sb32 is_trail)

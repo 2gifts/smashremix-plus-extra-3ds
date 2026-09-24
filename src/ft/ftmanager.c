@@ -367,6 +367,17 @@ void ftManagerSetupFilesKind(s32 fkind)
         *data->p_file_submotion = FT_MANAGER_STATUS_FILE(data->file_submotion_id);
     }
     *data->p_file_model = FT_MANAGER_STATUS_FILE(data->file_model_id);
+#ifdef SSB_REMIX_PROBE
+    /* Ness's fixed effect descriptors point into the original Ness model.
+     * A derivative's own model can have a different layout (Lucas does), so
+     * keep that shared effect resource resident with the fighter's files. */
+    if (nativeRemixIsVariantOf(fkind, nFTKindNess))
+    {
+        FTData *parent = port_fighter_data(nFTKindNess);
+        *parent->p_file_model = (parent->file_model_id == data->file_model_id) ?
+            *data->p_file_model : FT_MANAGER_STATUS_FILE(parent->file_model_id);
+    }
+#endif
 
     if (data->file_shieldpose_id != 0)
     {
