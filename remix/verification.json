@@ -28,7 +28,7 @@
   "callback_dependency_graph": {
     "reference_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
     "compiled_callback_targets": 852,
-    "native_bound_targets": 143,
+    "native_bound_targets": 145,
     "distinct_original_engine_calls_reachable_from_unbound": 177,
     "distinct_expansion_helpers_reachable_from_unbound": 320,
     "callbacks_with_opaque_control_flow": 83,
@@ -70,6 +70,18 @@
     "development_elf_sha256": "25d6532fd92805b033f3195ff692c5b395e49b84ff036e9f881062c5b9434c67",
     "development_cia_sha256": "026e1a54d8e5719eee69aecf354a9665a55fc9432954e9ac665c1e55a0b35def",
     "scope": "The shared Goemon aerial physics callback is source-tested and ARM-built, but dead-stripped from the current 30-fighter development roster; no direct emulator move test or full-mod release is claimed."
+  },
+  "animation_end_status_effects_import": {
+    "reference_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
+    "animation_end_candidates": 35,
+    "checked_callback_pairs": 15,
+    "newly_decoded_callback_pairs": 2,
+    "new_effects": ["post-status motion flag 0 set to 1", "finite explicit animation start frame 6.0"],
+    "total_bound_callback_targets": 145,
+    "host_effect_tests_passed": true,
+    "development_elf_sha256": "05ea2b5307e6202db8151ae16afa723596f11562ab7d8ae3ad6d0950e5be155b",
+    "development_cia_sha256": "ea4e81acfac5ad78afad1f4f6d0256a5a7a95417899c8b389247c26977e75447",
+    "scope": "The restricted instruction decoder accepts only modeled status arguments, an optional animation call, and a constant motion-flag write. The new Meta Knight handlers are ARM-built but outside the development roster, so their moves are not directly emulator-tested and the CIA is not a full-mod release."
   },
   "assets": {
     "source_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",

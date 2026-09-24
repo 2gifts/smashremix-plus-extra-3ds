@@ -133,7 +133,9 @@ def extract_native_anim_ends(ref, worklist):
             continue
         if target not in accepted_targets:
             decoded = decode_straightline(ref, target, allow_status_only=True,
-                                          allow_entry_resets=True)
+                                          allow_entry_resets=True,
+                                          allow_motion_flag_writes=True,
+                                          allow_constant_frame=True)
             exact_clear = decode_status_play_clear(ref, target)
             if exact_clear and (not decoded or
                                 decoded.get('template') != 'decoded_entry_reset' or
@@ -160,19 +162,26 @@ def extract_native_anim_ends(ref, worklist):
 def render_native_code(manifest):
     lines = ['/* Exact compiled animation-end callback and status templates. */']
     for row in manifest['transitions']:
-        if row.get('template') in ('decoded_status_only', 'decoded_entry_reset'):
+        if row.get('template') in ('decoded_status_only', 'decoded_entry_reset',
+                                   'decoded_status_motion_flags'):
             flags = {0: 'FTSTATUS_PRESERVE_NONE', 1: 'FTSTATUS_PRESERVE_HIT'}.get(
                 row['preserve_flags'], f'0x{row["preserve_flags"]:x}u')
-            frame = '0.0F' if row['frame_begin'] == 'zero' else 'fighter_gobj->anim_frame'
+            frame = ('0.0F' if row['frame_begin'] == 'zero' else
+                     f'{row["frame_value"]!r}F' if row['frame_begin'] == 'constant' else
+                     'fighter_gobj->anim_frame')
             lines += [f'static void nativeRemixAnimStatus_{row["address"]}(GObj *fighter_gobj) {{',
                       f'    ftMainSetStatus(fighter_gobj, {row["status_id"]}, {frame}, '
                       f'{row["speed"]!r}F, {flags});']
-            if row['template'] == 'decoded_entry_reset' or row['play_anim']:
+            if row['template'] == 'decoded_entry_reset' or row.get('play_anim', False):
                 lines.append('    ftMainPlayAnimEventsAll(fighter_gobj);')
             if row['template'] == 'decoded_entry_reset':
                 lines.append('    FTStruct *fp = ftGetStruct(fighter_gobj);')
                 for index in row['reset_motion_flags']:
                     lines.append(f'    fp->motion_vars.flags.flag{index} = 0;')
+            if row['template'] == 'decoded_status_motion_flags':
+                lines.append('    FTStruct *fp = ftGetStruct(fighter_gobj);')
+                for write in row['set_motion_flags']:
+                    lines.append(f'    fp->motion_vars.flags.flag{write["index"]} = {write["value"]};')
             lines += ['}', '']
             continue
         if row.get('template') != 'dive_air_initial':

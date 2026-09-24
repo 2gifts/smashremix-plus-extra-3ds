@@ -40,7 +40,8 @@ def add_value(value, amount):
 
 
 def decode_straightline(ref, address, allow_status_only=False,
-                        allow_entry_resets=False):
+                        allow_entry_resets=False, allow_motion_flag_writes=False,
+                        allow_constant_frame=False):
     words = ref.words(address, 128)
     length = first_return_words(words)
     if length is None or length > 64:
@@ -91,7 +92,7 @@ def decode_straightline(ref, address, allow_status_only=False,
                 registers[rt] = ('status', 0)
             else:
                 registers[rt] = UNKNOWN
-        elif opcode == 43:  # sw: local stack or explicit motion-flag reset.
+        elif opcode == 43:  # sw: local stack or checked motion-flag write.
             base = registers[rs]
             offset = sign16(imm)
             if (allow_entry_resets and base == FIGHTER and
@@ -99,6 +100,11 @@ def decode_straightline(ref, address, allow_status_only=False,
                     registers[rt] == 0):
                 actions.append({'kind': 'reset_motion_flag',
                                 'index': (offset - 0x17c) // 4})
+            elif (allow_motion_flag_writes and base == FIGHTER and
+                  offset in (0x17c, 0x180, 0x184, 0x188) and
+                  registers[rt] == 1):
+                actions.append({'kind': 'set_motion_flag',
+                                'index': (offset - 0x17c) // 4, 'value': 1})
             elif rs == 29 and isinstance(base, int):
                 stack[base + offset] = registers[rt]
             else:
@@ -145,7 +151,13 @@ def decode_straightline(ref, address, allow_status_only=False,
             if kind == 'status':
                 value, frame, speed = registers[5], registers[6], registers[7]
                 flags = stack.get(registers[29] + 0x10, UNKNOWN)
-                if (registers[4] != GOBJ or frame not in (ANIM_FRAME, 0) or
+                constant_frame = None
+                if allow_constant_frame and isinstance(frame, int):
+                    constant_frame = struct.unpack('>f', struct.pack('>I', frame & 0xffffffff))[0]
+                    if not math.isfinite(constant_frame) or not 0.0 <= constant_frame <= 256.0:
+                        return None
+                if (registers[4] != GOBJ or
+                        (frame not in (ANIM_FRAME, 0) and constant_frame is None) or
                         not isinstance(speed, int) or not isinstance(flags, int) or
                         flags & ~0x7fff):
                     return None
@@ -169,7 +181,9 @@ def decode_straightline(ref, address, allow_status_only=False,
                     return None
                 actions.append({'kind': kind, 'status_id': status,
                                 'status_delta': delta, 'preserve_flags': flags,
-                                'frame_begin': 'zero' if frame == 0 else 'current',
+                                'frame_begin': ('zero' if frame == 0 else 'current'
+                                                if frame == ANIM_FRAME else 'constant'),
+                                'frame_value': constant_frame if frame != 0 else 0.0,
                                 'speed': speed_float})
             elif kind == 'play_anim' and registers[4] == GOBJ:
                 actions.append({'kind': kind})
@@ -200,8 +214,23 @@ def decode_straightline(ref, address, allow_status_only=False,
                 'status_id': status_action['status_id'],
                 'preserve_flags': status_action['preserve_flags'],
                 'frame_begin': status_action['frame_begin'],
+                'frame_value': status_action['frame_value'],
                 'speed': status_action['speed'],
                 'reset_motion_flags': [action['index'] for action in actions[2:]]}
+    flag_start = 2 if kinds[:2] == ['status', 'play_anim'] else 1
+    if (allow_motion_flag_writes and len(kinds) > flag_start and kinds[0] == 'status' and
+            all(kind == 'set_motion_flag' for kind in kinds[flag_start:]) and
+            actions[0]['status_id'] is not None):
+        status_action = actions[0]
+        return {'address': f'{address:08x}', 'template': 'decoded_status_motion_flags',
+                'status_id': status_action['status_id'],
+                'preserve_flags': status_action['preserve_flags'],
+                'frame_begin': status_action['frame_begin'],
+                'frame_value': status_action['frame_value'],
+                'speed': status_action['speed'],
+                'set_motion_flags': [dict(index=action['index'], value=action['value'])
+                                     for action in actions[flag_start:]],
+                'play_anim': flag_start == 2}
     if allow_status_only and kinds in (['status'], ['status', 'play_anim']):
         status_action = actions[0]
         if status_action['status_id'] is None:
@@ -210,6 +239,7 @@ def decode_straightline(ref, address, allow_status_only=False,
                 'status_id': status_action['status_id'],
                 'preserve_flags': status_action['preserve_flags'],
                 'frame_begin': status_action['frame_begin'],
+                'frame_value': status_action['frame_value'],
                 'speed': status_action['speed'],
                 'play_anim': kinds[-1] == 'play_anim'}
     if (kinds not in (['ground', 'status'], ['air', 'status'],
