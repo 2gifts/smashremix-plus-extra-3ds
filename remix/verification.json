@@ -937,6 +937,22 @@
     "game_abort_stale_token_or_unmapped_access_detected": false,
     "scope": "The shared importer installs bound compiled action-table deltas without fighter-specific registration code. Dr. Luigi and Metal Luigi reached results in separate stereo development matches; this does not validate all moves or imply that the other structurally bindable fighters are playable."
   },
+  "compiled_special_dispatch_import": {
+    "changed_dispatch_slots": 257,
+    "unique_compiled_targets": 181,
+    "checked_native_targets": 11,
+    "unresolved_shape_groups": 100,
+    "development_roster_total": 30,
+    "source_only_special_dispatch_tests_passed": 1,
+    "source_only_lucas_callback_tests_passed": 1,
+    "development_cia_sha256": "622688336309293d22cab804d0f1f974600ddd5f2b521988835b61332f4a5048",
+    "development_cxi_sha256": "d52747fb9eaa2c869be7956d3d4479c1ecee5a02e8de321007b85fc27f3fd80e",
+    "development_elf_sha256": "39fb9e3999f9e15295b65f7e2966f61959adae7031b44255cd318daa11486e0a",
+    "azahar_stereo_gnd_active_match_frame": 2037,
+    "azahar_lucas_action_callback_pointer_verified": true,
+    "azahar_lucas_stale_effect_relocation_token_detected": true,
+    "scope": "The final six Character patch tables drive a shared, fail-closed special-entry translator and unresolved shape worklist. The checked Lucas aerial callback binds two structural candidates, but its match exposed a stale effect relocation token. The private CIA is not a full-mod release and the added fighters remain unverified for full gameplay."
+  },
   "fighter_import_host_tests": {
     "passed": true,
     "tests": 44,

@@ -75,6 +75,8 @@ typedef struct NativeRemixVariantMeta {
 #include "native_crowd_chant_rows.inc"
 #include "native_hit_sound_rows.inc"
 #include "native_entry_effect_rows.inc"
+#include "native_lucas_air_move.inc"
+#include "native_special_dispatch.inc"
 #include "native_collision_templates.inc"
 #include "native_anim_end_templates.inc"
 #include "generic_action_tables.inc"
@@ -219,6 +221,7 @@ void nativeRemixGenericInit(void) {
         desc.entry_appear_status[1] = native_remix_table_patches[i].entry_status[1];
         desc.down_bounce_fgm = native_remix_table_patches[i].down_bounce_fgm;
         nativeRemixApplyGenericActionTable(def->kind, &desc);
+        nativeRemixApplyGenericSpecialDispatch(def->kind, &desc);
         def->relocate_scripts();
         port_fighter_register(def->kind, &desc);
         port_log("REMIX PROBE: generic fighter registered at fkind %u\n", def->kind);

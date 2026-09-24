@@ -177,26 +177,28 @@ def render_native_tables(catalog, manifest):
     return '\n'.join(lines) + '\n'
 
 
-def validate_generic_dispatch(catalog, manifest):
+def validate_generic_dispatch(catalog, manifest, bindings=None, audit=None):
+    from native_special_dispatch import unresolved_dispatches
     rows = {row['name']: row for row in manifest['fighters']}
+    audits = {row['name']: row for row in audit['fighters']} if audit else {}
     if not SPECIAL_DISPATCH_TABLES <= manifest['layouts'].keys():
         raise ValueError('Reference special-dispatch tables are incomplete')
     for fighter in catalog['fighters']:
         if fighter['registration'] != 'generic':
             continue
         row = rows[fighter['name']]
-        changed = SPECIAL_DISPATCH_TABLES.intersection(row['changed_from_parent'])
+        changed = unresolved_dispatches(row, bindings or {}, audits.get(fighter['name']))
         if changed:
             raise ValueError(f"{fighter['name']}: custom special-entry dispatch needs native code: "
                              + ', '.join(sorted(changed)))
 
 
-def write_reference_tables(ref, audit, catalog, out):
+def write_reference_tables(ref, audit, catalog, out, special_bindings=None):
     source = ref.path.with_name('src') / 'Character.asm'
     manifest = extract_table_patches(ref, audit, source.read_text())
     if manifest['reference_rom_sha256'] != audit['reference_rom_sha256']:
         raise ValueError('Table patches and fighter audit use different ROMs')
-    validate_generic_dispatch(catalog, manifest)
+    validate_generic_dispatch(catalog, manifest, special_bindings, audit)
     write_json(BUILD / 'fighter-table-patches.json', manifest)
     (Path(out) / 'generic_table_data.inc').write_text(render_native_tables(catalog, manifest))
     return manifest

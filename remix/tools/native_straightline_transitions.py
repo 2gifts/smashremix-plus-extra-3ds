@@ -39,7 +39,8 @@ def add_value(value, amount):
     return UNKNOWN
 
 
-def decode_straightline(ref, address, allow_status_only=False):
+def decode_straightline(ref, address, allow_status_only=False,
+                        allow_entry_resets=False):
     words = ref.words(address, 128)
     length = first_return_words(words)
     if length is None or length > 64:
@@ -90,11 +91,18 @@ def decode_straightline(ref, address, allow_status_only=False):
                 registers[rt] = ('status', 0)
             else:
                 registers[rt] = UNKNOWN
-        elif opcode == 43:  # sw: the only allowed memory writes are local.
+        elif opcode == 43:  # sw: local stack or explicit motion-flag reset.
             base = registers[rs]
-            if rs != 29 or not isinstance(base, int):
+            offset = sign16(imm)
+            if (allow_entry_resets and base == FIGHTER and
+                    offset in (0x17c, 0x180, 0x184, 0x188) and
+                    registers[rt] == 0):
+                actions.append({'kind': 'reset_motion_flag',
+                                'index': (offset - 0x17c) // 4})
+            elif rs == 29 and isinstance(base, int):
+                stack[base + offset] = registers[rt]
+            else:
                 return False
-            stack[base + sign16(imm)] = registers[rt]
         elif opcode == 0:
             funct = word & 63
             rd = (word >> 11) & 31
@@ -130,7 +138,7 @@ def decode_straightline(ref, address, allow_status_only=False):
                 return None
             target = jal_target(address + index * 4, word)
             kind = ENGINE_CALLS.get(target)
-            if allow_status_only and target == 0x800E0830:
+            if (allow_status_only or allow_entry_resets) and target == 0x800E0830:
                 kind = 'play_anim'
             if kind is None:
                 return None
@@ -182,6 +190,18 @@ def decode_straightline(ref, address, allow_status_only=False):
             return None
         index += 1
     kinds = [action['kind'] for action in actions]
+    if (allow_entry_resets and len(kinds) >= 3 and
+            kinds[:2] == ['status', 'play_anim'] and
+            all(kind == 'reset_motion_flag' for kind in kinds[2:])):
+        status_action = actions[0]
+        if status_action['status_id'] is None:
+            return None
+        return {'address': f'{address:08x}', 'template': 'decoded_entry_reset',
+                'status_id': status_action['status_id'],
+                'preserve_flags': status_action['preserve_flags'],
+                'frame_begin': status_action['frame_begin'],
+                'speed': status_action['speed'],
+                'reset_motion_flags': [action['index'] for action in actions[2:]]}
     if allow_status_only and kinds in (['status'], ['status', 'play_anim']):
         status_action = actions[0]
         if status_action['status_id'] is None:

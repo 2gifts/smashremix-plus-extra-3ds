@@ -9,10 +9,11 @@ from collections import Counter
 
 from native_action_patches import action_callback_addresses
 from native_fighter_catalog import load_catalog
-from reference_table_patches import SPECIAL_DISPATCH_TABLES
+from native_special_dispatch import unresolved_dispatches
 
 
-def select_auto_catalog(source, audit, bindings, table_manifest):
+def select_auto_catalog(source, audit, bindings, table_manifest,
+                        special_bindings=None):
     if audit.get('schema') != 2:
         raise ValueError('Unsupported compiled fighter audit')
     if table_manifest.get('reference_rom_sha256') != audit.get('reference_rom_sha256'):
@@ -27,8 +28,7 @@ def select_auto_catalog(source, audit, bindings, table_manifest):
         if name in enabled:
             continue
         missing = action_callback_addresses(row) - bindings.keys()
-        special = sorted(SPECIAL_DISPATCH_TABLES.intersection(
-            table_rows[name]['changed_from_parent']))
+        special = unresolved_dispatches(table_rows[name], special_bindings or {}, row)
         blockers = []
         if row['fkind'] < 28:
             blockers.append('nonfighter_sentinel')
@@ -52,12 +52,13 @@ def select_auto_catalog(source, audit, bindings, table_manifest):
     return catalog, candidates, rejected
 
 
-def write_auto_catalog(source, audit, bindings, table_manifest, path):
+def write_auto_catalog(source, audit, bindings, table_manifest, path,
+                       special_bindings=None):
     import json
     from pathlib import Path
 
     catalog, candidates, rejected = select_auto_catalog(
-        source, audit, bindings, table_manifest)
+        source, audit, bindings, table_manifest, special_bindings)
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(catalog, indent=2) + '\n')

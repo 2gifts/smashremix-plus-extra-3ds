@@ -90,9 +90,12 @@ def main():
     bindings = vanilla_callback_symbols()
     bindings.update({int(item['address'], 16): item['native']
                      for item in json.loads(BINDINGS.read_text())['bindings']})
-    transitions = json.loads((BUILD / 'native-transition-templates.json').read_text())
+    generated = json.loads((BUILD / 'native-generated-action-bindings.json').read_text())
+    if generated['reference_rom_sha256'] != json.loads(
+            (BUILD / 'fighter-audit.json').read_text())['reference_rom_sha256']:
+        raise AssertionError('Generated callback bindings are from a different reference ROM')
     bindings.update({int(item['address'], 16): item['native']
-                     for item in transitions['wrappers']})
+                     for item in generated['bindings']})
     action_array = symbols.get(f'native_remix_{name.lower()}_actions')
     hit_manifest = json.loads((BUILD / 'fighter-hit-sound-patches.json').read_text())
     expected_j_hits = {item for family in hit_manifest['japanese_hit_fgm'][:2]

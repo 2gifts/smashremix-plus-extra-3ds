@@ -30,6 +30,9 @@ from native_variant_metadata import write_variant_metadata
 from native_anim_end_templates import write_native_anim_ends
 from native_stage_tables import write_stage_tables
 from native_auto_roster import write_auto_catalog
+from native_lucas_air_move import write_lucas_air_move
+from native_special_dispatch import (dispatch_bindings, extract_special_dispatch,
+                                     write_special_dispatch)
 
 
 class Reference:
@@ -224,6 +227,17 @@ def main():
         if address in auto_bindings:
             raise ValueError(f'Duplicate generated action callback {address:08x}')
         auto_bindings[address] = row['native']
+    lucas_air_move = write_lucas_air_move(ref, out)
+    lucas_address = int(lucas_air_move['address'], 16)
+    if lucas_address in auto_bindings:
+        raise ValueError(f'Duplicate generated action callback {lucas_address:08x}')
+    auto_bindings[lucas_address] = lucas_air_move['native']
+    write_json(BUILD / 'native-generated-action-bindings.json', {
+        'schema': 1,
+        'reference_rom_sha256': sha256(ref.path),
+        'bindings': [{'address': f'{address:08x}', 'native': native}
+                     for address, native in sorted(auto_bindings.items())],
+    })
     _, bindings = load_bindings(symbols=ref.symbols)
     bindings.update(auto_bindings)
     bindable = {row['name'] for row in audit['fighters']
@@ -231,8 +245,10 @@ def main():
     if args.auto_bindable:
         table_source = (ref.path.with_name('src') / 'Character.asm').read_text()
         compiled_tables = extract_table_patches(ref, audit, table_source)
+        special_manifest = extract_special_dispatch(ref, compiled_tables)
         catalog, auto_report = write_auto_catalog(
-            catalog, audit, bindings, compiled_tables, out / 'auto-roster.json')
+            catalog, audit, bindings, compiled_tables, out / 'auto-roster.json',
+            dispatch_bindings(special_manifest))
         auto_include = out / 'auto-include'
         auto_include.mkdir(exist_ok=True)
         (auto_include / HEADER.name).write_text(render_header(catalog))
@@ -268,7 +284,12 @@ def main():
 
     generic = {row['name']: emit_variant(ref, row['name'], native_scripts, out)
                for row in catalog['fighters'] if row['registration'] == 'generic'}
-    table_manifest = write_reference_tables(ref, audit, catalog, out)
+    if not args.auto_bindable:
+        table_source = (ref.path.with_name('src') / 'Character.asm').read_text()
+        compiled_tables = extract_table_patches(ref, audit, table_source)
+    special_manifest = write_special_dispatch(ref, compiled_tables, catalog, out)
+    special_bindings = dispatch_bindings(special_manifest)
+    table_manifest = write_reference_tables(ref, audit, catalog, out, special_bindings)
     write_variant_metadata(ref, table_manifest, out)
     fireball_manifest = write_fireballs(ref, table_manifest, audit, catalog, out)
     write_kirby_rows(ref, table_manifest, audit, out)

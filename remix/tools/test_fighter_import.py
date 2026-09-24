@@ -966,6 +966,7 @@ int main(void) {
                 'air_nsp', 'air_usp', 'air_dsp')})
             validate_generic_dispatch(catalog, manifest)
             generic_row = next(row for row in manifest['fighters'] if row['name'] == generic[0]['name'])
+            generic_row['tables']['ground_nsp'] = [0x80, 0x50, 0x00, 0x00]
             generic_row['changed_from_parent'].append('ground_nsp')
             with self.assertRaisesRegex(ValueError, 'custom special-entry dispatch'):
                 validate_generic_dispatch(catalog, manifest)

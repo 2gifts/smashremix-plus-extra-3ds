@@ -6,6 +6,8 @@ The scalable porting path is to assemble the pinned N64 mod, extract its final p
 
 Work on the full mod should advance shared table importers, callback families, engine hooks, and asset semantics before adding more hand-integrated fighters to the temporary selector. Each shared change should be checked against every affected fighter in the pinned reference and then exercised in an emulator; catalog expansion alone is not release progress.
 
+The special-entry importer now reads all six final `Character.table_patch_start` dispatch tables, groups shared MIPS targets by instruction shape, and emits ARM handlers only for routines whose status change, animation call, motion-flag writes, and return path are fully decoded. The pinned build has 257 changed slots, 181 unique routines, and 100 unresolved instruction-shape groups; 11 routines pass the current strict decoder. An unresolved entry blocks its fighter automatically. The private auto roster has 30 structural fighters, including Lucas and N Lucas via one checked shared aerial callback, but a Lucas match still logs a stale effect relocation token and is not validated as playable. The development CIA is not a full-mod release.
+
 ## Implemented and checked
 
 - Full port history retained, including stereoscopic rendering, widescreen, bottom-screen UI, controls, and previous fixes.
@@ -95,6 +97,8 @@ Dr. Luigi and Metal Luigi also reached the results scene in separate four-fighte
 - `remix/build/action-callback-families.json`: compiled MIPS wrapper and transition dependencies grouped by native collision helper and normalized instruction shape; it makes no playability claim.
 - `remix/build/native-transition-templates.json`: exact compiled transition and collision-wrapper patterns accepted for native generation; all other code is rejected.
 - `remix/build/native-callback-coverage.json`: bound callback count, highest-fanout unbound targets, and per-fighter missing callback addresses, used to prioritize shared native implementations.
+- `remix/build/native-special-dispatch.json`: deduplicated compiled special-entry targets, checked translations, and unresolved instruction-shape groups covering every patched fighter table slot.
+- `remix/build/native-generated-action-bindings.json`: one source-address-to-native-function manifest shared by the action importer and guest pointer checks.
 - `remix/build/fighter-probe/auto-roster-report.json`: opt-in development candidate names and per-fighter rejection reasons from the same compiled audit; `auto-roster-emulator.json` records isolated stereo smoke-test outcomes.
 - `remix/build/native-stage-tables.json`: all 233 compiled stage headers, setup classifications, classes, default and alternate tracks, plus the validated 618-file asset closure. Setup kind 255 is deliberately rejected by the native test path.
 - `remix/native_callback_bindings.json`: source-only expansion callback bindings. Original callback addresses are resolved from decomp address comments; Falco's compiled action patches are generated from both sources, while most expansion callbacks remain unported.

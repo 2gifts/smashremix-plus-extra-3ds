@@ -10,7 +10,9 @@ from native_auto_roster import select_auto_catalog, write_auto_catalog
 def fighter(name, kind, callback=0, ready=True, parent='FOX'):
     return {'name': name, 'fkind': kind, 'parent': parent,
             'fixture_data_ready': ready,
-            'action_table': {'changed_inherited_statuses': [],
+            'action_table': {'inherited_statuses': 25,
+                             'added_statuses': 1 if callback else 0,
+                             'changed_inherited_statuses': [],
                              'added_status_records': [
                                  {'words': ['00000000', f'{callback:08x}',
                                             '00000000', '00000000', '00000000']}
@@ -31,7 +33,8 @@ class AutoRosterTests(unittest.TestCase):
             fighter('CUSTOMDISPATCH', 34)]}
         tables = {'reference_rom_sha256': 'reference', 'fighters': [
             {'name': row['name'], 'changed_from_parent':
-             ['ground_nsp'] if row['name'] == 'CUSTOMDISPATCH' else []}
+             ['ground_nsp'] if row['name'] == 'CUSTOMDISPATCH' else [],
+             'tables': {'ground_nsp': [0x80, 0x50, 0, 0]}}
             for row in audit['fighters']]}
         with tempfile.TemporaryDirectory() as folder:
             catalog, report = write_auto_catalog(
@@ -53,7 +56,7 @@ class AutoRosterTests(unittest.TestCase):
         audit = {'schema': 2, 'reference_rom_sha256': 'reference',
                  'fighters': [fighter('UNBOUND', 30, 0x80500004)]}
         tables = {'reference_rom_sha256': 'reference', 'fighters': [
-            {'name': 'UNBOUND', 'changed_from_parent': []}]}
+            {'name': 'UNBOUND', 'changed_from_parent': [], 'tables': {}}]}
         with self.assertRaisesRegex(ValueError, 'No additional'):
             select_auto_catalog(source, audit, {}, tables)
 
