@@ -58,6 +58,8 @@ def game_flags():
     includes = [ROOT/'compat', ROOT/'include', UPSTREAM/'include', DECOMP/'include', DECOMP/'src',
                 UPSTREAM/'port', UPSTREAM/'debug_tools',
                 UPSTREAM/'libultraship/src', UPSTREAM/'libultraship/include']
+    if os.environ.get('REMIX_PROBE_CATALOG'):
+        includes.insert(0, DECOMP/'remix/build/fighter-probe/auto-include')
     includes += [SDK/'libctru/include']
     if os.environ.get('SSB_REMIX_PROBE') == 'falco':
         includes += [DECOMP/'remix/build/fighter-probe']
@@ -91,6 +93,11 @@ def compile_game():
             path = DECOMP/'remix/build/fighter-probe'/inc
             stamp_hash.update(inc.encode())
             stamp_hash.update(path.read_bytes())
+    if os.environ.get('REMIX_PROBE_CATALOG'):
+        private_include = DECOMP/'remix/build/fighter-probe/auto-include'
+        for name in ('native_remix_roster.h', 'native_remix_ui.inc'):
+            stamp_hash.update(name.encode())
+            stamp_hash.update((private_include/name).read_bytes())
     stamp = stamp_hash.hexdigest()
     stampfile = OUT/'game-flags.sha256'
     flags_changed = not stampfile.exists() or stampfile.read_text() != stamp

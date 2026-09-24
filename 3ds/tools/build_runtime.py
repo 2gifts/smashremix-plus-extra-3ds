@@ -57,6 +57,8 @@ def main():
                    '-isystem',str(ARM/'arm-none-eabi/include')]
         flags += ['-I'+str(ROOT/'include'),'-I'+str(ROOT/'renderer')]
         if probe:flags += ['-DSSB_REMIX_PROBE','-I'+str(ROOT.parent/'remix/build/fighter-probe')]
+        if probe and os.environ.get('REMIX_PROBE_CATALOG'):
+            flags.insert(0, '-I'+str(ROOT.parent/'remix/build/fighter-probe/auto-include'))
         if args.standalone_probe:flags += ['-DSSB_STANDALONE_PROBE']
         if args.render:flags += ['-DTARGET_N3DS','-DSSB_GRAPHICS']
         if args.release:flags += ['-DSSB_RELEASE']

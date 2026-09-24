@@ -886,6 +886,40 @@
     "azahar_invalid_memory_accesses_detected": false,
     "scope": "Shared angle-362 airborne hit hook is translated into the native fighter-hit path. The stereo DK Ult match regressed normal combat; no angle-362 hit was observed, so that branch still needs direct in-game validation."
   },
+  "automatic_compiled_fighter_batch": {
+    "ordinary_development_roster": 19,
+    "generated_candidates": ["GND", "DRM", "SANDBAG", "NDRM", "NFALCO", "NGND", "NDSAMUS", "NMARTH", "NYLINK"],
+    "development_roster_total": 28,
+    "validated_fixture_assets": 2607,
+    "rejected_candidate_records": 60,
+    "blocker_counts": {
+      "nonfighter_sentinel": 1,
+      "unbound_action_callbacks": 58,
+      "custom_special_dispatch": 51,
+      "no_native_parent": 1,
+      "assets_or_scripts_unready": 3
+    },
+    "host_auto_roster_tests_passed": 2,
+    "development_cia_sha256": "cb9c6b521cd181008928d20081b51d5642741a00367ca0760e29b893cb789e57",
+    "development_cxi_sha256": "3e55d5487ed380fbb35ff274735fc1918010fa64a07da2c877ffd917665ff0a1",
+    "development_elf_sha256": "5a7b24075f1272992db30c14086b985f74e0a2892515ff1465b6ee876cdad036",
+    "azahar_stereo_active_match_frames": {
+      "GND": 2039,
+      "DRM": 2013,
+      "SANDBAG": 2027,
+      "NDRM": 2014,
+      "NFALCO": 2016,
+      "NGND": 2033,
+      "NDSAMUS": 2029,
+      "NMARTH": 2007,
+      "NYLINK": 2019
+    },
+    "azahar_stereo_nfalco_results_frame": 5119,
+    "azahar_nfalco_action_callback_slots_verified": 12,
+    "ordinary_development_cxi_sha256": "04de89817f5586baa4bdf3d64796e520fec7ce48136dec017ea3638bdc5e3c1a",
+    "azahar_stereo_drl_ordinary_roster_regression_frame": 2042,
+    "scope": "A private, opt-in roster generator added all nine data-ready fighters with supported parent, action callbacks, and special-entry dispatch in the pinned audit. Each entered an isolated active stereo Azahar match; normal Falco also reached results. These are build and smoke tests, not full moveset, AI, mode, or console-performance validation. The source roster and release gate remain unchanged, and the CIA contains local copyrighted assets only."
+  },
   "generic_action_table_import": {
     "development_catalog_fighters": 19,
     "action_table_bindable_audit_fighters": 28,

@@ -1,4 +1,5 @@
 """Build a private fighter integration CIA, not a complete Remix +EXTRA release."""
+import argparse
 import json
 import os
 import shutil
@@ -10,7 +11,11 @@ from native_fighter_catalog import load_catalog
 
 
 def main():
-    fighter_count = len(load_catalog()['fighters'])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--auto-bindable', action='store_true',
+                        help='Build a separate development CIA with every structurally bindable fighter')
+    args = parser.parse_args()
+    os.environ.pop('REMIX_PROBE_CATALOG', None)
     os.environ['SSB_REMIX_PROBE'] = 'falco'
     sys.path.insert(0, str(ROOT / '3ds/tools'))
     from build import OUT, tool
@@ -24,7 +29,13 @@ def main():
             audit_meta.get('audit_script_sha256') != sha256(audit_source)):
         run(sys.executable, ROOT / 'remix/tools/audit_reference_fighters.py')
     run(sys.executable, ROOT / 'remix/tools/classify_action_callbacks.py')
-    run(sys.executable, ROOT / 'remix/tools/prepare_fighter_probe.py')
+    run(sys.executable, ROOT / 'remix/tools/prepare_fighter_probe.py',
+        *(['--auto-bindable'] if args.auto_bindable else []))
+    private_catalog = BUILD / 'fighter-probe/auto-roster.json'
+    if args.auto_bindable:
+        os.environ['REMIX_PROBE_CATALOG'] = str(private_catalog)
+    fighter_count = len(load_catalog(private_catalog if args.auto_bindable else
+                                     ROOT / 'remix/native_fighters.json')['fighters'])
     config_path = ROOT / '3ds/build-config.json'
     config = json.loads(config_path.read_text()) if config_path.exists() else {}
     if config.get('save'):
@@ -67,8 +78,11 @@ def main():
     for fmt, suffix in [('cia', 'cia'), ('ncch', 'cxi')]:
         run(tool('makerom'), '-f', fmt, *flags, *(['-ver', '1'] if fmt == 'cia' else []),
             '-o', dst / ('smash64-development.' + suffix))
-    report = {'development_only': True, 'build_variant': 'fighter-test', 'fully_playable': False,
-              'scope': f'{fighter_count} imported fighters selectable from their parent VS bottom cards; full Remix roster and menus unfinished',
+    report = {'development_only': True, 'build_variant': 'auto-bindable-test' if args.auto_bindable else 'fighter-test',
+              'fully_playable': False,
+              'scope': (f'{fighter_count} structurally bindable fighters in a private test roster; move behavior remains unverified'
+                        if args.auto_bindable else
+                        f'{fighter_count} imported fighters selectable from their parent VS bottom cards; full Remix roster and menus unfinished'),
               'elf_sha256': sha256(elf), 'title_id': '000400000ff64200', 'files': {}}
     for suffix in ('cia', 'cxi'):
         path = dst / ('smash64-development.' + suffix)
@@ -76,7 +90,8 @@ def main():
     write_json(dst / 'package.json', report)
     from verify_package import main as verify
     verify(dst, expected_title=0x000400000ff64200, verify_startup=True)
-    target = OUT / 'falco-test/Remix-Fighter-Integration-Test.cia'
+    target = OUT / 'falco-test' / ('Remix-Auto-Bindable-Test.cia' if args.auto_bindable
+                                  else 'Remix-Fighter-Integration-Test.cia')
     shutil.copy2(dst / 'smash64-development.cia', target)
     write_json(BUILD / 'fighter-probe/package.json', report)
     print('Development CIA (not the full mod):', target)

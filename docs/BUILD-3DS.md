@@ -95,6 +95,15 @@ remix/.venv/Scripts/python.exe remix/tools/build_fighter_probe.py
 
 The builder checks every enabled name, ID, parent, script, and asset closure against the pinned reference audit. For `generic` registrations it copies the native parent action table, applies compiled flag and callback changes, and appends added statuses. An unbound callback fails the build; a bound table still needs emulator move testing before its fighter can be considered complete. The builder also generates motion/script data, compiled costume patches, shared native registration, bottom-screen labels, and the VS bottom-card cycle. Character-specific MIPS functions cannot execute on ARM11; their native implementations and emulator move tests remain necessary. The catalog, generator, and shared runtime are source-only; generated ROM-derived includes and the CIA stay local.
 
+To test candidates in batches without editing the source roster, use the opt-in development mode:
+
+```powershell
+remix/.venv/Scripts/python.exe remix/tools/build_fighter_probe.py --auto-bindable
+remix/.venv/Scripts/python.exe remix/tools/emulator_auto_roster.py
+```
+
+This derives a private roster from the current compiled audit and native callback bindings. It requires validated fighter assets and scripts, a known vanilla parent, every action callback bound to ARM code, and no changed special-entry dispatch table. The pinned build currently adds nine structural candidates to the 19-fighter fixture. The builder writes ignored `auto-roster.json` and `auto-roster-report.json`, then packages `3ds/build/falco-test/Remix-Auto-Bindable-Test.cia`; the emulator runner restarts Azahar for each candidate and writes an ignored per-candidate result. The build and smoke tests identify shared runtime gaps. They do not prove full movesets or make the candidates release-ready. This CIA uses the same development title ID as the ordinary fighter test, so installing either replaces the other.
+
 The shared hit-sound importer reads all 88 compiled `sound_type` rows and the assembled Japanese sound-ID table. It validates the IDs against the packaged FGM bank and applies the Japanese table at the common fighter-hit playback path for J-type attackers. This reproduces Remix's default per-fighter sound selection; the mod's Japanese-sounds override menu is not yet native.
 
 ## Build the fighter development CIA

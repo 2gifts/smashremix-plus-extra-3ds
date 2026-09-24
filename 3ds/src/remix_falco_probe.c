@@ -252,7 +252,7 @@ static void stopHitboxes(GObj *gobj) {
     fp->is_use_fogcolor = FALSE;
     ftParamClearAttackCollAll(gobj);
 }
-static void groundPhantasm(GObj *gobj) {
+void groundPhantasm(GObj *gobj) {
     FTStruct *fp = ftGetStruct(gobj);
     unsigned shorten = bufferButtons(fp);
     native_remix_probe_phantasm_ground++;
@@ -266,7 +266,7 @@ static void groundPhantasm(GObj *gobj) {
         stopHitboxes(gobj);
     }
 }
-static void airPhantasm(GObj *gobj) {
+void airPhantasm(GObj *gobj) {
     FTStruct *fp = ftGetStruct(gobj);
     unsigned shorten = bufferButtons(fp);
     native_remix_probe_phantasm_air++;
@@ -291,11 +291,11 @@ static void airPhantasm(GObj *gobj) {
      * following frame when the dash first ends. */
     if (original_phase == 5) fp->physics.vel_air.y += 0x1.9ap0f; /* 0x3FCD0000 */
 }
-static void airPhysics(GObj *gobj) {
+void airPhysics(GObj *gobj) {
     if (ftGetStruct(gobj)->motion_vars.flags.flag2 == 5) ftPhysicsApplyAirVelDrift(gobj);
     else ftPhysicsApplyAirVelFriction(gobj);
 }
-static void airMap(GObj *gobj) {
+void airMap(GObj *gobj) {
     FTStruct *fp = ftGetStruct(gobj);
     if (fp->ga == nMPKineticsAir) {
         if (fp->motion_vars.flags.flag1 == 0 || fp->physics.vel_air.y >= 0.0f)

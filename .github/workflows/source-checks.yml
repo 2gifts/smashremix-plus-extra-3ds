@@ -35,3 +35,4 @@ jobs:
           python remix/tools/native_fighter_catalog.py --check
           python remix/tools/test_fighter_import.py
           python -m unittest discover -s remix/tools -p test_native_stage_tables.py
+          python -m unittest discover -s remix/tools -p test_native_auto_roster.py

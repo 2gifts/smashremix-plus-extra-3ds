@@ -11,7 +11,7 @@ import subprocess
 import sys
 import time
 
-from common import BUILD, ROOT
+from common import BUILD, ROOT, sha256
 from native_action_patches import BINDINGS, vanilla_callback_symbols
 from native_fighter_catalog import load_catalog
 
@@ -56,9 +56,18 @@ def main():
                         help='Require a Japanese hit sound selected during combat')
     parser.add_argument('--stage-id', type=int,
                         help='Test a compiled Remix stage through the private VS override')
+    parser.add_argument('--auto-bindable', action='store_true',
+                        help='Use the private batch-candidate roster from the matching development CIA')
     args = parser.parse_args()
+    if args.auto_bindable:
+        package = json.loads((OUT / 'package.json').read_text())
+        if (package['build_variant'] != 'auto-bindable-test' or
+                sha256(BINARY) != package['files'][BINARY.name]['sha256']):
+            parser.error('Build the matching auto-bindable development CIA first')
     name = args.name.upper()
-    catalog = {row['name']: row for row in load_catalog()['fighters']}
+    catalog_path = OUT / 'auto-roster.json' if args.auto_bindable else None
+    catalog = {row['name']: row for row in
+               (load_catalog(catalog_path) if catalog_path else load_catalog())['fighters']}
     if name not in catalog:
         parser.error(f'{name} is not in the development fighter catalog')
     row = next(row for row in json.loads((BUILD / 'fighter-audit.json').read_text())['fighters']

@@ -5,6 +5,7 @@ selectable via their parent bottom-screen cards in VS mode. No ROM
 addresses are executed: motion bytecode is decoded and its pointers relocated,
 and special callbacks are supplied by native C implementations.
 """
+import argparse
 import json
 import re
 import shutil
@@ -13,7 +14,7 @@ from collections import Counter
 from pathlib import Path
 from common import BUILD, ROOT, checked_sources, sha256, write_json
 from native_fighter_catalog import load_catalog, render_generic_data, render_header, render_ui, validate_reference, HEADER, UI
-from reference_table_patches import write_reference_tables
+from reference_table_patches import extract_table_patches, write_reference_tables
 from native_fireball_patches import write_fireballs
 from native_kirby_patches import write_kirby_rows
 from native_results_patches import write_results_patches
@@ -28,6 +29,7 @@ from native_transition_templates import write_native_transitions
 from native_variant_metadata import write_variant_metadata
 from native_anim_end_templates import write_native_anim_ends
 from native_stage_tables import write_stage_tables
+from native_auto_roster import write_auto_catalog
 
 
 class Reference:
@@ -201,6 +203,10 @@ def emit_variant(ref, name, native_scripts, out):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--auto-bindable', action='store_true',
+                        help='Include all structurally bindable fighters in a private test roster')
+    args = parser.parse_args()
     from audit_reference_fighters import known_native_script_symbols
     ref = Reference()
     catalog = load_catalog()
@@ -222,8 +228,18 @@ def main():
     bindings.update(auto_bindings)
     bindable = {row['name'] for row in audit['fighters']
                 if action_table_bindable(row, bindings)}
+    if args.auto_bindable:
+        table_source = (ref.path.with_name('src') / 'Character.asm').read_text()
+        compiled_tables = extract_table_patches(ref, audit, table_source)
+        catalog, auto_report = write_auto_catalog(
+            catalog, audit, bindings, compiled_tables, out / 'auto-roster.json')
+        auto_include = out / 'auto-include'
+        auto_include.mkdir(exist_ok=True)
+        (auto_include / HEADER.name).write_text(render_header(catalog))
+        (auto_include / UI.name).write_text(render_ui(catalog))
     validate_reference(catalog, BUILD / 'fighter-audit.json', sha256(ref.path), bindable)
-    if HEADER.read_text() != render_header(catalog) or UI.read_text() != render_ui(catalog):
+    if not args.auto_bindable and (HEADER.read_text() != render_header(catalog) or
+                                   UI.read_text() != render_ui(catalog)):
         raise ValueError('Native fighter tables are stale; run native_fighter_catalog.py')
     data = ref.words(ref.symbols['Character.FALCO_character_struct'], 30)
     motion = [ref.words(data[25] + i * 12, 3) for i in range(data[27])]
@@ -352,6 +368,7 @@ def main():
         'required_files': sorted(required), 'unresolved_relocations': bad,
         'compiled_stage_rows': stage_report['stage_count'],
         'required_stage_files': len(stage_report['required_stage_files']),
+        'auto_bindable_candidates': auto_report['candidate_count'] if args.auto_bindable else 0,
         'pack_sha256': sha256(assets / 'reloc.pak'),
     })
     print(f"{len(catalog['fighters'])} fighters: {sum(len(row[1]) for row in rows)} actions, {len(required)} validated assets")
