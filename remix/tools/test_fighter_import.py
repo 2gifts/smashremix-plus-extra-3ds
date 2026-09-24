@@ -39,6 +39,9 @@ from native_anim_end_templates import (STATUS_PLAY_CLEAR, DIVE_AIR_INITIAL,
                                        extract_native_anim_ends,
                                        render_native_code as render_anim_end_code)
 from native_straightline_transitions import decode_straightline
+from native_guarded_original_callbacks import (CAPTAIN_TURN,
+                                               extract_guarded_original_callbacks,
+                                               render_native_code as render_guarded_original_code)
 from native_fkind_branch_transitions import decode_fkind_branches
 from native_variant_metadata import extract_variant_metadata, render_variant_metadata
 
@@ -402,6 +405,35 @@ class MotionTests(unittest.TestCase):
             wrapper[3] = 0xac80017c  # The wrapper must remain side-effect-free.
             self.assertEqual(extract_native_anim_ends(ref, worklist)
                              ['recognized_action_callback_count'], 0)
+
+    def test_compiled_guarded_original_callback_binds_every_exact_use(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            path = Path(dirname) / 'reference.z64'
+            path.write_bytes(b'pinned guarded callback fixture')
+            base = [0x34090002 if word is None else word for word in CAPTAIN_TURN]
+            first, second, changed = 0x80500000, 0x80500040, 0x80500080
+            code = {first: base[:], second: base[:], changed: base[:]}
+            code[second][6] = 0x34090001
+            code[changed][5] = 0x8ca80184  # Different fighter field.
+            ref = SimpleNamespace(path=path, words=lambda address, count:
+                                  (code[address] + [0] * count)[:count])
+            worklist = {'reference_rom_sha256': sha256(path), 'targets': [
+                {'address': f'{address:08x}', 'symbols': [f'Fixture{index}'],
+                 'uses': [{'fighter': 'FIXTURE', 'status_id': 229, 'role': 'interrupt'}]}
+                for index, address in enumerate((first, second, changed))]}
+            manifest = extract_guarded_original_callbacks(ref, worklist)
+            self.assertEqual(manifest['recognized_callbacks'], 2)
+            self.assertEqual(manifest['action_table_uses'], 2)
+            code_text = render_guarded_original_code(manifest)
+            self.assertIn('fp->motion_vars.flags.flag1 == 1u', code_text)
+            self.assertIn('fp->motion_vars.flags.flag1 == 2u', code_text)
+            self.assertEqual(code_text.count('ftCaptainSpecialHiProcInterrupt(gobj);'), 2)
+            code[first][9] = 0x0c0580dd  # Original helper changed.
+            self.assertEqual(extract_guarded_original_callbacks(ref, worklist)
+                             ['recognized_callbacks'], 1)
+            worklist['reference_rom_sha256'] = 'stale'
+            with self.assertRaisesRegex(ValueError, 'pinned ROM'):
+                extract_guarded_original_callbacks(ref, worklist)
 
     def test_extra_autolink_angle_matches_ground_air_and_reverse_hit_rules(self):
         fixture = r'''

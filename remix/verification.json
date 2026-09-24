@@ -973,6 +973,19 @@
     "development_cia_sha256": "25e8000cf9ed45b7b47fca38d9131a46e4edce2b5636f5e9eeeca90e8cc1876e",
     "scope": "The animation-end importer uses one restricted semantic decoder for six shared status/animation/motion-flag reset transitions, independently cross-checked against the pinned exact pattern. The four dive templates now write motion flags rather than unrelated status variables. The generated callback frontier ranks unbound compiled behavior by impact but does not bind matching shapes. The affected callbacks are not linked into the current development roster, and their move behavior has not yet been emulator-tested. The private CIA is not a full-mod release."
   },
+  "shared_guarded_original_callback_import": {
+    "pinned_expansion_callbacks": 852,
+    "native_bound_callbacks": 119,
+    "guarded_callback_addresses": 7,
+    "guarded_action_table_uses": 25,
+    "generated_guard_values": [1, 2],
+    "unbound_shape_groups_with_collision_target_split": 419,
+    "source_only_fighter_import_tests_passed": 51,
+    "development_elf_sha256": "4aa828715cc7d12d50b72b8920fccdeda8237ba76f0a9244b08d2513678a75a8",
+    "development_cia_sha256": "cf110d1d6d64ad60aea793bedadc1be66106df2ced5c9aecc43e78acb1776651",
+    "azahar_stereo_drl_regression_frame": 2037,
+    "scope": "A full compiled-code pattern check translates seven guarded original turn-interrupt callbacks into two shared native implementations. Dr. Luigi reached an active stereo Azahar match in the rebuilt development executable, but he does not use these callbacks. Their owning fighters remain outside the structural development roster because of other unbound routines; this path is source-tested and ARM-built, not yet directly emulator-tested or a full-mod release."
+  },
   "fighter_import_host_tests": {
     "passed": true,
     "tests": 44,
