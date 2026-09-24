@@ -25,6 +25,7 @@ from native_patch_worklist import write_worklist
 from native_action_patches import (action_table_bindable, load_bindings,
                                    write_action_patches)
 from native_callback_dependencies import write_dependency_graph
+from native_source_copy_inventory import write_inventory as write_source_copy_inventory
 from classify_action_callbacks import classify as classify_action_callbacks
 from native_transition_templates import write_native_transitions
 from native_variant_metadata import write_variant_metadata
@@ -32,6 +33,7 @@ from native_anim_end_templates import write_native_anim_ends
 from native_guarded_original_callbacks import write_guarded_original_callbacks
 from native_ground_walk_physics import write_ground_walks
 from native_vanilla_clone_callbacks import write_clones
+from native_air_drift_overrides import write_air_drift
 from native_stage_tables import write_stage_tables
 from native_auto_roster import write_auto_catalog
 from native_lucas_air_move import write_lucas_air_move
@@ -249,6 +251,12 @@ def main():
         if address in auto_bindings:
             raise ValueError(f'Duplicate vanilla-clone callback {address:08x}')
         auto_bindings[address] = row['native']
+    air_drift = write_air_drift(ref, worklist, out)
+    for row in air_drift['accepted']:
+        address = int(row['address'], 16)
+        if address in auto_bindings:
+            raise ValueError(f'Duplicate air-drift callback {address:08x}')
+        auto_bindings[address] = row['native']
     lucas_air_move = write_lucas_air_move(ref, out)
     lucas_address = int(lucas_air_move['address'], 16)
     if lucas_address in auto_bindings:
@@ -263,6 +271,7 @@ def main():
     _, bindings = load_bindings(symbols=ref.symbols)
     bindings.update(auto_bindings)
     write_dependency_graph(ref, worklist, bindings)
+    write_source_copy_inventory(ref, worklist, bindings)
     bindable = {row['name'] for row in audit['fighters']
                 if action_table_bindable(row, bindings)}
     if args.auto_bindable:

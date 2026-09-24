@@ -28,9 +28,9 @@
   "callback_dependency_graph": {
     "reference_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
     "compiled_callback_targets": 852,
-    "native_bound_targets": 142,
+    "native_bound_targets": 143,
     "distinct_original_engine_calls_reachable_from_unbound": 177,
-    "distinct_expansion_helpers_reachable_from_unbound": 321,
+    "distinct_expansion_helpers_reachable_from_unbound": 320,
     "callbacks_with_opaque_control_flow": 83,
     "scope": "Static first-return-window direct-call inventory only; it does not translate or execute MIPS, prove full control flow, or establish gameplay parity."
   },
@@ -48,6 +48,28 @@
     "falco_status_226_observed": true,
     "falco_emulator_result_sha256": "265733c7a38650dc5c03f9c3a576d2689727d0e0b1442a337c5fef882e8f43e4",
     "scope": "One verified original-code clone family; generated native map behavior was host-tested and Falco reached results after entering its mapped action, but every collision branch and the other owning fighters have not been emulator-tested. Development CIA only."
+  },
+  "source_copy_inventory": {
+    "reference_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
+    "active_copy_macro_calls_in_staged_source": 413,
+    "matched_action_callback_scopes": 46,
+    "matched_callback_copy_segments": 103,
+    "unbound_matched_callback_scopes": 32,
+    "scope": "Source scope and copy-macro inventory for selecting native adapters; it is not a semantic decoder or proof of complete source coverage."
+  },
+  "air_drift_override_import": {
+    "reference_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
+    "original_copied_segment_sha256": "b1a855e6c78da519efd82b2b7b7b637c7a0da3ae4accb30d564b4b4e757e0847",
+    "main_words_checked": 32,
+    "helper_words_checked": 11,
+    "accepted_callback_targets": 1,
+    "action_table_uses": 15,
+    "compiled_max_air_speed": 28.0,
+    "total_bound_callback_targets": 143,
+    "host_branch_tests_passed": true,
+    "development_elf_sha256": "25d6532fd92805b033f3195ff692c5b395e49b84ff036e9f881062c5b9434c67",
+    "development_cia_sha256": "026e1a54d8e5719eee69aecf354a9665a55fc9432954e9ac665c1e55a0b35def",
+    "scope": "The shared Goemon aerial physics callback is source-tested and ARM-built, but dead-stripped from the current 30-fighter development roster; no direct emulator move test or full-mod release is claimed."
   },
   "assets": {
     "source_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
