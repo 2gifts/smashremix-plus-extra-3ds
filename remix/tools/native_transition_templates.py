@@ -104,6 +104,33 @@ FKIND_SELECT_BRANCH = (
     0x03e00008, 0x27bd0028,
 )
 
+# The compiled aerial collision wrapper chooses a custom landing transition
+# only while motion flag 2 is clear; otherwise it calls the original cliff /
+# wait-or-landing routine. The transition address is the sole pointer pair.
+CONDITIONAL_LANDING_CLIFF = (
+    0x27bdffd0, 0xafbf0014, 0xafa40018, 0x8c8e0084,
+    0x8dce0184, 0x15c00007, 0x00000000, None,
+    None, 0x0c0379b9, 0x00000000, 0x10000003,
+    0x00000000, 0x0c037a5e, 0x00000000, 0x8fbf0014,
+    0x03e00008, 0x27bd0030,
+)
+
+
+def decode_conditional_landing_cliff(ref, address):
+    words = ref.words(address, 128)
+    length = first_return_words(words)
+    if length != len(CONDITIONAL_LANDING_CLIFF):
+        return None
+    actual = words[:length]
+    if any(expected is not None and got != expected
+           for got, expected in zip(actual, CONDITIONAL_LANDING_CLIFF)):
+        return None
+    if (actual[7] & 0xffff0000 != 0x3c050000 or
+            actual[8] & 0xffff0000 != 0x34a50000):
+        return None
+    target = ((actual[7] & 0xffff) << 16) | (actual[8] & 0xffff)
+    return target if target >= ref.ram_base else None
+
 
 def decode_fkind_branch(address, actual):
     if len(actual) != len(FKIND_GROUND_BRANCH) or any(
@@ -280,9 +307,11 @@ def decode_transition(ref, address):
             decode_straightline(ref, address))
 
 
-def extract_native_transitions(ref, families):
+def extract_native_transitions(ref, families, worklist=None):
     if families['reference_rom_sha256'] != sha256(ref.path):
         raise ValueError('Callback families and pinned reference ROM differ')
+    if worklist is not None and worklist['reference_rom_sha256'] != sha256(ref.path):
+        raise ValueError('Conditional callback worklist and pinned reference ROM differ')
     transitions = {}
     wrappers = []
     for row in families['wrappers']:
@@ -320,6 +349,29 @@ def extract_native_transitions(ref, families):
                 raise ValueError(f'Compiled transition decoder disagrees at {address:08x}')
         wrappers.append({'address': row['address'], 'symbols': row['symbols'],
                          'helper': row['helper'], 'transition_address': row['transition_address'],
+                         'native': f'nativeRemixCollision_{row["address"]}'})
+    for row in worklist['targets'] if worklist is not None else ():
+        wrapper_address = int(row['address'], 16)
+        target = decode_conditional_landing_cliff(ref, wrapper_address)
+        if target is None:
+            continue
+        transition = (transitions[target] if target in transitions
+                      else decode_transition(ref, target))
+        # These compiled examples are all straight-line landing transitions.
+        # Require an independent instruction decode to agree on every effect.
+        decoded = decode_straightline(ref, target)
+        fields = ('status_id', 'status_delta', 'kinetics', 'clamp_air_speed',
+                  'preserve_flags')
+        if (transition is None or decoded is None or
+                any(transition.get(key) != decoded.get(key) for key in fields) or
+                transition.get('frame_begin', 'current') != decoded.get('frame_begin', 'current') or
+                transition.get('action_order', ['ground', 'status']) != decoded['action_order'] or
+                transition['kinetics'] != 'ground'):
+            continue
+        transitions[target] = transition
+        wrappers.append({'address': row['address'], 'symbols': row['symbols'],
+                         'helper': 'conditional_landing_cliff',
+                         'transition_address': f'{target:08x}',
                          'native': f'nativeRemixCollision_{row["address"]}'})
     accepted = sorted((row for row in transitions.values() if row is not None),
                       key=lambda row: row['address'])
@@ -375,6 +427,16 @@ def render_native_code(manifest):
                 lines.append(f'    mpCommonSetFighter{("Ground" if action == "ground" else "Air")}(fp);')
         lines += ['}', '']
     for row in manifest['wrappers']:
+        if row['helper'] == 'conditional_landing_cliff':
+            lines += [f'void {row["native"]}(GObj *fighter_gobj) {{',
+                      '    FTStruct *fp = ftGetStruct(fighter_gobj);',
+                      '    if (fp->motion_vars.flags.flag2 == 0)',
+                      f'        mpCommonProcFighterLanding(fighter_gobj, '
+                      f'nativeRemixTransition_{row["transition_address"]});',
+                      '    else',
+                      '        mpCommonProcFighterCliffWaitOrLanding(fighter_gobj);',
+                      '}', '']
+            continue
         lines += [f'void {row["native"]}(GObj *fighter_gobj) {{',
                   f'    {row["helper"]}(fighter_gobj, '
                   f'nativeRemixTransition_{row["transition_address"]});',
@@ -382,8 +444,8 @@ def render_native_code(manifest):
     return '\n'.join(lines)
 
 
-def write_native_transitions(ref, families, out):
-    manifest = extract_native_transitions(ref, families)
+def write_native_transitions(ref, families, out, worklist=None):
+    manifest = extract_native_transitions(ref, families, worklist)
     write_json(BUILD / 'native-transition-templates.json', manifest)
     (Path(out) / 'native_collision_templates.inc').write_text(render_native_code(manifest))
     return manifest

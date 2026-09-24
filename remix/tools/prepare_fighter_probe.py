@@ -219,7 +219,7 @@ def main():
     out.mkdir(exist_ok=True)
     worklist = json.loads((BUILD / 'action-callback-worklist.json').read_text())
     families = classify_action_callbacks(ref, worklist)
-    native_transitions = write_native_transitions(ref, families, out)
+    native_transitions = write_native_transitions(ref, families, out, worklist)
     auto_bindings = {int(row['address'], 16): row['native']
                      for row in native_transitions['wrappers']}
     native_anim_ends = write_native_anim_ends(ref, worklist, out)

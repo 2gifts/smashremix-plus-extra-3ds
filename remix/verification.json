@@ -986,6 +986,18 @@
     "azahar_stereo_drl_regression_frame": 2037,
     "scope": "A full compiled-code pattern check translates seven guarded original turn-interrupt callbacks into two shared native implementations. Dr. Luigi reached an active stereo Azahar match in the rebuilt development executable, but he does not use these callbacks. Their owning fighters remain outside the structural development roster because of other unbound routines; this path is source-tested and ARM-built, not yet directly emulator-tested or a full-mod release."
   },
+  "conditional_landing_cliff_callback_import": {
+    "pinned_expansion_callbacks": 852,
+    "native_bound_callbacks": 124,
+    "checked_collision_wrappers": 99,
+    "checked_collision_transitions": 98,
+    "conditional_landing_cliff_wrappers": 5,
+    "unbound_shape_groups_with_collision_target_split": 418,
+    "source_only_fighter_import_tests_passed": 52,
+    "development_elf_sha256": "18570086f60b203b85434fc5fc79066a421caa53ffd23be707c0ae106882707b",
+    "development_cia_sha256": "33089e6e4445315f7508de4b4be9571fa07cf25573e07786100843d1a1a61ce4",
+    "scope": "Five exact Sonic/Knuckles-family aerial collision callbacks select a checked native landing transition when motion flag 2 is clear, or the original cliff/wait helper otherwise. A separate instruction decoder agrees on each landing transition's status change and side effects. The affected fighters remain outside the development roster, so their move behavior is not yet emulator-tested and the private CIA is not a full-mod release."
+  },
   "fighter_import_host_tests": {
     "passed": true,
     "tests": 44,

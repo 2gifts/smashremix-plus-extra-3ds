@@ -30,6 +30,7 @@ from native_hit_sound_patches import extract_hit_sounds, render_native_rows as r
 from native_entry_patches import extract_entry_effects, render_native_rows as render_entry_effects
 from classify_action_callbacks import classify as classify_action_callbacks
 from native_transition_templates import (TEMPLATES, SHARED_TEMPLATES, TABLE_TEMPLATES,
+                                         CONDITIONAL_LANDING_CLIFF,
                                          FKIND_GROUND_BRANCH, FKIND_SELECT_BRANCH,
                                          decode_fkind_branch, decode_fkind_select_branch,
                                          decode_transition, extract_native_transitions,
@@ -434,6 +435,39 @@ class MotionTests(unittest.TestCase):
             worklist['reference_rom_sha256'] = 'stale'
             with self.assertRaisesRegex(ValueError, 'pinned ROM'):
                 extract_guarded_original_callbacks(ref, worklist)
+
+    def test_conditional_landing_wrapper_reuses_checked_ground_transition(self):
+        with tempfile.TemporaryDirectory() as dirname:
+            path = Path(dirname) / 'reference.z64'
+            path.write_bytes(b'pinned conditional collision fixture')
+            wrapper_address, target = 0x80500000, 0x80500100
+            wrapper = list(CONDITIONAL_LANDING_CLIFF)
+            wrapper[7:9] = [0x3c058050, 0x34a50100]
+            transition = [0x340500f7 if word is None else word
+                          for word in TEMPLATES['ground']]
+            code = {wrapper_address: wrapper, target: transition}
+            ref = SimpleNamespace(path=path, ram_base=0x80400000,
+                                  words=lambda address, count:
+                                  (code[address] + [0] * count)[:count])
+            pinned = sha256(path)
+            families = {'reference_rom_sha256': pinned, 'wrappers': []}
+            worklist = {'reference_rom_sha256': pinned, 'targets': [
+                {'address': f'{wrapper_address:08x}', 'symbols': ['Fixture.air_map'],
+                 'uses': [{'fighter': 'FIXTURE', 'status_id': 247, 'role': 'map'}]}]}
+            manifest = extract_native_transitions(ref, families, worklist)
+            self.assertEqual(manifest['recognized_collision_callback_count'], 1)
+            self.assertEqual(manifest['recognized_transition_count'], 1)
+            native = render_native_code(manifest)
+            self.assertIn('fp->motion_vars.flags.flag2 == 0', native)
+            self.assertIn('mpCommonProcFighterLanding(fighter_gobj,', native)
+            self.assertIn('mpCommonProcFighterCliffWaitOrLanding(fighter_gobj);', native)
+            wrapper[4] = 0x8dce0180  # Different motion flag is not equivalent.
+            self.assertEqual(extract_native_transitions(ref, families, worklist)
+                             ['recognized_collision_callback_count'], 0)
+            wrapper[4] = CONDITIONAL_LANDING_CLIFF[4]
+            transition[10] = 0x0c039bca  # Different status helper is unmodeled.
+            self.assertEqual(extract_native_transitions(ref, families, worklist)
+                             ['recognized_collision_callback_count'], 0)
 
     def test_extra_autolink_angle_matches_ground_air_and_reverse_hit_rules(self):
         fixture = r'''
