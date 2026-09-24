@@ -25,6 +25,15 @@
     "rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
     "symbols_sha256": "69463a54e1429fc058985e6bb3bcd1958223a8de2d2426c9260fc2cc636a0d85"
   },
+  "callback_dependency_graph": {
+    "reference_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
+    "compiled_callback_targets": 852,
+    "native_bound_targets": 126,
+    "distinct_original_engine_calls_reachable_from_unbound": 177,
+    "distinct_expansion_helpers_reachable_from_unbound": 321,
+    "callbacks_with_opaque_control_flow": 83,
+    "scope": "Static first-return-window direct-call inventory only; it does not translate or execute MIPS, prove full control flow, or establish gameplay parity."
+  },
   "assets": {
     "source_rom_sha256": "106f60d2265bbc71859fafafffddfb46a6123c1aae648d172719c08619f269bb",
     "extra_commit": "d981b7c23d7aadb80f86aadb6fbe7d9519a33ab4",

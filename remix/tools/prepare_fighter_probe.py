@@ -24,6 +24,7 @@ from native_entry_patches import write_entry_effects
 from native_patch_worklist import write_worklist
 from native_action_patches import (action_table_bindable, load_bindings,
                                    write_action_patches)
+from native_callback_dependencies import write_dependency_graph
 from classify_action_callbacks import classify as classify_action_callbacks
 from native_transition_templates import write_native_transitions
 from native_variant_metadata import write_variant_metadata
@@ -254,6 +255,7 @@ def main():
     })
     _, bindings = load_bindings(symbols=ref.symbols)
     bindings.update(auto_bindings)
+    write_dependency_graph(ref, worklist, bindings)
     bindable = {row['name'] for row in audit['fighters']
                 if action_table_bindable(row, bindings)}
     if args.auto_bindable:
